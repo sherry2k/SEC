@@ -1,18 +1,36 @@
 # SEC Dashboard — Setup
 
-Phase 1: login, signup with admin approval, role-aware dashboard shell,
-self-service password change, and User Management. Projects and Accounts
-are still placeholders — next phase.
+Phase 1 (auth, roles, User Management, change password) is done. This
+update adds Phase 2: Projects — the category/checklist tree, project
+creation, and the project detail page. Finance is still a placeholder,
+per your build order.
 
-## 1. Create the GitHub repo
+## If you already have this deployed
 
-Unzip `sec-dashboard.zip`, create a new empty repo on GitHub, then push
-this folder's contents to it (via GitHub's web UI "upload files", or `git`
-if you have it).
+1. Pull/replace the repo with this zip's contents and push to GitHub —
+   Vercel redeploys automatically.
+2. Run `seed-projects-schema.sql` once in the Neon SQL Editor. It creates
+   the new tables and seeds the checklist tree (BOC / CBC / Permit / Work
+   Permit / Contractor and all their items, including Contractor →
+   Inspection's 8 sub-items). Safe to run once; running it twice will
+   error on the second attempt because the tables already exist.
+3. That's it — no new environment variables needed for this phase.
 
-## 2. Create the Neon database
+## Starting from scratch
 
-In your Neon project's SQL Editor, run:
+Same as before, plus the new script:
+
+1. Create the GitHub repo from this zip.
+2. In Neon's SQL Editor, run `neon-schema.sql` for users/auth (see below),
+   then `seed-projects-schema.sql` for Projects.
+3. Import into Vercel, set `DATABASE_URL` and `JWT_SECRET`, deploy.
+4. Sign up, then promote yourself to `master_admin` in Neon:
+   ```sql
+   UPDATE users SET role = 'master_admin', status = 'approved', approved_at = now()
+   WHERE username = 'your-username';
+   ```
+
+### neon-schema.sql (users/auth — run first if starting fresh)
 
 ```sql
 CREATE TYPE user_role AS ENUM ('master_admin', 'admin', 'finance', 'staff');
@@ -39,90 +57,48 @@ CREATE TABLE app_settings (
 INSERT INTO app_settings (key, value) VALUES ('finance_can_edit_projects', 'false');
 ```
 
-Copy the connection string from Neon's dashboard (the "pooled connection"
-one) — you'll need it in step 4.
+## What's new in this phase
 
-## 3. Create the Vercel project
+**Projects list** (`/projects`) — every project, its category badges,
+location, status. "Add project" button only shows for roles that can
+create (Admin, Staff, Master admin — Finance only if the
+`finance_can_edit_projects` setting is turned on).
 
-Import the GitHub repo into a new Vercel project. Framework preset:
-Next.js (auto-detected).
+**New project** (`/projects/new`) — name, client, building/unit/location,
+area, notes, and category checkboxes. A project can have more than one
+category from the start.
 
-## 4. Environment variables (Vercel → Project → Settings → Environment Variables)
+**Project detail** (`/projects/[id]`) — shows the project's info, then one
+card per linked category with its full checklist, correctly nested
+(Contractor → Inspection shows its 8 inspection types indented
+underneath). Each item's status is an inline dropdown that saves
+immediately — no separate save button, optimistic update with rollback
+if the save fails. A "Link another category" control at the top lets you
+add BOC, CBC, Permit, Work Permit or Contractor to a project after the
+fact, which copies in that category's checklist without touching what's
+already there.
 
-| Name | Value |
-|---|---|
-| `DATABASE_URL` | The Neon connection string from step 2 |
-| `JWT_SECRET` | A random string, 32+ characters — generate one at https://generate-secret.vercel.app/32 |
+**Project codes** — auto-numbered `SEC/PRJ/2026/0001`, assigned
+atomically via the new `document_sequences` table so two people creating
+projects at the same moment never collide. The same table and helper
+(`lib/sequences.ts`) will generate quotation and invoice numbers in the
+Finance phase.
 
-Without `JWT_SECRET` the build itself fails on purpose (see
-`lib/session.ts` — no fallback secret is allowed). Without `DATABASE_URL`
-the build fails collecting page data for the auth routes — expected, not
-a bug; add the variable and redeploy.
+**Permission changes worth knowing** — `lib/auth.ts` got two new guards,
+`requirePermission()` and `authorizePermissionApi()`, used everywhere in
+Projects instead of the older role-list guards. These check the
+`finance_can_edit_projects` setting live on every request, which is what
+makes that toggle actually work rather than being cosmetic.
 
-## 5. Deploy, then create your own account
+## Testing it
 
-Once deployed: open the site, go to `/signup`, and register your own
-account. Then in the Neon SQL Editor, run:
-
-```sql
-UPDATE users SET role = 'master_admin', status = 'approved', approved_at = now()
-WHERE username = 'your-username';
-```
-
-Sign in — you now have full access, and can approve everyone else from
-the User Management page instead of going back into Neon.
-
-## 6. Point the subdomain (whenever you're ready to go live)
-
-In Vercel: Project → Settings → Domains → add `dashboard.solideng.ae`.
-Vercel will show a CNAME record to add in your DNS panel for
-`solideng.ae`. Until this is done, the `*.vercel.app` URL works fine for
-testing.
-
-## What's in this repo
-
-**Design system** — `/app/login`, `/app/signup`: split panel, logo blue
-`#095098`, Source Serif 4 for headings + Inter for UI text. Tokens live in
-`app/globals.css`.
-
-**Dashboard shell** — `/app/(dashboard)/layout.tsx` guards every dashboard
-page behind a valid session. `components/Sidebar.tsx` filters nav items
-server-side by role before the page reaches the browser.
-
-**User Management** (`/app/(dashboard)/users`, admin/master_admin only) —
-`components/UsersTable.tsx`. Pending signups sort to the top with
-Approve/Reject buttons. Approved users get a role dropdown (Admin /
-Finance / Staff — `master_admin` is never offered here, it's set by hand
-in Neon only) and a Disable/Re-enable button. Two guards live in
-`app/api/users/[id]/route.ts`: nobody can change their own role or status
-from this screen (lock-out protection), and a `master_admin` row can't be
-edited by anyone through the UI.
-
-**Change password** (`/app/(dashboard)/profile`) — any signed-in,
-approved user, reachable by clicking their name at the bottom of the
-sidebar. Requires the current password; new one must be 8+ characters and
-different from the old one. `app/api/auth/change-password/route.ts`.
-
-**Role rules** — `/lib/roles.ts`, `/lib/permissions.ts`, the one place
-role logic lives. `finance_can_edit_projects` in `app_settings` controls
-whether Finance can edit/create projects — off by default.
-
-**Fresh-per-request auth** — `/lib/auth.ts`: `requireRole()` for pages,
-`authorizeApi()` for API routes. Both re-check the database on every
-request, so disabling a user or changing their role takes effect
-immediately, not after their 7-day token expires.
-
-`/app/pending`, `/app/unauthorized` — shown to not-yet-approved and
-wrong-role users respectively.
-
-## Verified
-
-This repo has been through a real `next build` with the actual npm
-packages (not just a type-check) — confirms it will build cleanly on
-Vercel once the two environment variables are set.
+Sign in as `admin`, go to Projects → Add project, tick two or three
+categories, and open the result — each category's full checklist should
+appear as its own card, ready to click through statuses on.
 
 ## Next phase
 
-Projects: the category/checklist tree (BOC, CBC, Permit, Work Permit,
-Contractor) from the framework document, the projects list, and the
-project detail page. Finance comes after Projects, per your build order.
+Finance: quotations, invoices (shared `SEC/INV/…` sequence across all
+three types), and the Statement of Account, per Section 4 of the
+framework document. Waiting on your sample quotation/invoice formats
+before that starts.

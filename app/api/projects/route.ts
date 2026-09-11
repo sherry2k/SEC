@@ -1,0 +1,69 @@
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/db";
+import { projects } from "@/db/schema";
+import { authorizePermissionApi } from "@/lib/auth";
+import { nextDocumentCode } from "@/lib/sequences";
+import { addCategoryToProject } from "@/lib/projects";
+import { PROJECT_CATEGORIES, type ProjectCategory } from "@/lib/checklist";
+
+export async function POST(request: NextRequest) {
+  const auth = await authorizePermissionApi("projects.create");
+  if (!auth.ok) return auth.response;
+
+  try {
+    const body = await request.json().catch(() => null);
+    const name = typeof body?.name === "string" ? body.name.trim() : "";
+    const clientName = typeof body?.clientName === "string" ? body.clientName.trim() : "";
+    const buildingName = typeof body?.buildingName === "string" ? body.buildingName.trim() : "";
+    const unitNo = typeof body?.unitNo === "string" ? body.unitNo.trim() : "";
+    const location = typeof body?.location === "string" ? body.location.trim() : "";
+    const notes = typeof body?.notes === "string" ? body.notes.trim() : "";
+    const areaSqmRaw = body?.areaSqm;
+    const categories: unknown[] = Array.isArray(body?.categories) ? body.categories : [];
+
+    if (!name) {
+      return NextResponse.json({ error: "Project name is required." }, { status: 400 });
+    }
+
+    const validCategories = categories.filter((c): c is ProjectCategory =>
+      PROJECT_CATEGORIES.includes(c as ProjectCategory)
+    );
+    if (validCategories.length === 0) {
+      return NextResponse.json({ error: "Select at least one category." }, { status: 400 });
+    }
+
+    const areaSqm =
+      typeof areaSqmRaw === "number" && Number.isFinite(areaSqmRaw) && areaSqmRaw > 0
+        ? String(areaSqmRaw)
+        : null;
+
+    const projectCode = await nextDocumentCode("PRJ");
+
+    const [project] = await db
+      .insert(projects)
+      .values({
+        projectCode,
+        name,
+        clientName: clientName || null,
+        buildingName: buildingName || null,
+        unitNo: unitNo || null,
+        location: location || null,
+        areaSqm,
+        notes: notes || null,
+        createdBy: auth.user.id,
+      })
+      .returning();
+
+    for (const category of validCategories) {
+      await addCategoryToProject(project.id, category);
+    }
+
+    return NextResponse.json({ success: true, project }, { status: 201 });
+  } catch (error) {
+    console.error("Create project error:", error);
+    return NextResponse.json(
+      { error: "Something went wrong on the server. Try again." },
+      { status: 500 }
+    );
+  }
+}

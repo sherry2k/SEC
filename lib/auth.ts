@@ -7,6 +7,8 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import type { Role, UserStatus } from "@/lib/roles";
+import { can, type Permission } from "@/lib/permissions";
+import { financeCanEditProjects } from "@/lib/settings";
 import { SESSION_COOKIE, SESSION_MAX_AGE, verifyToken, type SessionPayload } from "@/lib/session";
 
 export type CurrentUser = {
@@ -84,6 +86,36 @@ export async function authorizeApi(allowed?: readonly Role[]): Promise<ApiAuthRe
     };
   }
   if (allowed && !allowed.includes(user.role)) {
+    return {
+      ok: false,
+      response: NextResponse.json({ error: "You don't have access to this." }, { status: 403 }),
+    };
+  }
+  return { ok: true, user };
+}
+
+// Permission-aware guards — use these instead of requireRole/authorizeApi
+// wherever the answer depends on more than a fixed role list, e.g. Projects
+// edit access, where Finance's answer depends on the finance_can_edit_projects
+// setting rather than their role alone.
+export async function requirePermission(permission: Permission): Promise<CurrentUser> {
+  const user = await getCurrentUser();
+  if (!user || user.status !== "approved") redirect("/login");
+  const allowFinanceEdit = await financeCanEditProjects();
+  if (!can(user.role, permission, allowFinanceEdit)) redirect("/unauthorized");
+  return user;
+}
+
+export async function authorizePermissionApi(permission: Permission): Promise<ApiAuthResult> {
+  const user = await getCurrentUser();
+  if (!user || user.status !== "approved") {
+    return {
+      ok: false,
+      response: NextResponse.json({ error: "Please sign in again." }, { status: 401 }),
+    };
+  }
+  const allowFinanceEdit = await financeCanEditProjects();
+  if (!can(user.role, permission, allowFinanceEdit)) {
     return {
       ok: false,
       response: NextResponse.json({ error: "You don't have access to this." }, { status: 403 }),
