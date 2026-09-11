@@ -21,7 +21,7 @@ export default function Sidebar({ user }: { user: CurrentUser }) {
       <div className="flex items-center gap-2.5 px-5 py-5">
         <img src="/images/logo.png" alt="SEC" className="h-8 w-8 object-contain" />
         <div className="leading-tight">
-          <p className="font-display text-sm text-[var(--sec-ink)]">Solid Engineering</p>
+          <p className="font-bold text-sm text-[var(--sec-ink)]">Solid Engineering</p>
           <p className="text-xs text-[var(--sec-muted)]">Consultancy</p>
         </div>
       </div>

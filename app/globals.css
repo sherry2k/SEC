@@ -21,6 +21,8 @@ html, body {
   font-family: var(--font-sans);
 }
 
-h1, h2, h3, .font-display {
+/* Serif is opt-in only (.font-display) — the login/signup brand panel uses
+   it deliberately; everything inside the dashboard is bold sans-serif. */
+.font-display {
   font-family: var(--font-serif);
 }

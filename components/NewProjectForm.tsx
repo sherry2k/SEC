@@ -11,8 +11,8 @@ export default function NewProjectForm() {
   const [clientName, setClientName] = useState("");
   const [buildingName, setBuildingName] = useState("");
   const [unitNo, setUnitNo] = useState("");
+  const [plotNo, setPlotNo] = useState("");
   const [location, setLocation] = useState("");
-  const [areaSqm, setAreaSqm] = useState("");
   const [notes, setNotes] = useState("");
   const [categories, setCategories] = useState<ProjectCategory[]>([]);
   const [error, setError] = useState("");
@@ -49,8 +49,8 @@ export default function NewProjectForm() {
           clientName: clientName.trim(),
           buildingName: buildingName.trim(),
           unitNo: unitNo.trim(),
+          plotNo: plotNo.trim(),
           location: location.trim(),
-          areaSqm: areaSqm ? Number(areaSqm) : undefined,
           notes: notes.trim(),
           categories,
         }),
@@ -123,20 +123,12 @@ export default function NewProjectForm() {
           <input id="unitNo" value={unitNo} onChange={(e) => setUnitNo(e.target.value)} className={inputClass} />
         </div>
         <div>
-          <label htmlFor="location" className={labelClass}>Location</label>
-          <input id="location" value={location} onChange={(e) => setLocation(e.target.value)} className={inputClass} />
+          <label htmlFor="plotNo" className={labelClass}>Plot No.</label>
+          <input id="plotNo" value={plotNo} onChange={(e) => setPlotNo(e.target.value)} className={inputClass} />
         </div>
         <div>
-          <label htmlFor="areaSqm" className={labelClass}>Area (sqm)</label>
-          <input
-            id="areaSqm"
-            type="number"
-            min="0"
-            step="0.01"
-            value={areaSqm}
-            onChange={(e) => setAreaSqm(e.target.value)}
-            className={inputClass}
-          />
+          <label htmlFor="location" className={labelClass}>Location</label>
+          <input id="location" value={location} onChange={(e) => setLocation(e.target.value)} className={inputClass} />
         </div>
       </div>
 

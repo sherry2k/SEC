@@ -7,7 +7,7 @@ export default function UnauthorizedPage() {
       <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
         <ShieldAlert size={24} className="text-red-600" />
       </div>
-      <h1 className="font-display mt-6 text-2xl text-[var(--sec-ink)]">You don't have access to this</h1>
+      <h1 className="font-bold mt-6 text-2xl text-[var(--sec-ink)]">You don't have access to this</h1>
       <p className="mt-2 max-w-sm text-sm leading-relaxed text-[var(--sec-muted)]">
         This section is restricted to certain roles. If you think this is wrong,
         ask an admin to check your account's role.

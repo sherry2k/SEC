@@ -16,9 +16,9 @@ export async function POST(request: NextRequest) {
     const clientName = typeof body?.clientName === "string" ? body.clientName.trim() : "";
     const buildingName = typeof body?.buildingName === "string" ? body.buildingName.trim() : "";
     const unitNo = typeof body?.unitNo === "string" ? body.unitNo.trim() : "";
+    const plotNo = typeof body?.plotNo === "string" ? body.plotNo.trim() : "";
     const location = typeof body?.location === "string" ? body.location.trim() : "";
     const notes = typeof body?.notes === "string" ? body.notes.trim() : "";
-    const areaSqmRaw = body?.areaSqm;
     const categories: unknown[] = Array.isArray(body?.categories) ? body.categories : [];
 
     if (!name) {
@@ -32,11 +32,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Select at least one category." }, { status: 400 });
     }
 
-    const areaSqm =
-      typeof areaSqmRaw === "number" && Number.isFinite(areaSqmRaw) && areaSqmRaw > 0
-        ? String(areaSqmRaw)
-        : null;
-
     const projectCode = await nextDocumentCode("PRJ");
 
     const [project] = await db
@@ -47,8 +42,8 @@ export async function POST(request: NextRequest) {
         clientName: clientName || null,
         buildingName: buildingName || null,
         unitNo: unitNo || null,
+        plotNo: plotNo || null,
         location: location || null,
-        areaSqm,
         notes: notes || null,
         createdBy: auth.user.id,
       })

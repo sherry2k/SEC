@@ -63,8 +63,8 @@ export default function UsersTable({ users, currentUserId }: { users: UserRow[];
         </div>
       )}
 
-      <div className="overflow-hidden rounded-lg border border-[var(--sec-line)] bg-white">
-        <table className="w-full text-left text-sm">
+      <div className="overflow-x-auto rounded-lg border border-[var(--sec-line)] bg-white">
+        <table className="w-full min-w-[720px] text-left text-sm">
           <thead>
             <tr className="border-b border-[var(--sec-line)] text-xs uppercase tracking-wide text-[var(--sec-muted)]">
               <th className="px-4 py-3 font-medium">Name</th>

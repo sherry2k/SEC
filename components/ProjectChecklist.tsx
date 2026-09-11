@@ -46,7 +46,7 @@ export default function ProjectChecklist({
       {sections.map(({ category, items }) => (
         <div key={category} className="rounded-lg border border-[var(--sec-line)] bg-white">
           <div className="border-b border-[var(--sec-line)] px-4 py-3">
-            <h3 className="font-display text-base text-[var(--sec-ink)]">{CATEGORY_LABELS[category]}</h3>
+            <h3 className="font-bold text-base text-[var(--sec-ink)]">{CATEGORY_LABELS[category]}</h3>
           </div>
           <div className="px-4 py-1">{renderTree(items, projectId, canEdit)}</div>
         </div>

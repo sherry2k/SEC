@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
+import { Pencil } from "lucide-react";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { projects, projectCategories, projectChecklistItems, checklistTemplates } from "@/db/schema";
@@ -50,18 +52,29 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     ["Client", project.clientName],
     ["Building / mall", project.buildingName],
     ["Unit / shop", project.unitNo],
+    ["Plot No.", project.plotNo],
     ["Location", project.location],
-    ["Area", project.areaSqm ? `${project.areaSqm} sqm` : null],
   ].filter(([, value]) => value) as [string, string][];
 
   return (
     <div>
       <p className="font-mono text-xs text-[var(--sec-muted)]">{project.projectCode}</p>
       <div className="mt-1 flex items-start justify-between gap-4">
-        <h1 className="font-display text-2xl text-[var(--sec-ink)]">{project.name}</h1>
-        <span className="rounded-full border border-[var(--sec-line)] bg-white px-3 py-1 text-xs font-medium text-[var(--sec-muted)]">
-          {PROJECT_STATUS_LABELS[project.status]}
-        </span>
+        <h1 className="font-bold text-2xl text-[var(--sec-ink)]">{project.name}</h1>
+        <div className="flex items-center gap-2">
+          <span className="rounded-full border border-[var(--sec-line)] bg-white px-3 py-1 text-xs font-medium text-[var(--sec-muted)]">
+            {PROJECT_STATUS_LABELS[project.status]}
+          </span>
+          {canEdit && (
+            <Link
+              href={`/projects/${project.id}/edit`}
+              className="flex items-center gap-1.5 rounded-md border border-[var(--sec-line)] px-3 py-1.5 text-xs font-medium text-[var(--sec-ink)] transition-colors hover:border-[var(--sec-blue)]"
+            >
+              <Pencil size={13} />
+              Edit
+            </Link>
+          )}
+        </div>
       </div>
 
       {details.length > 0 && (
@@ -78,7 +91,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       {project.notes && <p className="mt-4 text-sm text-[var(--sec-muted)]">{project.notes}</p>}
 
       <div className="mt-8 flex items-center justify-between">
-        <h2 className="font-display text-lg text-[var(--sec-ink)]">Checklist</h2>
+        <h2 className="font-bold text-lg text-[var(--sec-ink)]">Checklist</h2>
         {canEdit && <AddCategoryButton projectId={project.id} availableCategories={availableCategories} />}
       </div>
 

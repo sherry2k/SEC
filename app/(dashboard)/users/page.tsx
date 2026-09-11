@@ -36,7 +36,7 @@ export default async function UsersPage() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl text-[var(--sec-ink)]">User Management</h1>
+      <h1 className="font-bold text-2xl text-[var(--sec-ink)]">User Management</h1>
       <p className="mt-1 text-sm text-[var(--sec-muted)]">
         Approve new requests, assign roles, and disable accounts that no longer need access.
       </p>

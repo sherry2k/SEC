@@ -7,13 +7,13 @@ export default async function ProfilePage() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl text-[var(--sec-ink)]">Your profile</h1>
+      <h1 className="font-bold text-2xl text-[var(--sec-ink)]">Your profile</h1>
       <p className="mt-1 text-sm text-[var(--sec-muted)]">
         {user.name} · @{user.username} · {ROLE_LABELS[user.role]}
       </p>
 
       <div className="mt-8 border-t border-[var(--sec-line)] pt-8">
-        <h2 className="font-display text-lg text-[var(--sec-ink)]">Change password</h2>
+        <h2 className="font-bold text-lg text-[var(--sec-ink)]">Change password</h2>
         <p className="mt-1 text-sm text-[var(--sec-muted)]">
           You'll need your current password to set a new one.
         </p>

@@ -11,7 +11,7 @@ export default async function DashboardHome() {
       <p className="text-xs font-medium uppercase tracking-wide text-[var(--sec-muted)]">
         {ROLE_LABELS[user.role]}
       </p>
-      <h1 className="font-display mt-1 text-3xl text-[var(--sec-ink)]">
+      <h1 className="font-bold mt-1 text-3xl text-[var(--sec-ink)]">
         Welcome back, {user.name.split(" ")[0]}
       </h1>
       <p className="mt-2 text-sm text-[var(--sec-muted)]">

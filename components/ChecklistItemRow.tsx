@@ -53,7 +53,7 @@ export default function ChecklistItemRow({
 
   return (
     <div
-      className="flex items-center justify-between gap-3 border-b border-[var(--sec-line)] py-2.5 last:border-0"
+      className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--sec-line)] py-2.5 last:border-0"
       style={{ paddingLeft: depth * 20 }}
     >
       <span className={`text-sm ${depth > 0 ? "text-[var(--sec-muted)]" : "text-[var(--sec-ink)]"}`}>

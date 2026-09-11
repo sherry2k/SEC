@@ -1,20 +1,25 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { db } from "@/db";
-import { projects, projectCategories } from "@/db/schema";
+import { projects, projectCategories, projectChecklistItems } from "@/db/schema";
 import { desc } from "drizzle-orm";
 import { requirePermission } from "@/lib/auth";
 import { financeCanEditProjects } from "@/lib/settings";
 import { can } from "@/lib/permissions";
-import { CATEGORY_LABELS, PROJECT_STATUS_LABELS, type ProjectCategory } from "@/lib/checklist";
+import type { ProjectCategory } from "@/lib/checklist";
+import ProjectsTable from "@/components/ProjectsTable";
 
 export default async function ProjectsPage() {
   const user = await requirePermission("projects.view");
   const allowFinanceEdit = await financeCanEditProjects();
   const canCreate = can(user.role, "projects.create", allowFinanceEdit);
+  const canEdit = can(user.role, "projects.edit", allowFinanceEdit);
 
   const rows = await db.select().from(projects).orderBy(desc(projects.createdAt));
   const categoryLinks = await db.select().from(projectCategories);
+  const checklistRows = await db
+    .select({ projectId: projectChecklistItems.projectId, status: projectChecklistItems.status })
+    .from(projectChecklistItems);
 
   const categoriesByProject = new Map<string, ProjectCategory[]>();
   for (const link of categoryLinks) {
@@ -23,11 +28,32 @@ export default async function ProjectsPage() {
     categoriesByProject.set(link.projectId, list);
   }
 
+  const progressByProject = new Map<string, { approved: number; total: number }>();
+  for (const item of checklistRows) {
+    const entry = progressByProject.get(item.projectId) ?? { approved: 0, total: 0 };
+    entry.total += 1;
+    if (item.status === "approved") entry.approved += 1;
+    progressByProject.set(item.projectId, entry);
+  }
+
+  const tableRows = rows.map((p) => ({
+    id: p.id,
+    projectCode: p.projectCode,
+    name: p.name,
+    clientName: p.clientName,
+    buildingName: p.buildingName,
+    unitNo: p.unitNo,
+    location: p.location,
+    status: p.status,
+    categories: categoriesByProject.get(p.id) ?? [],
+    progress: progressByProject.get(p.id) ?? { approved: 0, total: 0 },
+  }));
+
   return (
     <div>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl text-[var(--sec-ink)]">Projects</h1>
+          <h1 className="text-2xl font-bold text-[var(--sec-ink)]">Projects</h1>
           <p className="mt-1 text-sm text-[var(--sec-muted)]">
             {rows.length} {rows.length === 1 ? "project" : "projects"}
           </p>
@@ -53,51 +79,8 @@ export default async function ProjectsPage() {
           )}
         </div>
       ) : (
-        <div className="mt-6 overflow-hidden rounded-lg border border-[var(--sec-line)] bg-white">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-[var(--sec-line)] text-xs uppercase tracking-wide text-[var(--sec-muted)]">
-                <th className="px-4 py-3 font-medium">Code</th>
-                <th className="px-4 py-3 font-medium">Project</th>
-                <th className="px-4 py-3 font-medium">Categories</th>
-                <th className="px-4 py-3 font-medium">Location</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((p) => (
-                <tr key={p.id} className="border-b border-[var(--sec-line)] last:border-0 hover:bg-slate-50">
-                  <td className="px-4 py-3">
-                    <Link href={`/projects/${p.id}`} className="font-mono text-xs text-[var(--sec-blue)] hover:underline">
-                      {p.projectCode}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Link href={`/projects/${p.id}`} className="font-medium text-[var(--sec-ink)] hover:underline">
-                      {p.name}
-                    </Link>
-                    {p.clientName && <p className="text-xs text-[var(--sec-muted)]">{p.clientName}</p>}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-1">
-                      {(categoriesByProject.get(p.id) ?? []).map((c) => (
-                        <span
-                          key={c}
-                          className="rounded-full border border-[var(--sec-blue)]/20 bg-[var(--sec-blue)]/[0.06] px-2 py-0.5 text-xs font-medium text-[var(--sec-blue)]"
-                        >
-                          {CATEGORY_LABELS[c]}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-[var(--sec-muted)]">
-                    {[p.buildingName, p.unitNo, p.location].filter(Boolean).join(" · ") || "—"}
-                  </td>
-                  <td className="px-4 py-3 text-[var(--sec-muted)]">{PROJECT_STATUS_LABELS[p.status]}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="mt-6">
+          <ProjectsTable rows={tableRows} canEdit={canEdit} />
         </div>
       )}
     </div>
