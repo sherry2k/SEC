@@ -1,4 +1,5 @@
 import type { Role } from "@/lib/roles";
+import { USER_MANAGEMENT_ROLES } from "@/lib/roles";
 
 // Fixed, per role — does not depend on any setting
 const ALWAYS: Record<string, readonly Role[]> = {
@@ -8,7 +9,7 @@ const ALWAYS: Record<string, readonly Role[]> = {
   "projects.delete": ["master_admin", "admin"],
   "accounts.view": ["master_admin", "admin", "finance"],
   "accounts.edit": ["master_admin", "admin", "finance"],
-  "users.manage": ["master_admin", "admin"],
+  "users.manage": USER_MANAGEMENT_ROLES,
   "settings.manage": ["master_admin", "admin"],
 };
 

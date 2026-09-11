@@ -19,3 +19,6 @@ export const FINANCE_ROLES: readonly Role[] = ["master_admin", "admin", "finance
 // master_admin is a developer-only role: never offered in the User Management
 // role dropdown, so nobody can promote themselves or anyone else into it from the UI.
 export const ASSIGNABLE_ROLES: readonly Role[] = ["admin", "finance", "staff"];
+
+// Roles allowed to open User Management and change anyone's role/status
+export const USER_MANAGEMENT_ROLES: readonly Role[] = ["master_admin", "admin"];

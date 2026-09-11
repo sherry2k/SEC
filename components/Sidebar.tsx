@@ -45,12 +45,15 @@ export default function Sidebar({ user }: { user: CurrentUser }) {
       </nav>
 
       <div className="border-t border-[var(--sec-line)] px-3 py-3">
-        <div className="flex items-center justify-between rounded-md px-3 py-2">
+        <Link
+          href="/profile"
+          className="flex items-center justify-between rounded-md px-3 py-2 transition-colors hover:bg-[var(--sec-blue)]/[0.06]"
+        >
           <div className="leading-tight">
             <p className="text-sm font-medium text-[var(--sec-ink)]">{user.name}</p>
             <p className="text-xs text-[var(--sec-muted)]">{ROLE_LABELS[user.role]}</p>
           </div>
-        </div>
+        </Link>
         <SignOutButton />
       </div>
     </aside>
