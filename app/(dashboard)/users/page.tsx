@@ -1,3 +1,4 @@
+import { ne } from "drizzle-orm";
 import { requireRole } from "@/lib/auth";
 import { USER_MANAGEMENT_ROLES } from "@/lib/roles";
 import { db } from "@/db";
@@ -6,6 +7,12 @@ import UsersTable from "@/components/UsersTable";
 
 export default async function UsersPage() {
   const currentUser = await requireRole(USER_MANAGEMENT_ROLES);
+
+  // Master admin is invisible on this page to anyone but master admin
+  // itself — an ordinary Admin never sees that a developer-level account
+  // exists, let alone who holds it.
+  const roleFilter =
+    currentUser.role === "master_admin" ? undefined : ne(users.role, "master_admin");
 
   const allUsers = await db
     .select({
@@ -17,7 +24,8 @@ export default async function UsersPage() {
       lastLoginAt: users.lastLoginAt,
       createdAt: users.createdAt,
     })
-    .from(users);
+    .from(users)
+    .where(roleFilter);
 
   // Pending requests first, then everyone else, newest first.
   const sorted = [...allUsers].sort((a, b) => {
