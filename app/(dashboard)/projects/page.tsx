@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { projects, projectCategories, projectChecklistItems } from "@/db/schema";
+import { projects, projectCategories, projectChecklistItems, checklistTemplates, users } from "@/db/schema";
 import { desc } from "drizzle-orm";
 import { requirePermission } from "@/lib/auth";
 import { financeCanEditProjects } from "@/lib/settings";
@@ -16,11 +17,33 @@ export default async function ProjectsPage() {
   const canEdit = can(user.role, "projects.edit", allowFinanceEdit);
   const canDelete = can(user.role, "projects.delete", allowFinanceEdit);
 
-  const rows = await db.select().from(projects).orderBy(desc(projects.createdAt));
+  const rows = await db
+    .select({
+      id: projects.id,
+      projectCode: projects.projectCode,
+      name: projects.name,
+      clientName: projects.clientName,
+      buildingName: projects.buildingName,
+      unitNo: projects.unitNo,
+      location: projects.location,
+      status: projects.status,
+      updatedAt: projects.updatedAt,
+      updatedByName: users.name,
+    })
+    .from(projects)
+    .leftJoin(users, eq(projects.updatedBy, users.id))
+    .orderBy(desc(projects.updatedAt));
+
   const categoryLinks = await db.select().from(projectCategories);
   const checklistRows = await db
-    .select({ projectId: projectChecklistItems.projectId, status: projectChecklistItems.status })
-    .from(projectChecklistItems);
+    .select({
+      projectId: projectChecklistItems.projectId,
+      status: projectChecklistItems.status,
+      name: checklistTemplates.name,
+      sortOrder: checklistTemplates.sortOrder,
+    })
+    .from(projectChecklistItems)
+    .innerJoin(checklistTemplates, eq(projectChecklistItems.templateId, checklistTemplates.id));
 
   const categoriesByProject = new Map<string, ProjectCategory[]>();
   for (const link of categoryLinks) {
@@ -30,11 +53,29 @@ export default async function ProjectsPage() {
   }
 
   const progressByProject = new Map<string, { approved: number; total: number }>();
+  // Whichever item is currently "submitted" or "resubmission" is the one
+  // actively blocking progress — that's what shows in Current Activity.
+  // Submitted takes priority over resubmission when both exist, and ties
+  // break by checklist order (earlier items first).
+  const currentActivityByProject = new Map<string, string>();
+  const activityPriority: Record<string, number> = { submitted: 0, resubmission: 1 };
+
+  const bestForProject = new Map<string, { priority: number; sortOrder: number; name: string }>();
   for (const item of checklistRows) {
-    const entry = progressByProject.get(item.projectId) ?? { approved: 0, total: 0 };
-    entry.total += 1;
-    if (item.status === "approved") entry.approved += 1;
-    progressByProject.set(item.projectId, entry);
+    const progress = progressByProject.get(item.projectId) ?? { approved: 0, total: 0 };
+    progress.total += 1;
+    if (item.status === "approved") progress.approved += 1;
+    progressByProject.set(item.projectId, progress);
+
+    const priority = activityPriority[item.status];
+    if (priority === undefined) continue;
+    const current = bestForProject.get(item.projectId);
+    if (!current || priority < current.priority || (priority === current.priority && item.sortOrder < current.sortOrder)) {
+      bestForProject.set(item.projectId, { priority, sortOrder: item.sortOrder, name: item.name });
+    }
+  }
+  for (const [projectId, best] of bestForProject) {
+    currentActivityByProject.set(projectId, best.name);
   }
 
   const tableRows = rows.map((p) => ({
@@ -46,8 +87,11 @@ export default async function ProjectsPage() {
     unitNo: p.unitNo,
     location: p.location,
     status: p.status,
+    updatedAt: p.updatedAt.toISOString(),
+    updatedByName: p.updatedByName,
     categories: categoriesByProject.get(p.id) ?? [],
     progress: progressByProject.get(p.id) ?? { approved: 0, total: 0 },
+    currentActivity: currentActivityByProject.get(p.id) ?? null,
   }));
 
   return (

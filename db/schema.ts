@@ -68,6 +68,22 @@ export const projects = pgTable("projects", {
   notes: text("notes"),
   createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedBy: integer("updated_by").references(() => users.id),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// A general-purpose audit trail — scoped to Projects today, but the shape
+// (actor, optional related project, a short action code, a human-readable
+// target name, free-text details) works unchanged for Users or Finance
+// events later without a schema change.
+export const activityLog = pgTable("activity_log", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  projectId: uuid("project_id").references(() => projects.id, { onDelete: "set null" }),
+  action: text("action").notNull(),
+  targetName: text("target_name").notNull(),
+  details: text("details"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 // The seed tree: BOC / CBC / Permit / Work Permit / Contractor, each with

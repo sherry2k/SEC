@@ -4,7 +4,8 @@ import { projects } from "@/db/schema";
 import { authorizePermissionApi } from "@/lib/auth";
 import { nextDocumentCode } from "@/lib/sequences";
 import { addCategoryToProject } from "@/lib/projects";
-import { PROJECT_CATEGORIES, type ProjectCategory } from "@/lib/checklist";
+import { logActivity } from "@/lib/activity";
+import { PROJECT_CATEGORIES, CATEGORY_LABELS, type ProjectCategory } from "@/lib/checklist";
 
 export async function POST(request: NextRequest) {
   const auth = await authorizePermissionApi("projects.create");
@@ -46,12 +47,21 @@ export async function POST(request: NextRequest) {
         location: location || null,
         notes: notes || null,
         createdBy: auth.user.id,
+        updatedBy: auth.user.id,
       })
       .returning();
 
     for (const category of validCategories) {
       await addCategoryToProject(project.id, category);
     }
+
+    await logActivity({
+      userId: auth.user.id,
+      projectId: project.id,
+      action: "project_created",
+      targetName: project.name,
+      details: `Categories: ${validCategories.map((c) => CATEGORY_LABELS[c]).join(", ")}`,
+    });
 
     return NextResponse.json({ success: true, project }, { status: 201 });
   } catch (error) {

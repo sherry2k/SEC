@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Pencil } from "lucide-react";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { projects, projectCategories, projectChecklistItems, checklistTemplates } from "@/db/schema";
+import { projects, projectCategories, projectChecklistItems, checklistTemplates, users } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import { financeCanEditProjects } from "@/lib/settings";
 import { can } from "@/lib/permissions";
@@ -22,6 +22,10 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
   const [project] = await db.select().from(projects).where(eq(projects.id, id)).limit(1);
   if (!project) notFound();
+
+  const [updatedByUser] = project.updatedBy
+    ? await db.select({ name: users.name }).from(users).where(eq(users.id, project.updatedBy)).limit(1)
+    : [null];
 
   const links = await db.select().from(projectCategories).where(eq(projectCategories.projectId, id));
   const linkedCategories = links.map((l) => l.category);
@@ -90,6 +94,12 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           ))}
         </dl>
       )}
+
+      <p className="mt-4 text-xs text-[var(--sec-muted)]">
+        Last updated{" "}
+        {project.updatedAt.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+        {updatedByUser && ` by ${updatedByUser.name}`}
+      </p>
 
       {project.notes && <p className="mt-4 text-sm text-[var(--sec-muted)]">{project.notes}</p>}
 

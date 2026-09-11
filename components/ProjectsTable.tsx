@@ -15,9 +15,16 @@ type ProjectRow = {
   unitNo: string | null;
   location: string | null;
   status: ProjectStatus;
+  updatedAt: string;
+  updatedByName: string | null;
   categories: ProjectCategory[];
   progress: { approved: number; total: number };
+  currentActivity: string | null;
 };
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
 
 export default function ProjectsTable({
   rows,
@@ -94,19 +101,22 @@ export default function ProjectsTable({
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-[var(--sec-line)] bg-white">
-          <table className="w-full min-w-[720px] text-left text-sm">
+          <table className="w-full min-w-[980px] text-left text-sm">
             <thead>
               <tr className="border-b border-[var(--sec-line)] text-xs uppercase tracking-wide text-[var(--sec-muted)]">
+                <th className="px-4 py-3 font-medium">S.No.</th>
                 <th className="px-4 py-3 font-medium">Project</th>
                 <th className="px-4 py-3 font-medium">Categories</th>
                 <th className="px-4 py-3 font-medium">Location</th>
                 <th className="px-4 py-3 font-medium">Progress</th>
+                <th className="px-4 py-3 font-medium">Current activity</th>
                 <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Last updated</th>
                 {(canEdit || canDelete) && <th className="px-4 py-3 font-medium" />}
               </tr>
             </thead>
             <tbody>
-              {filtered.map((p) => {
+              {filtered.map((p, index) => {
                 const pct = p.progress.total > 0 ? Math.round((p.progress.approved / p.progress.total) * 100) : 0;
                 return (
                   <tr
@@ -114,6 +124,7 @@ export default function ProjectsTable({
                     onClick={() => router.push(`/projects/${p.id}`)}
                     className="cursor-pointer border-b border-[var(--sec-line)] last:border-0 hover:bg-slate-50"
                   >
+                    <td className="px-4 py-3 text-[var(--sec-muted)]">{index + 1}</td>
                     <td className="px-4 py-3">
                       <p className="font-medium text-[var(--sec-ink)]">{p.name}</p>
                       <p className="font-mono text-xs text-[var(--sec-muted)]">{p.projectCode}</p>
@@ -148,7 +159,20 @@ export default function ProjectsTable({
                         <span className="text-xs text-[var(--sec-muted)]">—</span>
                       )}
                     </td>
+                    <td className="px-4 py-3">
+                      {p.currentActivity ? (
+                        <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                          {p.currentActivity}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-[var(--sec-muted)]">—</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-[var(--sec-muted)]">{PROJECT_STATUS_LABELS[p.status]}</td>
+                    <td className="px-4 py-3 text-[var(--sec-muted)]">
+                      <p className="whitespace-nowrap">{formatDate(p.updatedAt)}</p>
+                      {p.updatedByName && <p className="text-xs">by {p.updatedByName}</p>}
+                    </td>
                     {(canEdit || canDelete) && (
                       <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-1.5">

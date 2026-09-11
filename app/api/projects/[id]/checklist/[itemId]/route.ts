@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq, and } from "drizzle-orm";
 import { db } from "@/db";
-import { projectChecklistItems } from "@/db/schema";
+import { projects, projectChecklistItems, checklistTemplates } from "@/db/schema";
 import { authorizePermissionApi } from "@/lib/auth";
-import { ITEM_STATUSES, type ItemStatus } from "@/lib/checklist";
+import { touchProject, logActivity } from "@/lib/activity";
+import { ITEM_STATUSES, ITEM_STATUS_LABELS, type ItemStatus } from "@/lib/checklist";
 
 export async function PATCH(
   request: NextRequest,
@@ -22,6 +23,19 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid status." }, { status: 400 });
   }
 
+  // Fetch the item's current status and name before overwriting — needed
+  // for a readable activity log entry ("X: not started → submitted").
+  const [before] = await db
+    .select({ status: projectChecklistItems.status, name: checklistTemplates.name })
+    .from(projectChecklistItems)
+    .innerJoin(checklistTemplates, eq(projectChecklistItems.templateId, checklistTemplates.id))
+    .where(and(eq(projectChecklistItems.id, itemId), eq(projectChecklistItems.projectId, projectId)))
+    .limit(1);
+
+  if (!before) {
+    return NextResponse.json({ error: "Checklist item not found." }, { status: 404 });
+  }
+
   const update: Partial<typeof projectChecklistItems.$inferInsert> = {
     updatedBy: auth.user.id,
     updatedAt: new Date(),
@@ -29,14 +43,22 @@ export async function PATCH(
   if (status !== undefined) update.status = status;
   if (remarks !== undefined) update.remarks = remarks || null;
 
-  const result = await db
+  await db
     .update(projectChecklistItems)
     .set(update)
-    .where(and(eq(projectChecklistItems.id, itemId), eq(projectChecklistItems.projectId, projectId)))
-    .returning({ id: projectChecklistItems.id });
+    .where(and(eq(projectChecklistItems.id, itemId), eq(projectChecklistItems.projectId, projectId)));
 
-  if (result.length === 0) {
-    return NextResponse.json({ error: "Checklist item not found." }, { status: 404 });
+  await touchProject(projectId, auth.user.id);
+
+  if (status !== undefined && status !== before.status) {
+    const [project] = await db.select({ name: projects.name }).from(projects).where(eq(projects.id, projectId)).limit(1);
+    await logActivity({
+      userId: auth.user.id,
+      projectId,
+      action: "checklist_status_changed",
+      targetName: project?.name ?? "",
+      details: `${before.name}: ${ITEM_STATUS_LABELS[before.status]} → ${ITEM_STATUS_LABELS[status]}`,
+    });
   }
 
   return NextResponse.json({ success: true });

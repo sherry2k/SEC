@@ -1,6 +1,7 @@
 import { requireRole } from "@/lib/auth";
 import Sidebar from "@/components/Sidebar";
 import MobileShell from "@/components/MobileShell";
+import DashboardTopbar from "@/components/DashboardTopbar";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   // No role list passed: any approved user reaches the shell.
@@ -13,6 +14,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <Sidebar user={user} />
       </MobileShell>
       <main className="flex-1 overflow-y-auto">
+        <DashboardTopbar />
         <div className="mx-auto max-w-6xl px-4 py-6 sm:px-8 sm:py-8">{children}</div>
       </main>
     </div>

@@ -4,7 +4,8 @@ import { db } from "@/db";
 import { projects } from "@/db/schema";
 import { authorizePermissionApi } from "@/lib/auth";
 import { addCategoryToProject } from "@/lib/projects";
-import { PROJECT_CATEGORIES, type ProjectCategory } from "@/lib/checklist";
+import { touchProject, logActivity } from "@/lib/activity";
+import { PROJECT_CATEGORIES, CATEGORY_LABELS, type ProjectCategory } from "@/lib/checklist";
 
 // Links one more category onto an existing project (framework doc 3.3 —
 // projects aren't locked to the category chosen at creation).
@@ -14,7 +15,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const { id: projectId } = await params;
 
-  const [project] = await db.select({ id: projects.id }).from(projects).where(eq(projects.id, projectId)).limit(1);
+  const [project] = await db.select({ id: projects.id, name: projects.name }).from(projects).where(eq(projects.id, projectId)).limit(1);
   if (!project) {
     return NextResponse.json({ error: "Project not found." }, { status: 404 });
   }
@@ -27,6 +28,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   await addCategoryToProject(projectId, category);
+  await touchProject(projectId, auth.user.id);
+  await logActivity({
+    userId: auth.user.id,
+    projectId,
+    action: "category_added",
+    targetName: project.name,
+    details: `Linked ${CATEGORY_LABELS[category]}`,
+  });
 
   return NextResponse.json({ success: true });
 }
