@@ -1,6 +1,6 @@
 "use client";
 
-import { CATEGORY_LABELS, type ProjectCategory } from "@/lib/checklist";
+import { CATEGORY_LABELS, CATEGORY_ACCENT_BORDER, type ProjectCategory } from "@/lib/checklist";
 import ChecklistItemRow, { type ChecklistItem } from "@/components/ChecklistItemRow";
 
 type CategorySection = { category: ProjectCategory; items: ChecklistItem[] };
@@ -44,7 +44,7 @@ export default function ProjectChecklist({
   return (
     <div className="space-y-6">
       {sections.map(({ category, items }) => (
-        <div key={category} className="rounded-lg border border-[var(--sec-line)] bg-white">
+        <div key={category} className={`rounded-lg border border-l-4 border-[var(--sec-line)] bg-white ${CATEGORY_ACCENT_BORDER[category]}`}>
           <div className="border-b border-[var(--sec-line)] px-4 py-3">
             <h3 className="font-bold text-base text-[var(--sec-ink)]">{CATEGORY_LABELS[category]}</h3>
           </div>

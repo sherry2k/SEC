@@ -3,8 +3,8 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, Pencil } from "lucide-react";
-import { PROJECT_CATEGORIES, CATEGORY_LABELS, PROJECT_STATUS_LABELS, type ProjectCategory, type ProjectStatus } from "@/lib/checklist";
+import { Search, Pencil, Trash2, Loader2, Check } from "lucide-react";
+import { PROJECT_CATEGORIES, CATEGORY_LABELS, CATEGORY_BADGE_STYLES, PROJECT_STATUS_LABELS, type ProjectCategory, type ProjectStatus } from "@/lib/checklist";
 
 type ProjectRow = {
   id: string;
@@ -19,10 +19,33 @@ type ProjectRow = {
   progress: { approved: number; total: number };
 };
 
-export default function ProjectsTable({ rows, canEdit }: { rows: ProjectRow[]; canEdit: boolean }) {
+export default function ProjectsTable({
+  rows,
+  canEdit,
+  canDelete,
+}: {
+  rows: ProjectRow[];
+  canEdit: boolean;
+  canDelete: boolean;
+}) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<ProjectCategory | "all">("all");
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleDelete = async (id: string) => {
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/projects/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        router.refresh();
+      }
+    } finally {
+      setDeletingId(null);
+      setConfirmingId(null);
+    }
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -79,7 +102,7 @@ export default function ProjectsTable({ rows, canEdit }: { rows: ProjectRow[]; c
                 <th className="px-4 py-3 font-medium">Location</th>
                 <th className="px-4 py-3 font-medium">Progress</th>
                 <th className="px-4 py-3 font-medium">Status</th>
-                {canEdit && <th className="px-4 py-3 font-medium" />}
+                {(canEdit || canDelete) && <th className="px-4 py-3 font-medium" />}
               </tr>
             </thead>
             <tbody>
@@ -101,7 +124,7 @@ export default function ProjectsTable({ rows, canEdit }: { rows: ProjectRow[]; c
                         {p.categories.map((c) => (
                           <span
                             key={c}
-                            className="rounded-full border border-[var(--sec-blue)]/20 bg-[var(--sec-blue)]/[0.06] px-2 py-0.5 text-xs font-medium text-[var(--sec-blue)]"
+                            className={`rounded-full border px-2 py-0.5 text-xs font-medium ${CATEGORY_BADGE_STYLES[c]}`}
                           >
                             {CATEGORY_LABELS[c]}
                           </span>
@@ -126,16 +149,38 @@ export default function ProjectsTable({ rows, canEdit }: { rows: ProjectRow[]; c
                       )}
                     </td>
                     <td className="px-4 py-3 text-[var(--sec-muted)]">{PROJECT_STATUS_LABELS[p.status]}</td>
-                    {canEdit && (
-                      <td className="px-4 py-3 text-right">
-                        <Link
-                          href={`/projects/${p.id}/edit`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center gap-1 rounded-md border border-[var(--sec-line)] px-2.5 py-1 text-xs font-medium text-[var(--sec-ink)] hover:border-[var(--sec-blue)]"
-                        >
-                          <Pencil size={12} />
-                          Edit
-                        </Link>
+                    {(canEdit || canDelete) && (
+                      <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-end gap-1.5">
+                          {canEdit && (
+                            <Link
+                              href={`/projects/${p.id}/edit`}
+                              className="inline-flex items-center gap-1 rounded-md border border-[var(--sec-line)] px-2.5 py-1 text-xs font-medium text-[var(--sec-ink)] hover:border-[var(--sec-blue)]"
+                            >
+                              <Pencil size={12} />
+                              Edit
+                            </Link>
+                          )}
+                          {canDelete &&
+                            (confirmingId === p.id ? (
+                              <button
+                                onClick={() => handleDelete(p.id)}
+                                disabled={deletingId === p.id}
+                                className="inline-flex items-center gap-1 rounded-md border border-red-300 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-50"
+                              >
+                                {deletingId === p.id ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                                Confirm
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => setConfirmingId(p.id)}
+                                className="inline-flex items-center gap-1 rounded-md border border-[var(--sec-line)] px-2.5 py-1 text-xs font-medium text-[var(--sec-muted)] hover:border-red-300 hover:bg-red-50 hover:text-red-600"
+                              >
+                                <Trash2 size={12} />
+                                Delete
+                              </button>
+                            ))}
+                        </div>
                       </td>
                     )}
                   </tr>

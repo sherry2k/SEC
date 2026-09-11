@@ -12,6 +12,25 @@ export const CATEGORY_LABELS: Record<ProjectCategory, string> = {
   contractor: "Contractor",
 };
 
+// A distinct colour per category, applied everywhere a category shows up —
+// list badges, checklist section headers, the new-project checkboxes — so
+// the eye can tell BOC from Contractor at a glance without reading the text.
+export const CATEGORY_BADGE_STYLES: Record<ProjectCategory, string> = {
+  boc: "border-[var(--sec-blue)]/25 bg-[var(--sec-blue)]/[0.08] text-[var(--sec-blue)]",
+  cbc: "border-violet-200 bg-violet-50 text-violet-700",
+  permit: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  work_permit: "border-amber-200 bg-amber-50 text-amber-700",
+  contractor: "border-rose-200 bg-rose-50 text-rose-700",
+};
+
+export const CATEGORY_ACCENT_BORDER: Record<ProjectCategory, string> = {
+  boc: "border-l-[var(--sec-blue)]",
+  cbc: "border-l-violet-400",
+  permit: "border-l-emerald-400",
+  work_permit: "border-l-amber-400",
+  contractor: "border-l-rose-400",
+};
+
 export const CATEGORY_FULL_NAMES: Record<ProjectCategory, string> = {
   boc: "Building Occupancy Certificate",
   cbc: "Certificate of Building Condition",

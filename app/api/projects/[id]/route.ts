@@ -41,3 +41,20 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   return NextResponse.json({ success: true });
 }
+
+// project_categories and project_checklist_items are ON DELETE CASCADE, so
+// removing the project row cleans up its checklist and category links too.
+export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await authorizePermissionApi("projects.delete");
+  if (!auth.ok) return auth.response;
+
+  const { id } = await params;
+
+  const result = await db.delete(projects).where(eq(projects.id, id)).returning({ id: projects.id });
+
+  if (result.length === 0) {
+    return NextResponse.json({ error: "Project not found." }, { status: 404 });
+  }
+
+  return NextResponse.json({ success: true });
+}

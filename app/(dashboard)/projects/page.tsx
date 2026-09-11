@@ -14,6 +14,7 @@ export default async function ProjectsPage() {
   const allowFinanceEdit = await financeCanEditProjects();
   const canCreate = can(user.role, "projects.create", allowFinanceEdit);
   const canEdit = can(user.role, "projects.edit", allowFinanceEdit);
+  const canDelete = can(user.role, "projects.delete", allowFinanceEdit);
 
   const rows = await db.select().from(projects).orderBy(desc(projects.createdAt));
   const categoryLinks = await db.select().from(projectCategories);
@@ -80,7 +81,7 @@ export default async function ProjectsPage() {
         </div>
       ) : (
         <div className="mt-6">
-          <ProjectsTable rows={tableRows} canEdit={canEdit} />
+          <ProjectsTable rows={tableRows} canEdit={canEdit} canDelete={canDelete} />
         </div>
       )}
     </div>

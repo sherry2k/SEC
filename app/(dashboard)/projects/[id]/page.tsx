@@ -10,11 +10,13 @@ import { can } from "@/lib/permissions";
 import { PROJECT_CATEGORIES, CATEGORY_LABELS, PROJECT_STATUS_LABELS, type ProjectCategory } from "@/lib/checklist";
 import ProjectChecklist from "@/components/ProjectChecklist";
 import AddCategoryButton from "@/components/AddCategoryButton";
+import DeleteProjectButton from "@/components/DeleteProjectButton";
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requirePermission("projects.view");
   const allowFinanceEdit = await financeCanEditProjects();
   const canEdit = can(user.role, "projects.edit", allowFinanceEdit);
+  const canDelete = can(user.role, "projects.delete", allowFinanceEdit);
 
   const { id } = await params;
 
@@ -59,9 +61,9 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   return (
     <div>
       <p className="font-mono text-xs text-[var(--sec-muted)]">{project.projectCode}</p>
-      <div className="mt-1 flex items-start justify-between gap-4">
+      <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
         <h1 className="font-bold text-2xl text-[var(--sec-ink)]">{project.name}</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="rounded-full border border-[var(--sec-line)] bg-white px-3 py-1 text-xs font-medium text-[var(--sec-muted)]">
             {PROJECT_STATUS_LABELS[project.status]}
           </span>
@@ -74,6 +76,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               Edit
             </Link>
           )}
+          {canDelete && <DeleteProjectButton projectId={project.id} />}
         </div>
       </div>
 

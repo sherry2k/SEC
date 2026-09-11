@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
-import { PROJECT_CATEGORIES, CATEGORY_LABELS, CATEGORY_FULL_NAMES, type ProjectCategory } from "@/lib/checklist";
+import { PROJECT_CATEGORIES, CATEGORY_LABELS, CATEGORY_FULL_NAMES, CATEGORY_BADGE_STYLES, type ProjectCategory } from "@/lib/checklist";
 
 export default function NewProjectForm() {
   const router = useRouter();
@@ -84,9 +84,7 @@ export default function NewProjectForm() {
             <label
               key={c}
               className={`flex cursor-pointer items-start gap-3 rounded-md border px-3.5 py-3 transition-colors ${
-                categories.includes(c)
-                  ? "border-[var(--sec-blue)] bg-[var(--sec-blue)]/[0.06]"
-                  : "border-[var(--sec-line)] bg-white hover:border-[var(--sec-blue)]/40"
+                categories.includes(c) ? CATEGORY_BADGE_STYLES[c] : "border-[var(--sec-line)] bg-white hover:border-[var(--sec-blue)]/40"
               }`}
             >
               <input
