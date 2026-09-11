@@ -23,6 +23,18 @@ export const CATEGORY_BADGE_STYLES: Record<ProjectCategory, string> = {
   contractor: "border-rose-200 bg-rose-50 text-rose-700",
 };
 
+// Solid version — background is the full category colour, text is white.
+// Used when a category is the "on" state (selected on the new-project
+// form); the tinted CATEGORY_BADGE_STYLES above is the "off"/informational
+// state used everywhere else (list badges, checklist card accents).
+export const CATEGORY_SOLID_STYLES: Record<ProjectCategory, string> = {
+  boc: "bg-[var(--sec-blue)] border-[var(--sec-blue)]",
+  cbc: "bg-violet-600 border-violet-600",
+  permit: "bg-emerald-600 border-emerald-600",
+  work_permit: "bg-amber-600 border-amber-600",
+  contractor: "bg-rose-600 border-rose-600",
+};
+
 export const CATEGORY_ACCENT_BORDER: Record<ProjectCategory, string> = {
   boc: "border-l-[var(--sec-blue)]",
   cbc: "border-l-violet-400",

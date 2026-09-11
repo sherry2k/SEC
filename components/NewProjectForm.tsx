@@ -2,8 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
-import { PROJECT_CATEGORIES, CATEGORY_LABELS, CATEGORY_FULL_NAMES, CATEGORY_BADGE_STYLES, type ProjectCategory } from "@/lib/checklist";
+import { Loader2, Check } from "lucide-react";
+import {
+  PROJECT_CATEGORIES,
+  CATEGORY_LABELS,
+  CATEGORY_FULL_NAMES,
+  CATEGORY_BADGE_STYLES,
+  CATEGORY_SOLID_STYLES,
+  type ProjectCategory,
+} from "@/lib/checklist";
 
 export default function NewProjectForm() {
   const router = useRouter();
@@ -80,25 +87,40 @@ export default function NewProjectForm() {
       <div>
         <label className={labelClass}>Categories</label>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {PROJECT_CATEGORIES.map((c) => (
-            <label
-              key={c}
-              className={`flex cursor-pointer items-start gap-3 rounded-md border px-3.5 py-3 transition-colors ${
-                categories.includes(c) ? CATEGORY_BADGE_STYLES[c] : "border-[var(--sec-line)] bg-white hover:border-[var(--sec-blue)]/40"
-              }`}
-            >
-              <input
-                type="checkbox"
-                checked={categories.includes(c)}
-                onChange={() => toggleCategory(c)}
-                className="mt-0.5 accent-[var(--sec-blue)]"
-              />
-              <span>
-                <span className="block text-sm font-medium text-[var(--sec-ink)]">{CATEGORY_LABELS[c]}</span>
-                <span className="block text-xs text-[var(--sec-muted)]">{CATEGORY_FULL_NAMES[c]}</span>
-              </span>
-            </label>
-          ))}
+          {PROJECT_CATEGORIES.map((c) => {
+            const selected = categories.includes(c);
+            return (
+              <label
+                key={c}
+                className={`flex cursor-pointer items-start gap-3 rounded-md border px-3.5 py-3 transition-colors ${
+                  selected ? CATEGORY_SOLID_STYLES[c] : `${CATEGORY_BADGE_STYLES[c]} hover:brightness-95`
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={selected}
+                  onChange={() => toggleCategory(c)}
+                  className="sr-only"
+                />
+                <span
+                  className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+                    selected ? "border-white bg-white/20" : "border-current"
+                  }`}
+                  aria-hidden="true"
+                >
+                  {selected && <Check size={12} strokeWidth={3} className="text-white" />}
+                </span>
+                <span>
+                  <span className={`block text-sm font-medium ${selected ? "text-white" : "text-[var(--sec-ink)]"}`}>
+                    {CATEGORY_LABELS[c]}
+                  </span>
+                  <span className={`block text-xs ${selected ? "text-white/80" : "text-[var(--sec-muted)]"}`}>
+                    {CATEGORY_FULL_NAMES[c]}
+                  </span>
+                </span>
+              </label>
+            );
+          })}
         </div>
       </div>
 
