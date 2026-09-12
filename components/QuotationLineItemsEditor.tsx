@@ -18,7 +18,7 @@ const CLASSIFICATION_SUGGESTIONS = ["Mandatory", "Optional", "If Required", "Opt
 
 export function emptyItem(): QuotationItemDraft {
   return {
-    key: crypto.randomUUID(),
+    key: `item-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
     description: "",
     classification: "Mandatory",
     feeExclVat: "",
