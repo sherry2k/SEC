@@ -10,7 +10,10 @@ export type ActivityAction =
   | "checklist_status_changed"
   | "quotation_created"
   | "quotation_updated"
-  | "quotation_deleted";
+  | "quotation_deleted"
+  | "performa_invoice_created"
+  | "performa_invoice_updated"
+  | "performa_invoice_deleted";
 
 export const ACTIVITY_LABELS: Record<ActivityAction, string> = {
   project_created: "created",
@@ -21,4 +24,7 @@ export const ACTIVITY_LABELS: Record<ActivityAction, string> = {
   quotation_created: "created quotation",
   quotation_updated: "updated quotation",
   quotation_deleted: "deleted quotation",
+  performa_invoice_created: "created performa invoice",
+  performa_invoice_updated: "updated performa invoice",
+  performa_invoice_deleted: "deleted performa invoice",
 };

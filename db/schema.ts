@@ -178,3 +178,36 @@ export const quotationItems = pgTable("quotation_items", {
   duration: text("duration"),
   note: text("note"),
 });
+
+// ---------------------------------------------------------------------------
+// Finance — Performa Invoices (a distinct document from Quotations: a
+// pre-payment bill sent to a client, matching SEC's real "PERFORMA INVOICE"
+// format — customer + project + a simple item list + one VAT line + total)
+// ---------------------------------------------------------------------------
+
+export const performaInvoices = pgTable("performa_invoices", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  invoiceNo: text("invoice_no").notNull().unique(),
+  issueDate: text("issue_date").notNull(),
+  customerName: text("customer_name"),
+  project: text("project"),
+  customerAddress: text("customer_address"),
+  vatRatePercent: numeric("vat_rate_percent", { precision: 5, scale: 2 }).notNull().default("5"),
+  signatoryName: text("signatory_name"),
+  status: text("status").notNull().default("draft"),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedBy: integer("updated_by").references(() => users.id),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const performaInvoiceItems = pgTable("performa_invoice_items", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  invoiceId: uuid("invoice_id")
+    .notNull()
+    .references(() => performaInvoices.id, { onDelete: "cascade" }),
+  sortOrder: integer("sort_order").notNull().default(0),
+  itemDate: text("item_date"),
+  description: text("description").notNull(),
+  amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+});

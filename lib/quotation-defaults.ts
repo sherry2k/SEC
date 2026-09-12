@@ -43,23 +43,8 @@ export type QuotationFormValues = {
   items: QuotationItemDraft[];
 };
 
-const DEFAULT_INTRO =
-  "We are pleased to submit our technical and commercial proposal for the requested mandatory and optional consultancy services. Each service is separately priced and will be executed in accordance with the approved scope and applicable authority requirements.";
-
-const DEFAULT_PAYMENT_TERMS =
-  "50% down payment upon approval of each service item and before commencement.\n50% upon completion of the respective service item.";
-
-const DEFAULT_COMMERCIAL_CONDITIONS = [
-  "All prices are lump sum fees for the scope specifically stated under each service item.",
-  "No optional service will commence without the Client's prior written approval.",
-  "The stated durations commence upon receipt of the down payment, all required documents and information, and full access to the property.",
-  "Authority review periods and delays are not included within the stated working durations.",
-  "Authority comments, revisions, and resubmissions within the approved scope are included.",
-  "Client requested changes or changes to the approved scope will be treated as a variation.",
-  "No additional government fees are currently anticipated under the stated scope.",
-  "This proposal is valid for 30 days from the proposal date.",
-].join("\n");
-
+// No boilerplate content is pre-filled anywhere — every field starts blank
+// so nothing needs to be deleted before typing the real content.
 export function defaultQuotationValues(): QuotationFormValues {
   return {
     title: "Technical and Commercial Proposal",
@@ -70,11 +55,11 @@ export function defaultQuotationValues(): QuotationFormValues {
     location: "",
     buildingConfig: "",
     vatRatePercent: 5,
-    intro: DEFAULT_INTRO,
-    paymentTerms: DEFAULT_PAYMENT_TERMS,
-    commercialConditions: DEFAULT_COMMERCIAL_CONDITIONS,
-    signatoryName: "Mohammad Naser Hasan Abu Eisa",
-    signatoryTitle: "General Manager",
+    intro: "",
+    paymentTerms: "",
+    commercialConditions: "",
+    signatoryName: "",
+    signatoryTitle: "",
     items: [emptyItem()],
   };
 }

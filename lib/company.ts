@@ -7,3 +7,14 @@ export const COMPANY = {
   mobile: "+971 50 7119095",
   email: "solid.con.eng@gmail.com",
 };
+
+// Static bank account info printed on Performa Invoices — not something a
+// user re-types per document, so it isn't a form field, just fixed letterhead
+// data like the phone number above.
+export const BANK_DETAILS = {
+  accountName: "SOLID ENGINEERING CONSULTANCY",
+  bankName: "ADCB",
+  accountNumber: "13891995820001",
+  iban: "AE980030013891995820001",
+  currency: "AED",
+};
