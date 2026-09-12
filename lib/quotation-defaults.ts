@@ -43,8 +43,24 @@ export type QuotationFormValues = {
   items: QuotationItemDraft[];
 };
 
-// No boilerplate content is pre-filled anywhere — every field starts blank
-// so nothing needs to be deleted before typing the real content.
+const DEFAULT_PAYMENT_TERMS =
+  "50% down payment upon approval of each service item and before commencement.\n50% upon completion of the respective service item.";
+
+const DEFAULT_COMMERCIAL_CONDITIONS = [
+  "All prices are lump sum fees for the scope specifically stated under each service item.",
+  "No optional service will commence without the Client's prior written approval.",
+  "The stated durations commence upon receipt of the down payment, all required documents and information, and full access to the property.",
+  "Authority review periods and delays are not included within the stated working durations.",
+  "Authority comments, revisions, and resubmissions within the approved scope are included.",
+  "Client requested changes or changes to the approved scope will be treated as a variation.",
+  "No additional government fees are currently anticipated under the stated scope.",
+  "This proposal is valid for 30 days from the proposal date.",
+].join("\n");
+
+// Payment terms and commercial conditions ARE pre-filled — they're SEC's
+// standing boilerplate, edited per quotation rather than typed from scratch
+// each time. The intro paragraph and signatory fields stay blank, since
+// those genuinely vary per document.
 export function defaultQuotationValues(): QuotationFormValues {
   return {
     title: "Technical and Commercial Proposal",
@@ -56,8 +72,8 @@ export function defaultQuotationValues(): QuotationFormValues {
     buildingConfig: "",
     vatRatePercent: 5,
     intro: "",
-    paymentTerms: "",
-    commercialConditions: "",
+    paymentTerms: DEFAULT_PAYMENT_TERMS,
+    commercialConditions: DEFAULT_COMMERCIAL_CONDITIONS,
     signatoryName: "",
     signatoryTitle: "",
     items: [emptyItem()],

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { calcPerformaInvoiceTotals } from "@/lib/performa-invoice-calc";
+import { calcItemTotals } from "@/lib/quotation-calc";
 import { emptyPIItem, type PerformaInvoiceFormValues, type PerformaInvoiceItemDraft } from "@/lib/performa-invoice-defaults";
 
 export default function PerformaInvoiceForm({
@@ -121,52 +122,64 @@ export default function PerformaInvoiceForm({
         </div>
 
         <div className="overflow-x-auto rounded-lg border border-[var(--sec-line)] bg-white">
-          <table className="w-full min-w-[560px] text-left text-sm">
+          <table className="w-full min-w-[760px] text-left text-sm">
             <thead>
               <tr className="border-b border-[var(--sec-line)] bg-slate-50 text-xs uppercase tracking-wide text-[var(--sec-muted)]">
                 <th className="w-32 px-3 py-2 font-medium">Date</th>
                 <th className="px-3 py-2 font-medium">Description</th>
-                <th className="w-32 px-3 py-2 font-medium">Amount</th>
+                <th className="w-28 px-3 py-2 font-medium">Amount</th>
+                <th className="w-24 px-3 py-2 font-medium">VAT</th>
+                <th className="w-28 px-3 py-2 font-medium">Total Incl. VAT</th>
                 <th className="w-12 px-3 py-2" />
               </tr>
             </thead>
             <tbody>
-              {values.items.map((item) => (
-                <tr key={item.key} className="border-b border-[var(--sec-line)] last:border-0">
-                  <td className="px-3 py-2">
-                    <input value={item.itemDate} onChange={(e) => updateItem(item.key, { itemDate: e.target.value })} className={smallInput} />
-                  </td>
-                  <td className="px-3 py-2">
-                    <input
-                      value={item.description}
-                      onChange={(e) => updateItem(item.key, { description: e.target.value })}
-                      placeholder="e.g. Site Visit – Supervision for 1 Visit Fees."
-                      className={smallInput}
-                    />
-                  </td>
-                  <td className="px-3 py-2">
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={item.amount}
-                      onChange={(e) => updateItem(item.key, { amount: e.target.value })}
-                      placeholder="0.00"
-                      className={smallInput}
-                    />
-                  </td>
-                  <td className="px-3 py-2">
-                    <button
-                      type="button"
-                      onClick={() => removeItem(item.key)}
-                      className="rounded-md p-1.5 text-[var(--sec-muted)] hover:bg-red-50 hover:text-red-600"
-                      aria-label="Remove item"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {values.items.map((item) => {
+                const amount = Number(item.amount) || 0;
+                const { vatAmount, totalInclVat } = calcItemTotals(amount, values.vatRatePercent);
+                return (
+                  <tr key={item.key} className="border-b border-[var(--sec-line)] last:border-0">
+                    <td className="px-3 py-2">
+                      <input value={item.itemDate} onChange={(e) => updateItem(item.key, { itemDate: e.target.value })} className={smallInput} />
+                    </td>
+                    <td className="px-3 py-2">
+                      <input
+                        value={item.description}
+                        onChange={(e) => updateItem(item.key, { description: e.target.value })}
+                        placeholder="e.g. Site Visit – Supervision for 1 Visit Fees."
+                        className={smallInput}
+                      />
+                    </td>
+                    <td className="px-3 py-2">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={item.amount}
+                        onChange={(e) => updateItem(item.key, { amount: e.target.value })}
+                        placeholder="0.00"
+                        className={smallInput}
+                      />
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-[var(--sec-muted)]">
+                      {vatAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap font-medium text-[var(--sec-ink)]">
+                      {totalInclVat.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-3 py-2">
+                      <button
+                        type="button"
+                        onClick={() => removeItem(item.key)}
+                        className="rounded-md p-1.5 text-[var(--sec-muted)] hover:bg-red-50 hover:text-red-600"
+                        aria-label="Remove item"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

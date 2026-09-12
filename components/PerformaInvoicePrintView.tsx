@@ -1,3 +1,4 @@
+import { calcItemTotals } from "@/lib/quotation-calc";
 import { calcPerformaInvoiceTotals } from "@/lib/performa-invoice-calc";
 import { COMPANY, BANK_DETAILS } from "@/lib/company";
 
@@ -56,37 +57,35 @@ export default function PerformaInvoicePrintView({ invoice }: { invoice: Printab
 
       <table className="mt-5 w-full border-collapse text-sm">
         <thead>
-          <tr>
-            <th className="w-32 border border-[var(--sec-line)] bg-slate-50 px-3 py-2 text-left">Date</th>
-            <th className="border border-[var(--sec-line)] bg-slate-50 px-3 py-2 text-left">Description</th>
-            <th className="w-32 border border-[var(--sec-line)] bg-slate-50 px-3 py-2 text-right">Amount</th>
+          <tr className="bg-[var(--sec-blue-deep)] text-white">
+            <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-left">No.</th>
+            <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-left">Date</th>
+            <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-left">Description</th>
+            <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-right">Amount</th>
+            <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-right">VAT {invoice.vatRatePercent}%</th>
+            <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-right">Total Incl. VAT</th>
           </tr>
         </thead>
         <tbody>
-          {invoice.items.map((item, index) => (
-            <tr key={index}>
-              <td className="border border-[var(--sec-line)] px-3 py-2 align-top">{item.itemDate}</td>
-              <td className="border border-[var(--sec-line)] px-3 py-2 align-top">
-                {invoice.items.length > 1 ? `${index + 1}. ` : ""}
-                {item.description}
-              </td>
-              <td className="border border-[var(--sec-line)] px-3 py-2 text-right align-top">AED {money(item.amount)}</td>
-            </tr>
-          ))}
-          <tr>
-            <td className="border border-[var(--sec-line)] px-3 py-2" colSpan={2}>
-              VAT {invoice.vatRatePercent}%
-            </td>
-            <td className="border border-[var(--sec-line)] px-3 py-2 text-right">AED {money(totals.vatAmount)}</td>
-          </tr>
-          <tr className="font-bold">
-            <td className="border border-[var(--sec-line)] px-3 py-2" colSpan={2}>
-              Total Amount
-            </td>
-            <td className="border border-[var(--sec-line)] px-3 py-2 text-right">AED {money(totals.total)}</td>
-          </tr>
+          {invoice.items.map((item, index) => {
+            const { vatAmount, totalInclVat } = calcItemTotals(item.amount, invoice.vatRatePercent);
+            return (
+              <tr key={index}>
+                <td className="border border-[var(--sec-line)] px-2 py-2 align-top">{index + 1}</td>
+                <td className="border border-[var(--sec-line)] px-2 py-2 align-top">{item.itemDate}</td>
+                <td className="border border-[var(--sec-line)] px-2 py-2 align-top">{item.description}</td>
+                <td className="border border-[var(--sec-line)] px-2 py-2 text-right align-top">AED {money(item.amount)}</td>
+                <td className="border border-[var(--sec-line)] px-2 py-2 text-right align-top">AED {money(vatAmount)}</td>
+                <td className="border border-[var(--sec-line)] px-2 py-2 text-right align-top font-semibold">AED {money(totalInclVat)}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
+
+      <p className="mt-3 text-right text-sm font-bold text-[var(--sec-ink)]">
+        Total Amount: AED {money(totals.total)} including {invoice.vatRatePercent}% VAT.
+      </p>
 
       <div className="mt-6 text-sm">
         <p className="font-bold underline">Bank Account Details:</p>
