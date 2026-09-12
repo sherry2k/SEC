@@ -18,6 +18,7 @@ export async function POST(request: NextRequest) {
     const buildingName = typeof body?.buildingName === "string" ? body.buildingName.trim() : "";
     const unitNo = typeof body?.unitNo === "string" ? body.unitNo.trim() : "";
     const plotNo = typeof body?.plotNo === "string" ? body.plotNo.trim() : "";
+    const municipalityNo = typeof body?.municipalityNo === "string" ? body.municipalityNo.trim() : "";
     const location = typeof body?.location === "string" ? body.location.trim() : "";
     const notes = typeof body?.notes === "string" ? body.notes.trim() : "";
     const categories: unknown[] = Array.isArray(body?.categories) ? body.categories : [];
@@ -44,6 +45,7 @@ export async function POST(request: NextRequest) {
         buildingName: buildingName || null,
         unitNo: unitNo || null,
         plotNo: plotNo || null,
+        municipalityNo: municipalityNo || null,
         location: location || null,
         notes: notes || null,
         createdBy: auth.user.id,

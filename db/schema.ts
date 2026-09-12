@@ -63,6 +63,9 @@ export const projects = pgTable("projects", {
   buildingName: text("building_name"),
   unitNo: text("unit_no"),
   plotNo: text("plot_no"),
+  // The real-world reference issued by the municipality — entered by
+  // staff, unrelated to our own auto-generated projectCode above.
+  municipalityNo: text("municipality_no"),
   location: text("location"),
   status: projectStatusEnum("status").notNull().default("active"),
   notes: text("notes"),

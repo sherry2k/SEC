@@ -5,7 +5,7 @@ import { projects } from "@/db/schema";
 import { authorizePermissionApi } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
 
-const EDITABLE_TEXT_FIELDS = ["name", "clientName", "buildingName", "unitNo", "plotNo", "location", "notes"] as const;
+const EDITABLE_TEXT_FIELDS = ["name", "clientName", "buildingName", "unitNo", "plotNo", "municipalityNo", "location", "notes"] as const;
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await authorizePermissionApi("projects.edit");

@@ -10,6 +10,7 @@ type ProjectFields = {
   buildingName: string;
   unitNo: string;
   plotNo: string;
+  municipalityNo: string;
   location: string;
   notes: string;
 };
@@ -86,6 +87,10 @@ export default function EditProjectForm({ projectId, initial }: { projectId: str
         <div>
           <label htmlFor="plotNo" className={labelClass}>Plot No.</label>
           <input id="plotNo" value={fields.plotNo} onChange={set("plotNo")} className={inputClass} />
+        </div>
+        <div>
+          <label htmlFor="municipalityNo" className={labelClass}>Project No. (municipality)</label>
+          <input id="municipalityNo" value={fields.municipalityNo} onChange={set("municipalityNo")} className={inputClass} />
         </div>
         <div>
           <label htmlFor="location" className={labelClass}>Location</label>

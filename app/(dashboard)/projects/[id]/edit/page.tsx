@@ -14,7 +14,7 @@ export default async function EditProjectPage({ params }: { params: Promise<{ id
 
   return (
     <div>
-      <p className="font-mono text-xs text-[var(--sec-muted)]">{project.projectCode}</p>
+      <p className="font-mono text-xs text-[var(--sec-muted)]">Ref: {project.projectCode}</p>
       <h1 className="mt-1 text-2xl font-bold text-[var(--sec-ink)]">Edit project</h1>
 
       <div className="mt-8 max-w-2xl">
@@ -26,6 +26,7 @@ export default async function EditProjectPage({ params }: { params: Promise<{ id
             buildingName: project.buildingName ?? "",
             unitNo: project.unitNo ?? "",
             plotNo: project.plotNo ?? "",
+            municipalityNo: project.municipalityNo ?? "",
             location: project.location ?? "",
             notes: project.notes ?? "",
           }}

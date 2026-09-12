@@ -55,6 +55,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   const availableCategories: ProjectCategory[] = PROJECT_CATEGORIES.filter((c) => !linkedCategories.includes(c));
 
   const details = [
+    ["Project No.", project.municipalityNo],
     ["Client", project.clientName],
     ["Building / mall", project.buildingName],
     ["Unit / shop", project.unitNo],
@@ -64,7 +65,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div>
-      <p className="font-mono text-xs text-[var(--sec-muted)]">{project.projectCode}</p>
+      <p className="font-mono text-xs text-[var(--sec-muted)]">Ref: {project.projectCode}</p>
       <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
         <h1 className="font-bold text-2xl text-[var(--sec-ink)]">{project.name}</h1>
         <div className="flex flex-wrap items-center gap-2">

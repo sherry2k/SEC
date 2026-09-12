@@ -9,6 +9,7 @@ import { PROJECT_CATEGORIES, CATEGORY_LABELS, CATEGORY_BADGE_STYLES, PROJECT_STA
 type ProjectRow = {
   id: string;
   projectCode: string;
+  municipalityNo: string | null;
   name: string;
   clientName: string | null;
   buildingName: string | null;
@@ -60,7 +61,7 @@ export default function ProjectsTable({
       const matchesCategory = categoryFilter === "all" || r.categories.includes(categoryFilter);
       if (!matchesCategory) return false;
       if (!q) return true;
-      const haystack = [r.name, r.projectCode, r.clientName, r.buildingName, r.unitNo, r.location]
+      const haystack = [r.name, r.projectCode, r.municipalityNo, r.clientName, r.buildingName, r.unitNo, r.location]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
@@ -101,10 +102,11 @@ export default function ProjectsTable({
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-[var(--sec-line)] bg-white">
-          <table className="w-full min-w-[980px] text-left text-sm">
+          <table className="w-full min-w-[1080px] text-left text-sm">
             <thead>
               <tr className="border-b border-[var(--sec-line)] text-xs uppercase tracking-wide text-[var(--sec-muted)]">
                 <th className="px-4 py-3 font-medium">S.No.</th>
+                <th className="px-4 py-3 font-medium">Project No.</th>
                 <th className="px-4 py-3 font-medium">Project</th>
                 <th className="px-4 py-3 font-medium">Categories</th>
                 <th className="px-4 py-3 font-medium">Location</th>
@@ -125,9 +127,9 @@ export default function ProjectsTable({
                     className="cursor-pointer border-b border-[var(--sec-line)] last:border-0 hover:bg-slate-50"
                   >
                     <td className="px-4 py-3 text-[var(--sec-muted)]">{index + 1}</td>
+                    <td className="px-4 py-3 text-[var(--sec-muted)]">{p.municipalityNo || "—"}</td>
                     <td className="px-4 py-3">
                       <p className="font-medium text-[var(--sec-ink)]">{p.name}</p>
-                      <p className="font-mono text-xs text-[var(--sec-muted)]">{p.projectCode}</p>
                       {p.clientName && <p className="text-xs text-[var(--sec-muted)]">{p.clientName}</p>}
                     </td>
                     <td className="px-4 py-3">

@@ -21,6 +21,7 @@ export default async function ProjectsPage() {
     .select({
       id: projects.id,
       projectCode: projects.projectCode,
+      municipalityNo: projects.municipalityNo,
       name: projects.name,
       clientName: projects.clientName,
       buildingName: projects.buildingName,
@@ -81,6 +82,7 @@ export default async function ProjectsPage() {
   const tableRows = rows.map((p) => ({
     id: p.id,
     projectCode: p.projectCode,
+    municipalityNo: p.municipalityNo,
     name: p.name,
     clientName: p.clientName,
     buildingName: p.buildingName,

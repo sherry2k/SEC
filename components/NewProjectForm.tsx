@@ -19,6 +19,7 @@ export default function NewProjectForm() {
   const [buildingName, setBuildingName] = useState("");
   const [unitNo, setUnitNo] = useState("");
   const [plotNo, setPlotNo] = useState("");
+  const [municipalityNo, setMunicipalityNo] = useState("");
   const [location, setLocation] = useState("");
   const [notes, setNotes] = useState("");
   const [categories, setCategories] = useState<ProjectCategory[]>([]);
@@ -57,6 +58,7 @@ export default function NewProjectForm() {
           buildingName: buildingName.trim(),
           unitNo: unitNo.trim(),
           plotNo: plotNo.trim(),
+          municipalityNo: municipalityNo.trim(),
           location: location.trim(),
           notes: notes.trim(),
           categories,
@@ -145,6 +147,16 @@ export default function NewProjectForm() {
         <div>
           <label htmlFor="plotNo" className={labelClass}>Plot No.</label>
           <input id="plotNo" value={plotNo} onChange={(e) => setPlotNo(e.target.value)} className={inputClass} />
+        </div>
+        <div>
+          <label htmlFor="municipalityNo" className={labelClass}>Project No. (municipality)</label>
+          <input
+            id="municipalityNo"
+            value={municipalityNo}
+            onChange={(e) => setMunicipalityNo(e.target.value)}
+            placeholder="Number assigned by the municipality"
+            className={inputClass}
+          />
         </div>
         <div>
           <label htmlFor="location" className={labelClass}>Location</label>
