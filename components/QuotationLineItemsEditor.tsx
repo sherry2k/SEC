@@ -3,30 +3,11 @@
 import { Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { Fragment, useState } from "react";
 import { calcItemTotals } from "@/lib/quotation-calc";
+import { emptyItem, type QuotationItemDraft } from "@/lib/quotation-defaults";
 
-export type QuotationItemDraft = {
-  key: string;
-  description: string;
-  classification: string;
-  feeExclVat: string;
-  scopeOfWork: string;
-  duration: string;
-  note: string;
-};
+export type { QuotationItemDraft };
 
 const CLASSIFICATION_SUGGESTIONS = ["Mandatory", "Optional", "If Required", "Optional If Required"];
-
-export function emptyItem(): QuotationItemDraft {
-  return {
-    key: `item-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-    description: "",
-    classification: "Mandatory",
-    feeExclVat: "",
-    scopeOfWork: "",
-    duration: "",
-    note: "",
-  };
-}
 
 export default function QuotationLineItemsEditor({
   items,

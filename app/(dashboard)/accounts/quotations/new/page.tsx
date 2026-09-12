@@ -1,5 +1,6 @@
 import { requirePermission } from "@/lib/auth";
-import QuotationForm, { defaultQuotationValues } from "@/components/QuotationForm";
+import QuotationForm from "@/components/QuotationForm";
+import { defaultQuotationValues } from "@/lib/quotation-defaults";
 
 export default async function NewQuotationPage() {
   await requirePermission("accounts.edit");

@@ -3,8 +3,8 @@ import { eq, asc } from "drizzle-orm";
 import { db } from "@/db";
 import { quotations, quotationItems } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
-import QuotationForm, { type QuotationFormValues } from "@/components/QuotationForm";
-import type { QuotationItemDraft } from "@/components/QuotationLineItemsEditor";
+import QuotationForm from "@/components/QuotationForm";
+import type { QuotationFormValues, QuotationItemDraft } from "@/lib/quotation-defaults";
 
 export default async function EditQuotationPage({ params }: { params: Promise<{ id: string }> }) {
   await requirePermission("accounts.edit");
