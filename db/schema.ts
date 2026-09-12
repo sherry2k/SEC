@@ -5,6 +5,7 @@ import {
   text,
   varchar,
   integer,
+  numeric,
   timestamp,
   uuid,
   primaryKey,
@@ -130,4 +131,50 @@ export const projectChecklistItems = pgTable("project_checklist_items", {
   fileUrl: text("file_url"),
   updatedBy: integer("updated_by").references(() => users.id),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ---------------------------------------------------------------------------
+// Finance — Quotations (framework doc Section 4, refined against SEC's real
+// quotation format)
+// ---------------------------------------------------------------------------
+
+export const quotations = pgTable("quotations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  quotationNo: text("quotation_no").notNull().unique(),
+  title: text("title").notNull().default("Technical and Commercial Proposal"),
+  subtitle: text("subtitle"),
+  attention: text("attention"),
+  clientName: text("client_name"),
+  projectDescription: text("project_description"),
+  location: text("location"),
+  buildingConfig: text("building_config"),
+  projectId: uuid("project_id").references(() => projects.id),
+  vatRatePercent: numeric("vat_rate_percent", { precision: 5, scale: 2 }).notNull().default("5"),
+  intro: text("intro"),
+  paymentTerms: text("payment_terms"),
+  commercialConditions: text("commercial_conditions"),
+  signatoryName: text("signatory_name"),
+  signatoryTitle: text("signatory_title"),
+  status: text("status").notNull().default("draft"),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedBy: integer("updated_by").references(() => users.id),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// VAT amount and totals are never stored — always derived from feeExclVat and
+// the parent quotation's vatRatePercent, so changing the VAT rate later never
+// leaves a stale total sitting in the database.
+export const quotationItems = pgTable("quotation_items", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  quotationId: uuid("quotation_id")
+    .notNull()
+    .references(() => quotations.id, { onDelete: "cascade" }),
+  sortOrder: integer("sort_order").notNull().default(0),
+  description: text("description").notNull(),
+  classification: text("classification"),
+  feeExclVat: numeric("fee_excl_vat", { precision: 12, scale: 2 }).notNull(),
+  scopeOfWork: text("scope_of_work"),
+  duration: text("duration"),
+  note: text("note"),
 });

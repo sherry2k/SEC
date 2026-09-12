@@ -12,7 +12,7 @@ export default function MobileShell({ children }: { children: React.ReactNode })
 
   return (
     <>
-      <div className="flex items-center justify-between border-b border-[var(--sec-line)] bg-white px-4 py-3 lg:hidden">
+      <div className="no-print flex items-center justify-between border-b border-[var(--sec-line)] bg-white px-4 py-3 lg:hidden">
         <div className="flex items-center gap-2">
           <img src="/images/logo.png" alt="SEC" className="h-7 w-7 object-contain" />
           <span className="text-sm font-bold text-[var(--sec-ink)]">Solid Engineering</span>
@@ -35,7 +35,7 @@ export default function MobileShell({ children }: { children: React.ReactNode })
       )}
 
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 transition-transform duration-200 ease-out lg:static lg:z-auto lg:translate-x-0 lg:transition-none ${
+        className={`no-print fixed inset-y-0 left-0 z-50 w-64 transition-transform duration-200 ease-out lg:static lg:z-auto lg:translate-x-0 lg:transition-none ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >

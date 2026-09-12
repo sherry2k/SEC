@@ -15,7 +15,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       </MobileShell>
       <main className="flex-1 overflow-y-auto">
         <DashboardTopbar />
-        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-8 sm:py-8">{children}</div>
+        <div className="dashboard-content-wrap mx-auto max-w-6xl px-4 py-6 sm:px-8 sm:py-8">{children}</div>
       </main>
     </div>
   );

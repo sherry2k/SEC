@@ -4,7 +4,7 @@ import NotificationBell from "@/components/NotificationBell";
 // topbar, which only exists on mobile for the hamburger menu).
 export default function DashboardTopbar() {
   return (
-    <div className="sticky top-0 z-20 flex items-center justify-end border-b border-[var(--sec-line)] bg-white px-4 py-2 sm:px-8">
+    <div className="no-print sticky top-0 z-20 flex items-center justify-end border-b border-[var(--sec-line)] bg-white px-4 py-2 sm:px-8">
       <NotificationBell />
     </div>
   );
