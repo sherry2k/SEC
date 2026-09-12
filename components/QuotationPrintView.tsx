@@ -1,6 +1,7 @@
 import { calcItemTotals, groupByClassification, calcGrandTotals } from "@/lib/quotation-calc";
 import { amountToWordsAED } from "@/lib/number-to-words";
 import { COMPANY } from "@/lib/company";
+import PrintLetterhead from "@/components/PrintLetterhead";
 
 export type PrintableItem = {
   description: string;
@@ -50,18 +51,12 @@ export default function QuotationPrintView({ quotation }: { quotation: Printable
   return (
     <div className="mx-auto max-w-[850px] bg-white p-8 text-[13px] leading-relaxed text-[var(--sec-ink)] shadow-sm print:shadow-none sm:p-12">
       {/* Letterhead */}
-      <div className="flex items-start justify-between border-b border-[var(--sec-line)] pb-6">
-        <img src="/images/logo.png" alt="SOLID Engineering Consultancy" className="h-20 object-contain" />
-        <div className="text-right text-xs text-[var(--sec-muted)]">
-          <p>
-            <span className="font-semibold text-[var(--sec-ink)]">Date:</span>{" "}
-            {quotation.createdAt.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}
-          </p>
-          <p>
-            <span className="font-semibold text-[var(--sec-ink)]">Ref.</span> {quotation.quotationNo}
-          </p>
-        </div>
-      </div>
+      <PrintLetterhead
+        dateLabel="Date"
+        dateValue={quotation.createdAt.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}
+        refLabel="Ref."
+        refValue={quotation.quotationNo}
+      />
 
       <div className="mt-6 text-center">
         <h1 className="text-xl font-bold text-[var(--sec-ink)]">{quotation.title}</h1>

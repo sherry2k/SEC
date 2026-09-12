@@ -1,6 +1,7 @@
 import { calcItemTotals } from "@/lib/quotation-calc";
 import { calcPerformaInvoiceTotals } from "@/lib/performa-invoice-calc";
 import { COMPANY, BANK_DETAILS } from "@/lib/company";
+import PrintLetterhead from "@/components/PrintLetterhead";
 
 export type PrintablePIItem = { itemDate: string; description: string; amount: number };
 
@@ -24,20 +25,14 @@ export default function PerformaInvoicePrintView({ invoice }: { invoice: Printab
 
   return (
     <div className="mx-auto max-w-[850px] bg-white p-8 text-[13px] leading-relaxed text-[var(--sec-ink)] shadow-sm print:shadow-none sm:p-12">
-      <div className="border-b border-[var(--sec-line)] pb-6">
-        <img src="/images/logo.png" alt="SOLID Engineering Consultancy" className="h-20 object-contain" />
-      </div>
+      <PrintLetterhead
+        dateLabel="Date"
+        dateValue={invoice.issueDate}
+        refLabel="Ref. No."
+        refValue={invoice.invoiceNo}
+      />
 
       <h1 className="mt-6 text-center text-lg font-bold uppercase underline">Performa Invoice</h1>
-
-      <div className="mt-6 text-sm">
-        <p>
-          <span className="font-semibold">Date:</span> {invoice.issueDate}
-        </p>
-        <p>
-          <span className="font-semibold">Ref. No.:</span> {invoice.invoiceNo}
-        </p>
-      </div>
 
       <div className="mt-4 text-sm">
         <p>
@@ -59,7 +54,6 @@ export default function PerformaInvoicePrintView({ invoice }: { invoice: Printab
         <thead>
           <tr className="bg-[var(--sec-blue-deep)] text-white">
             <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-left">No.</th>
-            <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-left">Date</th>
             <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-left">Description</th>
             <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-right">Amount</th>
             <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-right">VAT {invoice.vatRatePercent}%</th>
@@ -72,7 +66,6 @@ export default function PerformaInvoicePrintView({ invoice }: { invoice: Printab
             return (
               <tr key={index}>
                 <td className="border border-[var(--sec-line)] px-2 py-2 align-top">{index + 1}</td>
-                <td className="border border-[var(--sec-line)] px-2 py-2 align-top">{item.itemDate}</td>
                 <td className="border border-[var(--sec-line)] px-2 py-2 align-top">{item.description}</td>
                 <td className="border border-[var(--sec-line)] px-2 py-2 text-right align-top">AED {money(item.amount)}</td>
                 <td className="border border-[var(--sec-line)] px-2 py-2 text-right align-top">AED {money(vatAmount)}</td>

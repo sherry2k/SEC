@@ -122,10 +122,9 @@ export default function PerformaInvoiceForm({
         </div>
 
         <div className="overflow-x-auto rounded-lg border border-[var(--sec-line)] bg-white">
-          <table className="w-full min-w-[760px] text-left text-sm">
+          <table className="w-full min-w-[640px] text-left text-sm">
             <thead>
               <tr className="border-b border-[var(--sec-line)] bg-slate-50 text-xs uppercase tracking-wide text-[var(--sec-muted)]">
-                <th className="w-32 px-3 py-2 font-medium">Date</th>
                 <th className="px-3 py-2 font-medium">Description</th>
                 <th className="w-28 px-3 py-2 font-medium">Amount</th>
                 <th className="w-24 px-3 py-2 font-medium">VAT</th>
@@ -139,9 +138,6 @@ export default function PerformaInvoiceForm({
                 const { vatAmount, totalInclVat } = calcItemTotals(amount, values.vatRatePercent);
                 return (
                   <tr key={item.key} className="border-b border-[var(--sec-line)] last:border-0">
-                    <td className="px-3 py-2">
-                      <input value={item.itemDate} onChange={(e) => updateItem(item.key, { itemDate: e.target.value })} className={smallInput} />
-                    </td>
                     <td className="px-3 py-2">
                       <input
                         value={item.description}
