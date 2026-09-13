@@ -102,14 +102,14 @@ export default function ProjectsTable({
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-[var(--sec-line)] bg-white">
-          <table className="w-full min-w-[1080px] text-left text-sm">
+          <table className="w-full min-w-[1220px] text-left text-sm">
             <thead>
               <tr className="border-b border-[var(--sec-line)] text-xs uppercase tracking-wide text-[var(--sec-muted)]">
                 <th className="px-4 py-3 font-medium">S.No.</th>
-                <th className="px-4 py-3 font-medium">Project No.</th>
+                <th className="w-40 px-4 py-3 font-medium">Project No.</th>
                 <th className="px-4 py-3 font-medium">Project</th>
                 <th className="px-4 py-3 font-medium">Categories</th>
-                <th className="px-4 py-3 font-medium">Location</th>
+                <th className="w-56 px-4 py-3 font-medium">Location</th>
                 <th className="px-4 py-3 font-medium">Progress</th>
                 <th className="px-4 py-3 font-medium">Current activity</th>
                 <th className="px-4 py-3 font-medium">Status</th>
@@ -127,7 +127,7 @@ export default function ProjectsTable({
                     className="cursor-pointer border-b border-[var(--sec-line)] last:border-0 hover:bg-slate-50"
                   >
                     <td className="px-4 py-3 text-[var(--sec-muted)]">{index + 1}</td>
-                    <td className="px-4 py-3 text-[var(--sec-muted)]">{p.municipalityNo || "—"}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-[var(--sec-muted)]">{p.municipalityNo || "—"}</td>
                     <td className="px-4 py-3">
                       <p className="font-medium text-[var(--sec-ink)]">{p.name}</p>
                       {p.clientName && <p className="text-xs text-[var(--sec-muted)]">{p.clientName}</p>}
@@ -144,7 +144,7 @@ export default function ProjectsTable({
                         ))}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-[var(--sec-muted)]">
+                    <td className="whitespace-nowrap px-4 py-3 text-[var(--sec-muted)]">
                       {[p.buildingName, p.unitNo, p.location].filter(Boolean).join(" · ") || "—"}
                     </td>
                     <td className="px-4 py-3">

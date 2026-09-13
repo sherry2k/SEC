@@ -7,6 +7,7 @@ import { desc } from "drizzle-orm";
 import { requirePermission } from "@/lib/auth";
 import { financeCanEditProjects } from "@/lib/settings";
 import { can } from "@/lib/permissions";
+import { visibleActorName } from "@/lib/visibility";
 import type { ProjectCategory } from "@/lib/checklist";
 import ProjectsTable from "@/components/ProjectsTable";
 
@@ -30,6 +31,7 @@ export default async function ProjectsPage() {
       status: projects.status,
       updatedAt: projects.updatedAt,
       updatedByName: users.name,
+      updatedByRole: users.role,
     })
     .from(projects)
     .leftJoin(users, eq(projects.updatedBy, users.id))
@@ -90,7 +92,7 @@ export default async function ProjectsPage() {
     location: p.location,
     status: p.status,
     updatedAt: p.updatedAt.toISOString(),
-    updatedByName: p.updatedByName,
+    updatedByName: visibleActorName(p.updatedByRole, p.updatedByName, user.role),
     categories: categoriesByProject.get(p.id) ?? [],
     progress: progressByProject.get(p.id) ?? { approved: 0, total: 0 },
     currentActivity: currentActivityByProject.get(p.id) ?? null,
