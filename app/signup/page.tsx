@@ -120,7 +120,7 @@ export default function SignupPage() {
                     type="text"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    placeholder="e.g. mohamed.ibrahim"
+                    placeholder="e.g. mohamed"
                     required
                     minLength={3}
                     maxLength={30}
