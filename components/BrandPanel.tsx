@@ -29,7 +29,7 @@ export default function BrandPanel({
       </svg>
 
       <div className="relative flex items-center gap-3">
-        <img src="/images/logo-transparent.png" alt="" className="h-9 w-9 object-contain" />
+        <img src="/images/logo-white.png" alt="" className="h-9 w-9 object-contain" />
         <span className="font-display text-lg tracking-tight">Solid Engineering Consultancy</span>
       </div>
 

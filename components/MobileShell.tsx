@@ -13,7 +13,7 @@ export default function MobileShell({ children }: { children: React.ReactNode })
     <>
       <div className="no-print flex items-center justify-between bg-[var(--sec-blue-deep)] px-4 py-3 lg:hidden">
         <div className="flex items-center gap-2">
-          <img src="/images/logo-transparent.png" alt="" className="h-7 w-7 object-contain" />
+          <img src="/images/logo-white.png" alt="" className="h-7 w-7 object-contain" />
           <span className="text-sm font-bold text-white">Solid Engineering</span>
         </div>
         <button

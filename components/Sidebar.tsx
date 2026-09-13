@@ -41,7 +41,7 @@ export default function Sidebar({ user }: { user: CurrentUser }) {
       </svg>
 
       <div className="relative flex items-center gap-2.5 px-5 py-5">
-        <img src="/images/logo-transparent.png" alt="" className="h-9 w-9 object-contain" />
+        <img src="/images/logo-white.png" alt="" className="h-9 w-9 object-contain" />
         <div className="leading-tight">
           <p className="text-sm font-bold text-white">Solid Engineering</p>
           <p className="text-xs text-white/55">Consultancy</p>
