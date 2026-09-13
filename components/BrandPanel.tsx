@@ -1,6 +1,8 @@
 // The dark left panel shared by login and signup. A thin line-drawing motif
 // echoes the roofline strokes in the SEC logo — the one bold, memorable
 // element on these two pages, kept quiet everywhere else.
+import LogoBadge from "@/components/LogoBadge";
+
 export default function BrandPanel({
   eyebrow,
   heading,
@@ -29,7 +31,7 @@ export default function BrandPanel({
       </svg>
 
       <div className="relative flex items-center gap-3">
-        <img src="/images/logo-white.png" alt="" className="h-9 w-9 object-contain" />
+        <LogoBadge size={38} />
         <span className="font-display text-lg tracking-tight">Solid Engineering Consultancy</span>
       </div>
 

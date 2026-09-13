@@ -7,6 +7,7 @@ import type { CurrentUser } from "@/lib/auth";
 import { can } from "@/lib/permissions";
 import { ROLE_LABELS } from "@/lib/roles";
 import SignOutButton from "@/components/SignOutButton";
+import LogoBadge from "@/components/LogoBadge";
 
 // Client component so the active nav item can be highlighted from the
 // current route (usePathname). The permission checks below are pure and
@@ -41,7 +42,7 @@ export default function Sidebar({ user }: { user: CurrentUser }) {
       </svg>
 
       <div className="relative flex items-center gap-2.5 px-5 py-5">
-        <img src="/images/logo-white.png" alt="" className="h-9 w-9 object-contain" />
+        <LogoBadge size={38} />
         <div className="leading-tight">
           <p className="text-sm font-bold text-white">Solid Engineering</p>
           <p className="text-xs text-white/55">Consultancy</p>

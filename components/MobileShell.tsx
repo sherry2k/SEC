@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
+import LogoBadge from "@/components/LogoBadge";
 
 // Wraps Sidebar so it can slide in as a drawer on mobile and sit statically
 // on desktop. The mobile topbar echoes the sidebar's dark brand color, so
@@ -13,7 +14,7 @@ export default function MobileShell({ children }: { children: React.ReactNode })
     <>
       <div className="no-print flex items-center justify-between bg-[var(--sec-blue-deep)] px-4 py-3 lg:hidden">
         <div className="flex items-center gap-2">
-          <img src="/images/logo-white.png" alt="" className="h-7 w-7 object-contain" />
+          <LogoBadge size={30} />
           <span className="text-sm font-bold text-white">Solid Engineering</span>
         </div>
         <button
