@@ -42,7 +42,7 @@ export default function Sidebar({ user }: { user: CurrentUser }) {
       </svg>
 
       <div className="relative flex items-center gap-2.5 px-5 py-5">
-        <LogoBadge size={48} />
+        <LogoBadge size={48} iconSize={42} />
         <div className="leading-tight">
           <p className="text-sm font-bold text-white">Solid Engineering</p>
           <p className="text-xs text-white/55">Consultancy</p>
