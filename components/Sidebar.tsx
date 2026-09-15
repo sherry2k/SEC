@@ -25,7 +25,7 @@ export default function Sidebar({ user }: { user: CurrentUser }) {
   ];
 
   return (
-    <aside className="relative flex h-screen w-64 shrink-0 flex-col overflow-hidden bg-[var(--sec-blue-deep)]">
+    <aside className="relative flex h-full w-64 shrink-0 flex-col overflow-hidden bg-[var(--sec-blue-deep)]">
       {/* Roofline watermark, echoing the login page's brand panel — the one
           deliberately branded surface, kept quiet so the nav stays legible. */}
       <svg

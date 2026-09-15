@@ -9,7 +9,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const user = await requireRole();
 
   return (
-    <div className="flex min-h-screen flex-col bg-[var(--sec-bg)] lg:flex-row">
+    <div className="flex h-screen flex-col overflow-hidden bg-[var(--sec-bg)] lg:flex-row">
       <MobileShell>
         <Sidebar user={user} />
       </MobileShell>
