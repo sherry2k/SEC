@@ -3,8 +3,12 @@ import { getAssignableUsers } from "@/lib/assignable-users";
 import NewProjectForm from "@/components/NewProjectForm";
 
 export default async function NewProjectPage() {
-  await requirePermission("projects.create");
+  const user = await requirePermission("projects.create");
   const assignableUsers = await getAssignableUsers();
+  // master_admin is never assignable (it's excluded from getAssignableUsers),
+  // so only default Responsible to "self" for roles that are actually
+  // eligible — Tecto creating a project still starts on "Unassigned".
+  const defaultResponsibleId = user.role === "master_admin" ? null : user.id;
 
   return (
     <div>
@@ -14,7 +18,7 @@ export default async function NewProjectPage() {
         can link more categories later from the project page.
       </p>
       <div className="mt-8 max-w-2xl">
-        <NewProjectForm assignableUsers={assignableUsers} />
+        <NewProjectForm assignableUsers={assignableUsers} defaultResponsibleId={defaultResponsibleId} />
       </div>
     </div>
   );

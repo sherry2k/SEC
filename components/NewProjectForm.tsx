@@ -15,7 +15,13 @@ import {
 
 type AssignableUser = { id: number; name: string; role: Role };
 
-export default function NewProjectForm({ assignableUsers }: { assignableUsers: AssignableUser[] }) {
+export default function NewProjectForm({
+  assignableUsers,
+  defaultResponsibleId,
+}: {
+  assignableUsers: AssignableUser[];
+  defaultResponsibleId: number | null;
+}) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [clientName, setClientName] = useState("");
@@ -25,7 +31,7 @@ export default function NewProjectForm({ assignableUsers }: { assignableUsers: A
   const [municipalityNo, setMunicipalityNo] = useState("");
   const [location, setLocation] = useState("");
   const [notes, setNotes] = useState("");
-  const [responsibleId, setResponsibleId] = useState("");
+  const [responsibleId, setResponsibleId] = useState(defaultResponsibleId ? String(defaultResponsibleId) : "");
   const [categories, setCategories] = useState<ProjectCategory[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -168,7 +174,12 @@ export default function NewProjectForm({ assignableUsers }: { assignableUsers: A
           <input id="location" value={location} onChange={(e) => setLocation(e.target.value)} className={inputClass} />
         </div>
         <div>
-          <label htmlFor="responsibleId" className={labelClass}>Responsible</label>
+          <label htmlFor="responsibleId" className={labelClass}>
+            Responsible
+            {defaultResponsibleId !== null && (
+              <span className="font-normal text-[var(--sec-muted)]"> — defaults to you</span>
+            )}
+          </label>
           <select
             id="responsibleId"
             value={responsibleId}

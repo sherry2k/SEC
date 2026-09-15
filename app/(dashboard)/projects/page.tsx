@@ -9,6 +9,7 @@ import { requirePermission } from "@/lib/auth";
 import { financeCanEditProjects } from "@/lib/settings";
 import { can } from "@/lib/permissions";
 import { visibleActorName } from "@/lib/visibility";
+import { getAssignableUsers } from "@/lib/assignable-users";
 import type { ProjectCategory } from "@/lib/checklist";
 import ProjectsTable from "@/components/ProjectsTable";
 
@@ -18,6 +19,7 @@ export default async function ProjectsPage() {
   const canCreate = can(user.role, "projects.create", allowFinanceEdit);
   const canEdit = can(user.role, "projects.edit", allowFinanceEdit);
   const canDelete = can(user.role, "projects.delete", allowFinanceEdit);
+  const assignableUsers = await getAssignableUsers();
 
   const responsibleUsers = alias(users, "responsible_users");
 
@@ -143,6 +145,7 @@ export default async function ProjectsPage() {
             canDelete={canDelete}
             currentUserId={user.id}
             defaultToMine={user.role === "staff"}
+            assignableUsers={assignableUsers}
           />
         </div>
       )}
