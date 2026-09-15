@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { projects } from "@/db/schema";
 import { authorizePermissionApi } from "@/lib/auth";
+import { getAssignableUsers } from "@/lib/assignable-users";
 import { logActivity } from "@/lib/activity";
 
 const EDITABLE_TEXT_FIELDS = ["name", "clientName", "buildingName", "unitNo", "plotNo", "municipalityNo", "location", "notes"] as const;
@@ -26,13 +27,29 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: "Project name is required." }, { status: 400 });
   }
 
-  if (Object.keys(update).length === 0) {
+  let responsibleId: number | null | undefined;
+  if ("responsibleId" in (body ?? {})) {
+    responsibleId = typeof body.responsibleId === "number" ? body.responsibleId : null;
+    if (responsibleId !== null) {
+      const assignable = await getAssignableUsers();
+      if (!assignable.some((u) => u.id === responsibleId)) {
+        return NextResponse.json({ error: "Choose a valid person for Responsible." }, { status: 400 });
+      }
+    }
+  }
+
+  if (Object.keys(update).length === 0 && responsibleId === undefined) {
     return NextResponse.json({ error: "Nothing to update." }, { status: 400 });
   }
 
   const result = await db
     .update(projects)
-    .set({ ...update, updatedBy: auth.user.id, updatedAt: new Date() } as Partial<typeof projects.$inferInsert>)
+    .set({
+      ...update,
+      ...(responsibleId !== undefined ? { responsibleId } : {}),
+      updatedBy: auth.user.id,
+      updatedAt: new Date(),
+    } as Partial<typeof projects.$inferInsert>)
     .where(eq(projects.id, id))
     .returning({ id: projects.id, name: projects.name });
 

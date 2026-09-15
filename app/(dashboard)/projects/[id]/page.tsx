@@ -29,6 +29,10 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     : [null];
   const updatedByDisplayName = updatedByUser ? visibleActorName(updatedByUser.role, updatedByUser.name, user.role) : null;
 
+  const [responsibleUser] = project.responsibleId
+    ? await db.select({ name: users.name }).from(users).where(eq(users.id, project.responsibleId)).limit(1)
+    : [null];
+
   const links = await db.select().from(projectCategories).where(eq(projectCategories.projectId, id));
   const linkedCategories = links.map((l) => l.category);
 
@@ -63,6 +67,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     ["Unit / shop", project.unitNo],
     ["Plot No.", project.plotNo],
     ["Location", project.location],
+    ["Responsible", responsibleUser?.name ?? null],
   ].filter(([, value]) => value) as [string, string][];
 
   return (

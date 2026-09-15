@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { ROLE_LABELS, type Role } from "@/lib/roles";
 
 type ProjectFields = {
   name: string;
@@ -13,11 +14,22 @@ type ProjectFields = {
   municipalityNo: string;
   location: string;
   notes: string;
+  responsibleId: number | null;
 };
 
-export default function EditProjectForm({ projectId, initial }: { projectId: string; initial: ProjectFields }) {
+type AssignableUser = { id: number; name: string; role: Role };
+
+export default function EditProjectForm({
+  projectId,
+  initial,
+  assignableUsers,
+}: {
+  projectId: string;
+  initial: ProjectFields;
+  assignableUsers: AssignableUser[];
+}) {
   const router = useRouter();
-  const [fields, setFields] = useState<ProjectFields>(initial);
+  const [fields, setFields] = useState(initial);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -25,8 +37,10 @@ export default function EditProjectForm({ projectId, initial }: { projectId: str
     "w-full rounded-md border border-[var(--sec-line)] bg-white px-3.5 py-2.5 text-sm text-[var(--sec-ink)] outline-none transition-colors focus:border-[var(--sec-blue)] focus:ring-2 focus:ring-[var(--sec-blue)]/20";
   const labelClass = "mb-1.5 block text-sm font-medium text-[var(--sec-ink)]";
 
-  const set = (key: keyof ProjectFields) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-    setFields((prev) => ({ ...prev, [key]: e.target.value }));
+  const set =
+    (key: keyof Omit<ProjectFields, "responsibleId">) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      setFields((prev) => ({ ...prev, [key]: e.target.value }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,6 +109,24 @@ export default function EditProjectForm({ projectId, initial }: { projectId: str
         <div>
           <label htmlFor="location" className={labelClass}>Location</label>
           <input id="location" value={fields.location} onChange={set("location")} className={inputClass} />
+        </div>
+        <div>
+          <label htmlFor="responsibleId" className={labelClass}>Responsible</label>
+          <select
+            id="responsibleId"
+            value={fields.responsibleId ?? ""}
+            onChange={(e) =>
+              setFields((prev) => ({ ...prev, responsibleId: e.target.value ? Number(e.target.value) : null }))
+            }
+            className={inputClass}
+          >
+            <option value="">Unassigned</option>
+            {assignableUsers.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.name} — {ROLE_LABELS[u.role]}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { eq } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
 import { projects, projectCategories, projectChecklistItems, checklistTemplates, users } from "@/db/schema";
 import { desc } from "drizzle-orm";
@@ -18,6 +19,8 @@ export default async function ProjectsPage() {
   const canEdit = can(user.role, "projects.edit", allowFinanceEdit);
   const canDelete = can(user.role, "projects.delete", allowFinanceEdit);
 
+  const responsibleUsers = alias(users, "responsible_users");
+
   const rows = await db
     .select({
       id: projects.id,
@@ -32,9 +35,11 @@ export default async function ProjectsPage() {
       updatedAt: projects.updatedAt,
       updatedByName: users.name,
       updatedByRole: users.role,
+      responsibleName: responsibleUsers.name,
     })
     .from(projects)
     .leftJoin(users, eq(projects.updatedBy, users.id))
+    .leftJoin(responsibleUsers, eq(projects.responsibleId, responsibleUsers.id))
     .orderBy(desc(projects.updatedAt));
 
   const categoryLinks = await db.select().from(projectCategories);
@@ -93,6 +98,7 @@ export default async function ProjectsPage() {
     status: p.status,
     updatedAt: p.updatedAt.toISOString(),
     updatedByName: visibleActorName(p.updatedByRole, p.updatedByName, user.role),
+    responsibleName: p.responsibleName,
     categories: categoriesByProject.get(p.id) ?? [],
     progress: progressByProject.get(p.id) ?? { approved: 0, total: 0 },
     currentActivity: currentActivityByProject.get(p.id) ?? null,

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Check } from "lucide-react";
+import { ROLE_LABELS, type Role } from "@/lib/roles";
 import {
   PROJECT_CATEGORIES,
   CATEGORY_LABELS,
@@ -12,7 +13,9 @@ import {
   type ProjectCategory,
 } from "@/lib/checklist";
 
-export default function NewProjectForm() {
+type AssignableUser = { id: number; name: string; role: Role };
+
+export default function NewProjectForm({ assignableUsers }: { assignableUsers: AssignableUser[] }) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [clientName, setClientName] = useState("");
@@ -22,6 +25,7 @@ export default function NewProjectForm() {
   const [municipalityNo, setMunicipalityNo] = useState("");
   const [location, setLocation] = useState("");
   const [notes, setNotes] = useState("");
+  const [responsibleId, setResponsibleId] = useState("");
   const [categories, setCategories] = useState<ProjectCategory[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -61,6 +65,7 @@ export default function NewProjectForm() {
           municipalityNo: municipalityNo.trim(),
           location: location.trim(),
           notes: notes.trim(),
+          responsibleId: responsibleId ? Number(responsibleId) : null,
           categories,
         }),
       });
@@ -161,6 +166,22 @@ export default function NewProjectForm() {
         <div>
           <label htmlFor="location" className={labelClass}>Location</label>
           <input id="location" value={location} onChange={(e) => setLocation(e.target.value)} className={inputClass} />
+        </div>
+        <div>
+          <label htmlFor="responsibleId" className={labelClass}>Responsible</label>
+          <select
+            id="responsibleId"
+            value={responsibleId}
+            onChange={(e) => setResponsibleId(e.target.value)}
+            className={inputClass}
+          >
+            <option value="">Unassigned</option>
+            {assignableUsers.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.name} — {ROLE_LABELS[u.role]}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 

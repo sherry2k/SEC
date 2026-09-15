@@ -4,6 +4,7 @@ import { projects } from "@/db/schema";
 import { authorizePermissionApi } from "@/lib/auth";
 import { nextDocumentCode } from "@/lib/sequences";
 import { addCategoryToProject } from "@/lib/projects";
+import { getAssignableUsers } from "@/lib/assignable-users";
 import { logActivity } from "@/lib/activity";
 import { PROJECT_CATEGORIES, CATEGORY_LABELS, type ProjectCategory } from "@/lib/checklist";
 
@@ -21,10 +22,18 @@ export async function POST(request: NextRequest) {
     const municipalityNo = typeof body?.municipalityNo === "string" ? body.municipalityNo.trim() : "";
     const location = typeof body?.location === "string" ? body.location.trim() : "";
     const notes = typeof body?.notes === "string" ? body.notes.trim() : "";
+    const responsibleId = typeof body?.responsibleId === "number" ? body.responsibleId : null;
     const categories: unknown[] = Array.isArray(body?.categories) ? body.categories : [];
 
     if (!name) {
       return NextResponse.json({ error: "Project name is required." }, { status: 400 });
+    }
+
+    if (responsibleId !== null) {
+      const assignable = await getAssignableUsers();
+      if (!assignable.some((u) => u.id === responsibleId)) {
+        return NextResponse.json({ error: "Choose a valid person for Responsible." }, { status: 400 });
+      }
     }
 
     const validCategories = categories.filter((c): c is ProjectCategory =>
@@ -48,6 +57,7 @@ export async function POST(request: NextRequest) {
         municipalityNo: municipalityNo || null,
         location: location || null,
         notes: notes || null,
+        responsibleId,
         createdBy: auth.user.id,
         updatedBy: auth.user.id,
       })

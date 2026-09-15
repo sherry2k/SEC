@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { projects } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
+import { getAssignableUsers } from "@/lib/assignable-users";
 import EditProjectForm from "@/components/EditProjectForm";
 
 export default async function EditProjectPage({ params }: { params: Promise<{ id: string }> }) {
@@ -12,6 +13,8 @@ export default async function EditProjectPage({ params }: { params: Promise<{ id
   const [project] = await db.select().from(projects).where(eq(projects.id, id)).limit(1);
   if (!project) notFound();
 
+  const assignableUsers = await getAssignableUsers();
+
   return (
     <div>
       <p className="font-mono text-xs text-[var(--sec-muted)]">Ref: {project.projectCode}</p>
@@ -20,6 +23,7 @@ export default async function EditProjectPage({ params }: { params: Promise<{ id
       <div className="mt-8 max-w-2xl">
         <EditProjectForm
           projectId={project.id}
+          assignableUsers={assignableUsers}
           initial={{
             name: project.name,
             clientName: project.clientName ?? "",
@@ -29,6 +33,7 @@ export default async function EditProjectPage({ params }: { params: Promise<{ id
             municipalityNo: project.municipalityNo ?? "",
             location: project.location ?? "",
             notes: project.notes ?? "",
+            responsibleId: project.responsibleId,
           }}
         />
       </div>

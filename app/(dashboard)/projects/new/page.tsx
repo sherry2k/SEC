@@ -1,8 +1,10 @@
 import { requirePermission } from "@/lib/auth";
+import { getAssignableUsers } from "@/lib/assignable-users";
 import NewProjectForm from "@/components/NewProjectForm";
 
 export default async function NewProjectPage() {
   await requirePermission("projects.create");
+  const assignableUsers = await getAssignableUsers();
 
   return (
     <div>
@@ -12,7 +14,7 @@ export default async function NewProjectPage() {
         can link more categories later from the project page.
       </p>
       <div className="mt-8 max-w-2xl">
-        <NewProjectForm />
+        <NewProjectForm assignableUsers={assignableUsers} />
       </div>
     </div>
   );

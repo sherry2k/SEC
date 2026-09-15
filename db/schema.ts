@@ -70,6 +70,9 @@ export const projects = pgTable("projects", {
   location: text("location"),
   status: projectStatusEnum("status").notNull().default("active"),
   notes: text("notes"),
+  // Who owns this project day to day — separate from createdBy/updatedBy,
+  // which track who touched the record, not who's accountable for the work.
+  responsibleId: integer("responsible_id").references(() => users.id),
   createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedBy: integer("updated_by").references(() => users.id),

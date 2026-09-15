@@ -18,6 +18,7 @@ type ProjectRow = {
   status: ProjectStatus;
   updatedAt: string;
   updatedByName: string | null;
+  responsibleName: string | null;
   categories: ProjectCategory[];
   progress: { approved: number; total: number };
   currentActivity: string | null;
@@ -102,7 +103,7 @@ export default function ProjectsTable({
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-[var(--sec-line)] bg-white">
-          <table className="w-full min-w-[1220px] text-left text-sm">
+          <table className="w-full min-w-[1360px] text-left text-sm">
             <thead>
               <tr className="border-b border-[var(--sec-line)] text-xs uppercase tracking-wide text-[var(--sec-muted)]">
                 <th className="px-4 py-3 font-medium">S.No.</th>
@@ -112,6 +113,7 @@ export default function ProjectsTable({
                 <th className="w-56 px-4 py-3 font-medium">Location</th>
                 <th className="px-4 py-3 font-medium">Progress</th>
                 <th className="px-4 py-3 font-medium">Current activity</th>
+                <th className="w-36 px-4 py-3 font-medium">Responsible</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Last updated</th>
                 {(canEdit || canDelete) && <th className="px-4 py-3 font-medium" />}
@@ -170,6 +172,7 @@ export default function ProjectsTable({
                         <span className="text-xs text-[var(--sec-muted)]">—</span>
                       )}
                     </td>
+                    <td className="px-4 py-3 text-[var(--sec-muted)]">{p.responsibleName || "—"}</td>
                     <td className="px-4 py-3 text-[var(--sec-muted)]">{PROJECT_STATUS_LABELS[p.status]}</td>
                     <td className="px-4 py-3 text-[var(--sec-muted)]">
                       <p className="whitespace-nowrap">{formatDate(p.updatedAt)}</p>
