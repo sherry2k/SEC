@@ -14,7 +14,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <Sidebar user={user} />
       </MobileShell>
       <main className="flex-1 overflow-y-auto">
-        <DashboardTopbar />
+        <DashboardTopbar user={user} />
         <div className="dashboard-content-wrap w-full px-4 py-6 sm:px-8 sm:py-8">{children}</div>
       </main>
     </div>
