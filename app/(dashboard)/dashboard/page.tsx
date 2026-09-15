@@ -1,25 +1,53 @@
 import Link from "next/link";
-import { desc } from "drizzle-orm";
+import { desc, eq, inArray } from "drizzle-orm";
+import { Plus, AlertTriangle } from "lucide-react";
 import { db } from "@/db";
-import { projects, projectCategories, projectChecklistItems } from "@/db/schema";
+import {
+  projects,
+  projectCategories,
+  projectChecklistItems,
+  checklistTemplates,
+  users,
+  quotations,
+  quotationItems,
+  performaInvoices,
+  performaInvoiceItems,
+} from "@/db/schema";
 import { requireRole } from "@/lib/auth";
 import { ROLE_LABELS } from "@/lib/roles";
+import { can } from "@/lib/permissions";
+import { financeCanEditProjects } from "@/lib/settings";
+import { calcGrandTotals } from "@/lib/quotation-calc";
+import { calcPerformaInvoiceTotals } from "@/lib/performa-invoice-calc";
 import {
   PROJECT_CATEGORIES,
   CATEGORY_LABELS,
   CATEGORY_BADGE_STYLES,
   PROJECT_STATUS_LABELS,
+  ITEM_STATUS_LABELS,
+  ITEM_STATUS_STYLES,
   type ProjectCategory,
 } from "@/lib/checklist";
 
+const STALE_DAYS = 14;
+
 export default async function DashboardHome() {
   const user = await requireRole();
+  const allowFinanceEdit = await financeCanEditProjects();
+  const canCreateProject = can(user.role, "projects.create", allowFinanceEdit);
+  const canUseFinance = can(user.role, "accounts.edit");
+  const canViewFinance = can(user.role, "accounts.view");
 
   const allProjects = await db.select().from(projects).orderBy(desc(projects.createdAt));
   const categoryLinks = await db.select().from(projectCategories);
   const checklistRows = await db
-    .select({ status: projectChecklistItems.status })
-    .from(projectChecklistItems);
+    .select({
+      status: projectChecklistItems.status,
+      projectId: projectChecklistItems.projectId,
+      itemName: checklistTemplates.name,
+    })
+    .from(projectChecklistItems)
+    .innerJoin(checklistTemplates, eq(projectChecklistItems.templateId, checklistTemplates.id));
 
   const totalProjects = allProjects.length;
   const activeCount = allProjects.filter((p) => p.status === "active").length;
@@ -36,9 +64,7 @@ export default async function DashboardHome() {
   for (const link of categoryLinks) categoryCounts[link.category] += 1;
   const maxCategoryCount = Math.max(1, ...Object.values(categoryCounts));
 
-  const pendingItems = checklistRows.filter(
-    (i) => i.status === "submitted" || i.status === "resubmission"
-  ).length;
+  const pendingItems = checklistRows.filter((i) => i.status === "submitted" || i.status === "resubmission").length;
   const approvedItems = checklistRows.filter((i) => i.status === "approved").length;
 
   const recentProjects = allProjects.slice(0, 5);
@@ -50,14 +76,126 @@ export default async function DashboardHome() {
     { label: "Completed", value: completedCount },
   ];
 
+  // Needs attention: items stuck in rejected/resubmission, and projects
+  // nobody has touched in a while.
+  const projectsById = new Map(allProjects.map((p) => [p.id, p]));
+  const stuckItems = checklistRows
+    .filter((i) => i.status === "rejected" || i.status === "resubmission")
+    .map((i) => ({ ...i, project: projectsById.get(i.projectId) }))
+    .filter((i) => i.project)
+    .slice(0, 5);
+
+  const staleCutoff = new Date(Date.now() - STALE_DAYS * 24 * 60 * 60 * 1000);
+  const staleProjects = allProjects
+    .filter((p) => p.status === "active" && p.updatedAt < staleCutoff)
+    .sort((a, b) => a.updatedAt.getTime() - b.updatedAt.getTime())
+    .slice(0, 5);
+
+  // Team workload: how many projects each person is Responsible for.
+  const responsibleUsers = await db.select({ id: users.id, name: users.name }).from(users);
+  const responsibleNameById = new Map(responsibleUsers.map((u) => [u.id, u.name]));
+  const workloadCounts = new Map<string, number>();
+  let unassignedCount = 0;
+  for (const p of allProjects) {
+    if (!p.responsibleId) {
+      unassignedCount += 1;
+      continue;
+    }
+    const name = responsibleNameById.get(p.responsibleId) ?? "Unknown";
+    workloadCounts.set(name, (workloadCounts.get(name) ?? 0) + 1);
+  }
+  const workload = [...workloadCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
+
+  // Finance snapshot — Admin/Finance/Master admin only.
+  let financeSnapshot: {
+    quotationCount: number;
+    quotationTotal: number;
+    invoiceCount: number;
+    invoiceTotal: number;
+  } | null = null;
+
+  if (canViewFinance) {
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const allQuotations = await db.select().from(quotations);
+    const monthQuotations = allQuotations.filter((q) => q.createdAt >= startOfMonth);
+    const quotationIds = monthQuotations.map((q) => q.id);
+    const qItems = quotationIds.length
+      ? await db.select().from(quotationItems).where(inArray(quotationItems.quotationId, quotationIds))
+      : [];
+    const quotationTotal = monthQuotations.reduce((sum, q) => {
+      const items = qItems.filter((i) => i.quotationId === q.id).map((i) => ({
+        description: i.description,
+        classification: i.classification ?? "",
+        feeExclVat: Number(i.feeExclVat),
+      }));
+      return sum + calcGrandTotals(items, Number(q.vatRatePercent)).grandTotal;
+    }, 0);
+
+    const allInvoices = await db.select().from(performaInvoices);
+    const monthInvoices = allInvoices.filter((inv) => inv.createdAt >= startOfMonth);
+    const invoiceIds = monthInvoices.map((inv) => inv.id);
+    const invItems = invoiceIds.length
+      ? await db.select().from(performaInvoiceItems).where(inArray(performaInvoiceItems.invoiceId, invoiceIds))
+      : [];
+    const invoiceTotal = monthInvoices.reduce((sum, inv) => {
+      const items = invItems
+        .filter((i) => i.invoiceId === inv.id)
+        .map((i) => ({ description: i.description, amount: Number(i.amount) }));
+      return sum + calcPerformaInvoiceTotals(items, Number(inv.vatRatePercent)).total;
+    }, 0);
+
+    financeSnapshot = {
+      quotationCount: monthQuotations.length,
+      quotationTotal,
+      invoiceCount: monthInvoices.length,
+      invoiceTotal,
+    };
+  }
+
   return (
     <div>
-      <p className="text-xs font-medium uppercase tracking-wide text-[var(--sec-muted)]">
-        {ROLE_LABELS[user.role]}
-      </p>
-      <h1 className="mt-1 text-3xl font-bold text-[var(--sec-ink)]">
-        Welcome back, {user.name.split(" ")[0]}
-      </h1>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-[var(--sec-muted)]">
+            {ROLE_LABELS[user.role]}
+          </p>
+          <h1 className="mt-1 text-3xl font-bold text-[var(--sec-ink)]">
+            Welcome back, {user.name.split(" ")[0]}
+          </h1>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {canCreateProject && (
+            <Link
+              href="/projects/new"
+              className="flex items-center gap-1.5 rounded-md bg-[var(--sec-blue)] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--sec-blue-deep)]"
+            >
+              <Plus size={15} />
+              Project
+            </Link>
+          )}
+          {canUseFinance && (
+            <>
+              <Link
+                href="/accounts/quotations/new"
+                className="flex items-center gap-1.5 rounded-md border border-[var(--sec-line)] bg-white px-3 py-2 text-sm font-medium text-[var(--sec-ink)] transition-colors hover:border-[var(--sec-blue)]"
+              >
+                <Plus size={15} />
+                Quotation
+              </Link>
+              <Link
+                href="/accounts/performa-invoices/new"
+                className="flex items-center gap-1.5 rounded-md border border-[var(--sec-line)] bg-white px-3 py-2 text-sm font-medium text-[var(--sec-ink)] transition-colors hover:border-[var(--sec-blue)]"
+              >
+                <Plus size={15} />
+                Invoice
+              </Link>
+            </>
+          )}
+        </div>
+      </div>
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {statCards.map((card) => (
@@ -68,7 +206,35 @@ export default async function DashboardHome() {
         ))}
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+      {financeSnapshot && (
+        <div className="mt-6 rounded-lg border border-[var(--sec-line)] bg-white p-5">
+          <h2 className="text-base font-bold text-[var(--sec-ink)]">Finance this month</h2>
+          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <div>
+              <p className="text-2xl font-bold text-[var(--sec-ink)]">{financeSnapshot.quotationCount}</p>
+              <p className="text-xs text-[var(--sec-muted)]">Quotations issued</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-[var(--sec-ink)]">
+                AED {financeSnapshot.quotationTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </p>
+              <p className="text-xs text-[var(--sec-muted)]">Quoted value</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-[var(--sec-ink)]">{financeSnapshot.invoiceCount}</p>
+              <p className="text-xs text-[var(--sec-muted)]">Invoices issued</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-[var(--sec-ink)]">
+                AED {financeSnapshot.invoiceTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </p>
+              <p className="text-xs text-[var(--sec-muted)]">Invoiced value</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="rounded-lg border border-[var(--sec-line)] bg-white p-5">
           <h2 className="text-base font-bold text-[var(--sec-ink)]">Projects by category</h2>
           <div className="mt-4 space-y-3">
@@ -133,6 +299,79 @@ export default async function DashboardHome() {
                   </span>
                 </Link>
               ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="rounded-lg border border-[var(--sec-line)] bg-white p-5">
+          <div className="flex items-center gap-2">
+            <AlertTriangle size={16} className="text-amber-500" />
+            <h2 className="text-base font-bold text-[var(--sec-ink)]">Needs attention</h2>
+          </div>
+
+          {stuckItems.length === 0 && staleProjects.length === 0 ? (
+            <p className="mt-4 text-sm text-[var(--sec-muted)]">Nothing needs attention right now.</p>
+          ) : (
+            <div className="mt-3 space-y-1">
+              {stuckItems.map((item, i) => (
+                <Link
+                  key={`stuck-${i}`}
+                  href={`/projects/${item.project!.id}`}
+                  className="flex items-center justify-between gap-3 rounded-md px-1 py-1.5 hover:bg-slate-50"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm text-[var(--sec-ink)]">{item.itemName}</p>
+                    <p className="truncate text-xs text-[var(--sec-muted)]">{item.project!.name}</p>
+                  </div>
+                  <span
+                    className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium ${ITEM_STATUS_STYLES[item.status]}`}
+                  >
+                    {ITEM_STATUS_LABELS[item.status]}
+                  </span>
+                </Link>
+              ))}
+              {staleProjects.map((p) => (
+                <Link
+                  key={`stale-${p.id}`}
+                  href={`/projects/${p.id}`}
+                  className="flex items-center justify-between gap-3 rounded-md px-1 py-1.5 hover:bg-slate-50"
+                >
+                  <p className="truncate text-sm text-[var(--sec-ink)]">{p.name}</p>
+                  <span className="shrink-0 text-xs text-[var(--sec-muted)]">
+                    No update since {p.updatedAt.toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-lg border border-[var(--sec-line)] bg-white p-5">
+          <h2 className="text-base font-bold text-[var(--sec-ink)]">Team workload</h2>
+
+          {workload.length === 0 && unassignedCount === 0 ? (
+            <p className="mt-4 text-sm text-[var(--sec-muted)]">No projects yet.</p>
+          ) : (
+            <div className="mt-4 space-y-3">
+              {workload.map(([name, count]) => (
+                <div key={name} className="flex items-center gap-3">
+                  <span className="w-28 shrink-0 truncate text-sm text-[var(--sec-ink)]">{name}</span>
+                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className="h-full rounded-full bg-[var(--sec-blue)]"
+                      style={{ width: `${(count / Math.max(1, workload[0]?.[1] ?? 1)) * 100}%` }}
+                    />
+                  </div>
+                  <span className="w-4 shrink-0 text-right text-sm text-[var(--sec-muted)]">{count}</span>
+                </div>
+              ))}
+              {unassignedCount > 0 && (
+                <p className="border-t border-[var(--sec-line)] pt-3 text-xs text-[var(--sec-muted)]">
+                  {unassignedCount} project{unassignedCount === 1 ? "" : "s"} unassigned
+                </p>
+              )}
             </div>
           )}
         </div>
