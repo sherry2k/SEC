@@ -157,14 +157,14 @@ export default function ProjectsTable({
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-[var(--sec-line)] bg-white">
-          <table className="w-full min-w-[1360px] text-left text-sm">
+          <table className="w-full min-w-[1240px] text-left text-sm">
             <thead>
               <tr className="border-b border-[var(--sec-line)] text-xs uppercase tracking-wide text-[var(--sec-muted)]">
                 <th className="px-4 py-3 font-medium">S.No.</th>
                 <th className="w-40 px-4 py-3 font-medium">Project No.</th>
-                <th className="px-4 py-3 font-medium">Project</th>
+                <th className="w-56 px-4 py-3 font-medium">Project</th>
                 <th className="px-4 py-3 font-medium">Categories</th>
-                <th className="w-56 px-4 py-3 font-medium">Location</th>
+                <th className="w-40 px-4 py-3 font-medium">Location</th>
                 <th className="px-4 py-3 font-medium">Progress</th>
                 <th className="px-4 py-3 font-medium">Current activity</th>
                 <th className="w-36 px-4 py-3 font-medium">Responsible</th>
@@ -184,9 +184,9 @@ export default function ProjectsTable({
                   >
                     <td className="px-4 py-3 text-[var(--sec-muted)]">{index + 1}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-[var(--sec-muted)]">{p.municipalityNo || "—"}</td>
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-[var(--sec-ink)]">{p.name}</p>
-                      {p.clientName && <p className="text-xs text-[var(--sec-muted)]">{p.clientName}</p>}
+                    <td className="max-w-56 px-4 py-3">
+                      <p className="truncate font-medium text-[var(--sec-ink)]">{p.name}</p>
+                      {p.clientName && <p className="truncate text-xs text-[var(--sec-muted)]">{p.clientName}</p>}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
@@ -200,8 +200,11 @@ export default function ProjectsTable({
                         ))}
                       </div>
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-[var(--sec-muted)]">
-                      {[p.buildingName, p.unitNo, p.location].filter(Boolean).join(" · ") || "—"}
+                    <td className="max-w-40 px-4 py-3 text-[var(--sec-muted)]">
+                      {[p.buildingName, p.unitNo].filter(Boolean).length > 0 && (
+                        <p className="truncate">{[p.buildingName, p.unitNo].filter(Boolean).join(" · ")}</p>
+                      )}
+                      {p.location ? <p className="truncate">{p.location}</p> : !p.buildingName && !p.unitNo && "—"}
                     </td>
                     <td className="px-4 py-3">
                       {p.progress.total > 0 ? (
