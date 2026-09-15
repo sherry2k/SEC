@@ -35,6 +35,7 @@ export default async function ProjectsPage() {
       updatedAt: projects.updatedAt,
       updatedByName: users.name,
       updatedByRole: users.role,
+      responsibleId: projects.responsibleId,
       responsibleName: responsibleUsers.name,
     })
     .from(projects)
@@ -98,6 +99,7 @@ export default async function ProjectsPage() {
     status: p.status,
     updatedAt: p.updatedAt.toISOString(),
     updatedByName: visibleActorName(p.updatedByRole, p.updatedByName, user.role),
+    responsibleId: p.responsibleId,
     responsibleName: p.responsibleName,
     categories: categoriesByProject.get(p.id) ?? [],
     progress: progressByProject.get(p.id) ?? { approved: 0, total: 0 },
@@ -135,7 +137,13 @@ export default async function ProjectsPage() {
         </div>
       ) : (
         <div className="mt-6">
-          <ProjectsTable rows={tableRows} canEdit={canEdit} canDelete={canDelete} />
+          <ProjectsTable
+            rows={tableRows}
+            canEdit={canEdit}
+            canDelete={canDelete}
+            currentUserId={user.id}
+            defaultToMine={user.role === "staff"}
+          />
         </div>
       )}
     </div>

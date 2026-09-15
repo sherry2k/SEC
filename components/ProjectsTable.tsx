@@ -18,6 +18,7 @@ type ProjectRow = {
   status: ProjectStatus;
   updatedAt: string;
   updatedByName: string | null;
+  responsibleId: number | null;
   responsibleName: string | null;
   categories: ProjectCategory[];
   progress: { approved: number; total: number };
@@ -32,14 +33,19 @@ export default function ProjectsTable({
   rows,
   canEdit,
   canDelete,
+  currentUserId,
+  defaultToMine = false,
 }: {
   rows: ProjectRow[];
   canEdit: boolean;
   canDelete: boolean;
+  currentUserId: number;
+  defaultToMine?: boolean;
 }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<ProjectCategory | "all">("all");
+  const [assignedFilter, setAssignedFilter] = useState<"all" | "mine">(defaultToMine ? "mine" : "all");
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -56,9 +62,12 @@ export default function ProjectsTable({
     }
   };
 
+  const mineCount = useMemo(() => rows.filter((r) => r.responsibleId === currentUserId).length, [rows, currentUserId]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return rows.filter((r) => {
+      if (assignedFilter === "mine" && r.responsibleId !== currentUserId) return false;
       const matchesCategory = categoryFilter === "all" || r.categories.includes(categoryFilter);
       if (!matchesCategory) return false;
       if (!q) return true;
@@ -68,38 +77,59 @@ export default function ProjectsTable({
         .toLowerCase();
       return haystack.includes(q);
     });
-  }, [rows, query, categoryFilter]);
+  }, [rows, query, categoryFilter, assignedFilter, currentUserId]);
 
   return (
     <div>
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="relative flex-1 sm:max-w-xs">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--sec-muted)]" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Find a project…"
-            className="w-full rounded-md border border-[var(--sec-line)] bg-white py-2 pl-9 pr-3 text-sm text-[var(--sec-ink)] outline-none focus:border-[var(--sec-blue)] focus:ring-2 focus:ring-[var(--sec-blue)]/20"
-          />
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="inline-flex w-fit rounded-md border border-[var(--sec-line)] bg-white p-0.5">
+          <button
+            onClick={() => setAssignedFilter("all")}
+            className={`rounded px-3 py-1.5 text-sm font-medium transition-colors ${
+              assignedFilter === "all" ? "bg-[var(--sec-blue)] text-white" : "text-[var(--sec-muted)] hover:text-[var(--sec-ink)]"
+            }`}
+          >
+            All projects
+          </button>
+          <button
+            onClick={() => setAssignedFilter("mine")}
+            className={`rounded px-3 py-1.5 text-sm font-medium transition-colors ${
+              assignedFilter === "mine" ? "bg-[var(--sec-blue)] text-white" : "text-[var(--sec-muted)] hover:text-[var(--sec-ink)]"
+            }`}
+          >
+            My projects ({mineCount})
+          </button>
         </div>
 
-        <select
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value as ProjectCategory | "all")}
-          className="rounded-md border border-[var(--sec-line)] bg-white px-3 py-2 text-sm text-[var(--sec-ink)] outline-none focus:border-[var(--sec-blue)]"
-        >
-          <option value="all">All categories</option>
-          {PROJECT_CATEGORIES.map((c) => (
-            <option key={c} value={c}>
-              {CATEGORY_LABELS[c]}
-            </option>
-          ))}
-        </select>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="relative flex-1 sm:max-w-xs">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--sec-muted)]" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Find a project…"
+              className="w-full rounded-md border border-[var(--sec-line)] bg-white py-2 pl-9 pr-3 text-sm text-[var(--sec-ink)] outline-none focus:border-[var(--sec-blue)] focus:ring-2 focus:ring-[var(--sec-blue)]/20"
+            />
+          </div>
+
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value as ProjectCategory | "all")}
+            className="rounded-md border border-[var(--sec-line)] bg-white px-3 py-2 text-sm text-[var(--sec-ink)] outline-none focus:border-[var(--sec-blue)]"
+          >
+            <option value="all">All categories</option>
+            {PROJECT_CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {CATEGORY_LABELS[c]}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {filtered.length === 0 ? (
         <div className="rounded-lg border border-dashed border-[var(--sec-line)] bg-white py-12 text-center text-sm text-[var(--sec-muted)]">
-          No projects match that search.
+          {assignedFilter === "mine" ? "No projects assigned to you yet." : "No projects match that search."}
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-[var(--sec-line)] bg-white">
