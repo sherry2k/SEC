@@ -6,6 +6,7 @@ export const COMPANY = {
   tel: "+971 2 6220 1332",
   mobile: "+971 50 7119095",
   email: "solid.con.eng@gmail.com",
+  trn: "103299213100003",
 };
 
 // Static bank account info printed on Performa Invoices — not something a

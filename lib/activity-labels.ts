@@ -13,7 +13,10 @@ export type ActivityAction =
   | "quotation_deleted"
   | "performa_invoice_created"
   | "performa_invoice_updated"
-  | "performa_invoice_deleted";
+  | "performa_invoice_deleted"
+  | "tax_invoice_created"
+  | "tax_invoice_updated"
+  | "tax_invoice_deleted";
 
 export const ACTIVITY_LABELS: Record<ActivityAction, string> = {
   project_created: "created",
@@ -27,4 +30,7 @@ export const ACTIVITY_LABELS: Record<ActivityAction, string> = {
   performa_invoice_created: "created performa invoice",
   performa_invoice_updated: "updated performa invoice",
   performa_invoice_deleted: "deleted performa invoice",
+  tax_invoice_created: "created tax invoice",
+  tax_invoice_updated: "updated tax invoice",
+  tax_invoice_deleted: "deleted tax invoice",
 };

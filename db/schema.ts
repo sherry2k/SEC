@@ -214,3 +214,39 @@ export const performaInvoiceItems = pgTable("performa_invoice_items", {
   description: text("description").notNull(),
   amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
 });
+
+// ---------------------------------------------------------------------------
+// Finance — Tax Invoices. Same document family as Performa Invoice, but a
+// tax invoice needs each client's TRN (Tax Registration Number) recorded —
+// SEC's own TRN is fixed (lib/company.ts), the client's varies and is
+// editable per invoice, since it isn't stored anywhere else yet.
+// ---------------------------------------------------------------------------
+
+export const taxInvoices = pgTable("tax_invoices", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  invoiceNo: text("invoice_no").notNull().unique(),
+  issueDate: text("issue_date").notNull(),
+  clientName: text("client_name"),
+  clientAddress: text("client_address"),
+  clientTrn: text("client_trn"),
+  vatRatePercent: numeric("vat_rate_percent", { precision: 5, scale: 2 }).notNull().default("5"),
+  signatoryName: text("signatory_name"),
+  status: text("status").notNull().default("draft"),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedBy: integer("updated_by").references(() => users.id),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Unlike Performa Invoice, the tax invoice's real-world format shows a date
+// per line item, so itemDate is displayed here rather than just stored.
+export const taxInvoiceItems = pgTable("tax_invoice_items", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  invoiceId: uuid("invoice_id")
+    .notNull()
+    .references(() => taxInvoices.id, { onDelete: "cascade" }),
+  sortOrder: integer("sort_order").notNull().default(0),
+  itemDate: text("item_date"),
+  description: text("description").notNull(),
+  amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+});

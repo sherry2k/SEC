@@ -186,11 +186,18 @@ export default async function DashboardHome() {
                 Quotation
               </Link>
               <Link
+                href="/accounts/tax-invoices/new"
+                className="flex items-center gap-1.5 rounded-md border border-[var(--sec-line)] bg-white px-3 py-2 text-sm font-medium text-[var(--sec-ink)] transition-colors hover:border-[var(--sec-blue)]"
+              >
+                <Plus size={15} />
+                Tax invoice
+              </Link>
+              <Link
                 href="/accounts/performa-invoices/new"
                 className="flex items-center gap-1.5 rounded-md border border-[var(--sec-line)] bg-white px-3 py-2 text-sm font-medium text-[var(--sec-ink)] transition-colors hover:border-[var(--sec-blue)]"
               >
                 <Plus size={15} />
-                Invoice
+                Performa invoice
               </Link>
             </>
           )}
