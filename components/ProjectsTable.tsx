@@ -5,8 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search, Pencil, Trash2, Loader2, Check } from "lucide-react";
 import { PROJECT_CATEGORIES, CATEGORY_LABELS, CATEGORY_BADGE_STYLES, PROJECT_STATUS_LABELS, type ProjectCategory, type ProjectStatus } from "@/lib/checklist";
+import type { Role } from "@/lib/roles";
 
-type AssignableUser = { id: number; name: string };
+type AssignableUser = { id: number; name: string; role: Role };
 
 type ProjectRow = {
   id: string;
@@ -140,7 +141,7 @@ export default function ProjectsTable({
           >
             <option value="">Check a team member…</option>
             {assignableUsers
-              .filter((u) => u.id !== currentUserId)
+              .filter((u) => u.id !== currentUserId && u.role !== "admin")
               .map((u) => (
                 <option key={u.id} value={u.id}>
                   {u.name}
