@@ -69,7 +69,7 @@ export const ITEM_STATUS_LABELS: Record<ItemStatus, string> = {
   resubmission: "Resubmission",
   approved: "Approved",
   rejected: "Rejected",
-  not_applicable: "N/A",
+  not_applicable: "Not Required",
 };
 
 export const ITEM_STATUS_STYLES: Record<ItemStatus, string> = {

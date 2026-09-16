@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { AlertCircle, Clock, Loader2, CheckCircle2 } from "lucide-react";
-import { URGENCY_STYLES, formatDueLabel, type TaskUrgency } from "@/lib/task-urgency";
+import type { TaskUrgency } from "@/lib/task-urgency";
 
 export type MyTask = {
   projectId: string;
@@ -19,6 +18,10 @@ function greeting(firstName: string): string {
   return `Good ${part}, ${firstName}`;
 }
 
+// Just the greeting + summary chips now — the flat per-task table was
+// dropped: seeing the same project repeated once per open task read as
+// clutter rather than a task list. The full detail per task still lives
+// on the project's own checklist; this is a summary, not a duplicate view.
 export default function MyTasksView({
   tasks,
   completedThisWeekCount,
@@ -28,9 +31,6 @@ export default function MyTasksView({
   completedThisWeekCount: number;
   currentUserName: string;
 }) {
-  // Computed client-side (browser's local clock) to avoid a server/client
-  // hydration mismatch — the time of day depends on wherever the viewer
-  // actually is, not the server's clock.
   const [greetingText, setGreetingText] = useState<string | null>(null);
   useEffect(() => {
     setGreetingText(greeting(currentUserName.split(" ")[0]));
@@ -53,10 +53,8 @@ export default function MyTasksView({
   ];
 
   return (
-    <div>
+    <div className="mb-6">
       <h2 className="text-xl font-bold text-[var(--sec-ink)]">{greetingText ?? "\u00A0"}</h2>
-      <p className="mt-1 text-sm text-[var(--sec-muted)]">My Tasks</p>
-
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {chips.map((chip) => {
           const Icon = chip.icon;
@@ -70,45 +68,6 @@ export default function MyTasksView({
             </div>
           );
         })}
-      </div>
-
-      <div className="mt-6 overflow-hidden rounded-lg border border-[var(--sec-line)] bg-white">
-        {tasks.length === 0 ? (
-          <p className="px-4 py-10 text-center text-sm text-[var(--sec-muted)]">
-            No open tasks on your projects right now.
-          </p>
-        ) : (
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-[var(--sec-line)] text-xs uppercase tracking-wide text-[var(--sec-muted)]">
-                <th className="px-4 py-3 font-medium">Project</th>
-                <th className="px-4 py-3 font-medium">Task</th>
-                <th className="px-4 py-3 font-medium">Due</th>
-                <th className="w-10 px-4 py-3" />
-              </tr>
-            </thead>
-            <tbody>
-              {tasks.map((t, i) => (
-                <tr key={i} className="border-b border-[var(--sec-line)] last:border-0 hover:bg-slate-50">
-                  <td className="px-4 py-3">
-                    <Link href={`/projects/${t.projectId}`} className="font-mono text-xs text-[var(--sec-blue)] hover:underline">
-                      {t.projectLabel}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-[var(--sec-ink)]">
-                    <Link href={`/projects/${t.projectId}`} className="hover:underline">
-                      {t.taskName}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-[var(--sec-muted)]">{formatDueLabel(t.dueDate)}</td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-block h-2.5 w-2.5 rounded-full ${URGENCY_STYLES[t.urgency]}`} aria-hidden="true" />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
       </div>
     </div>
   );

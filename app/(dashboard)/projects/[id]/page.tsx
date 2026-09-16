@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Pencil } from "lucide-react";
+import { Pencil, ArrowLeft } from "lucide-react";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { projects, projectCategories, projectChecklistItems, checklistTemplates, users } from "@/db/schema";
@@ -96,6 +96,13 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div>
+      <Link
+        href="/projects"
+        className="no-print mb-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--sec-blue)] hover:underline"
+      >
+        <ArrowLeft size={14} />
+        Back to projects
+      </Link>
       <p className="font-mono text-xs text-[var(--sec-muted)]">Ref: {project.projectCode}</p>
       <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
         <h1 className="font-bold text-2xl text-[var(--sec-ink)]">{project.name}</h1>

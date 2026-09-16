@@ -123,7 +123,7 @@ export default function ProjectsTable({
           </button>
         </div>
 
-        <div className={`flex flex-col gap-3 sm:flex-row sm:items-center ${responsibleFilter === "me" ? "hidden" : ""}`}>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="relative flex-1 sm:max-w-xs">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--sec-muted)]" />
             <input
@@ -164,11 +164,13 @@ export default function ProjectsTable({
         </div>
       </div>
 
-      {responsibleFilter === "me" ? (
+      {responsibleFilter === "me" && (
         <MyTasksView tasks={myTasks} completedThisWeekCount={completedThisWeekCount} currentUserName={currentUserName} />
-      ) : filtered.length === 0 ? (
+      )}
+
+      {filtered.length === 0 ? (
         <div className="rounded-lg border border-dashed border-[var(--sec-line)] bg-white py-12 text-center text-sm text-[var(--sec-muted)]">
-          No projects match that search.
+          {responsibleFilter === "me" ? "No projects assigned to you yet." : "No projects match that search."}
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-[var(--sec-line)] bg-white">
