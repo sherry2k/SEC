@@ -51,16 +51,17 @@ export async function PATCH(
   if (remarks !== undefined) update.remarks = remarks || null;
   if (hasDueDate) update.dueDate = dueDate ?? null;
 
-  // Freeze who approved this specific stage, the moment it happens — not
-  // the project's Responsible person, since different staff can work on
-  // different stages. Reopening a stage (moving it off Approved) clears it.
+  // Submitting is the staff action worth crediting; approval is the
+  // municipality's decision, so it only gets a timestamp, no person.
   if (status !== undefined && status !== before.status) {
+    if (status === "submitted") {
+      update.submittedBy = auth.user.id;
+      update.submittedAt = new Date();
+    }
     if (status === "approved") {
-      update.completedBy = auth.user.id;
-      update.completedAt = new Date();
+      update.approvedAt = new Date();
     } else if (before.status === "approved") {
-      update.completedBy = null;
-      update.completedAt = null;
+      update.approvedAt = null;
     }
   }
 

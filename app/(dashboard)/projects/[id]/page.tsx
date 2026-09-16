@@ -51,16 +51,17 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       status: projectChecklistItems.status,
       remarks: projectChecklistItems.remarks,
       dueDate: projectChecklistItems.dueDate,
-      completedAt: projectChecklistItems.completedAt,
-      completedByName: users.name,
-      completedByRole: users.role,
+      submittedAt: projectChecklistItems.submittedAt,
+      submittedByName: users.name,
+      submittedByRole: users.role,
+      approvedAt: projectChecklistItems.approvedAt,
       category: checklistTemplates.category,
       name: checklistTemplates.name,
       sortOrder: checklistTemplates.sortOrder,
     })
     .from(projectChecklistItems)
     .innerJoin(checklistTemplates, eq(projectChecklistItems.templateId, checklistTemplates.id))
-    .leftJoin(users, eq(projectChecklistItems.completedBy, users.id))
+    .leftJoin(users, eq(projectChecklistItems.submittedBy, users.id))
     .where(eq(projectChecklistItems.projectId, id));
 
   const sections = linkedCategories.map((category) => ({
@@ -75,8 +76,9 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         remarks: i.remarks,
         parentItemId: i.parentItemId,
         dueDate: i.dueDate ? i.dueDate.toISOString().slice(0, 10) : null,
-        completedByName: visibleActorName(i.completedByRole, i.completedByName, user.role),
-        completedAt: i.completedAt ? i.completedAt.toISOString() : null,
+        submittedByName: visibleActorName(i.submittedByRole, i.submittedByName, user.role),
+        submittedAt: i.submittedAt ? i.submittedAt.toISOString() : null,
+        approvedAt: i.approvedAt ? i.approvedAt.toISOString() : null,
       })),
   }));
 

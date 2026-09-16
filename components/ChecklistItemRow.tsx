@@ -12,8 +12,9 @@ export type ChecklistItem = {
   remarks: string | null;
   parentItemId: string | null;
   dueDate: string | null; // "YYYY-MM-DD" or null
-  completedByName: string | null;
-  completedAt: string | null;
+  submittedByName: string | null;
+  submittedAt: string | null;
+  approvedAt: string | null;
 };
 
 function toDateInputValue(iso: string | null): string {
@@ -40,25 +41,29 @@ export default function ChecklistItemRow({
 }) {
   const [status, setStatus] = useState(item.status);
   const [dueDate, setDueDate] = useState(item.dueDate);
-  const [completedByName, setCompletedByName] = useState(item.completedByName);
-  const [completedAt, setCompletedAt] = useState(item.completedAt);
+  const [submittedByName, setSubmittedByName] = useState(item.submittedByName);
+  const [submittedAt, setSubmittedAt] = useState(item.submittedAt);
+  const [approvedAt, setApprovedAt] = useState(item.approvedAt);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   const save = async (patch: { status?: ItemStatus; dueDate?: string | null }) => {
-    const previous = { status, dueDate, completedByName, completedAt };
+    const previous = { status, dueDate, submittedByName, submittedAt, approvedAt };
 
     if (patch.status !== undefined) {
       setStatus(patch.status);
-      // Mirror the server's freeze-on-approve / clear-on-reopen logic here
-      // too, so the "Completed by" line shows immediately, not just after
-      // the next page load.
-      if (patch.status === "approved" && previous.status !== "approved") {
-        setCompletedByName(currentUserName);
-        setCompletedAt(new Date().toISOString());
-      } else if (patch.status !== "approved" && previous.status === "approved") {
-        setCompletedByName(null);
-        setCompletedAt(null);
+      // Mirror the server's rules here too, so the credit line updates the
+      // moment you change status, not just after the next page load.
+      // Submitting is the staff action worth crediting; approval is the
+      // municipality's call, so it only ever gets a date, never a name.
+      if (patch.status === "submitted") {
+        setSubmittedByName(currentUserName);
+        setSubmittedAt(new Date().toISOString());
+      }
+      if (patch.status === "approved") {
+        setApprovedAt(new Date().toISOString());
+      } else if (previous.status === "approved") {
+        setApprovedAt(null);
       }
     }
     if (patch.dueDate !== undefined) setDueDate(patch.dueDate);
@@ -75,15 +80,17 @@ export default function ChecklistItemRow({
         const data: { error?: string } = await res.json().catch(() => ({}));
         setStatus(previous.status);
         setDueDate(previous.dueDate);
-        setCompletedByName(previous.completedByName);
-        setCompletedAt(previous.completedAt);
+        setSubmittedByName(previous.submittedByName);
+        setSubmittedAt(previous.submittedAt);
+        setApprovedAt(previous.approvedAt);
         setError(data.error || "Couldn't save that.");
       }
     } catch {
       setStatus(previous.status);
       setDueDate(previous.dueDate);
-      setCompletedByName(previous.completedByName);
-      setCompletedAt(previous.completedAt);
+      setSubmittedByName(previous.submittedByName);
+      setSubmittedAt(previous.submittedAt);
+      setApprovedAt(previous.approvedAt);
       setError("Couldn't reach the server.");
     } finally {
       setSaving(false);
@@ -91,6 +98,15 @@ export default function ChecklistItemRow({
   };
 
   const urgency = classifyTask(dueDate, status);
+
+  let creditLine: string | null = null;
+  if (status === "approved" && approvedAt) {
+    creditLine = submittedByName
+      ? `Submitted by ${submittedByName}${submittedAt ? ` · ${formatDate(submittedAt)}` : ""} — Approved ${formatDate(approvedAt)}`
+      : `Approved ${formatDate(approvedAt)}`;
+  } else if (submittedByName && submittedAt) {
+    creditLine = `Submitted by ${submittedByName} · ${formatDate(submittedAt)}`;
+  }
 
   return (
     <div
@@ -103,11 +119,7 @@ export default function ChecklistItemRow({
           {urgency && <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${URGENCY_STYLES[urgency]}`} aria-hidden="true" />}
           {item.name}
         </span>
-        {status === "approved" && completedByName && completedAt && (
-          <span className="mt-0.5 block text-xs text-emerald-700">
-            Approved by {completedByName} · {formatDate(completedAt)}
-          </span>
-        )}
+        {creditLine && <span className="mt-0.5 block text-xs text-emerald-700">{creditLine}</span>}
       </span>
 
       <div className="flex items-center gap-2">

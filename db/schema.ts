@@ -141,12 +141,15 @@ export const projectChecklistItems = pgTable("project_checklist_items", {
   dueDate: date("due_date", { mode: "date" }),
   remarks: text("remarks"),
   fileUrl: text("file_url"),
-  // Frozen the moment this specific stage is marked Approved — the same
-  // reasoning as projects.completedBy: updatedBy/updatedAt get overwritten
-  // by any later edit (e.g. fixing the due date after approval), so they
-  // can't reliably answer "who finished this stage."
-  completedBy: integer("completed_by").references(() => users.id),
-  completedAt: timestamp("completed_at", { withTimezone: true }),
+  // Submitting is the real staff action worth crediting — approval itself
+  // is the municipality's decision, not something a staff member does, so
+  // there's no "approvedBy" here on purpose. submittedBy/At update every
+  // time the item re-enters "submitted" (e.g. after a resubmission) and
+  // otherwise persist as history even if the item is later approved or
+  // rejected. approvedAt is just a date, not a person's credit.
+  submittedBy: integer("submitted_by").references(() => users.id),
+  submittedAt: timestamp("submitted_at", { withTimezone: true }),
+  approvedAt: timestamp("approved_at", { withTimezone: true }),
   updatedBy: integer("updated_by").references(() => users.id),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
