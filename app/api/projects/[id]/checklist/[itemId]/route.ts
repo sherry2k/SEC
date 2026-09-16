@@ -18,6 +18,7 @@ export async function PATCH(
   const body = await request.json().catch(() => null);
   const status = body?.status as ItemStatus | undefined;
   const remarks = typeof body?.remarks === "string" ? body.remarks : undefined;
+  const name = typeof body?.name === "string" ? body.name.trim() : undefined;
   // dueDate: "YYYY-MM-DD" string sets it, null clears it, undefined leaves it alone
   const dueDateRaw = body?.dueDate;
   const hasDueDate = "dueDate" in (body ?? {});
@@ -29,19 +30,34 @@ export async function PATCH(
   if (hasDueDate && dueDateRaw !== null && (typeof dueDateRaw !== "string" || Number.isNaN(new Date(dueDateRaw).getTime()))) {
     return NextResponse.json({ error: "Invalid due date." }, { status: 400 });
   }
+  if (name !== undefined && name === "") {
+    return NextResponse.json({ error: "Name can't be empty." }, { status: 400 });
+  }
 
-  // Fetch the item's current status and name before overwriting — needed
-  // for a readable activity log entry ("X: not started → submitted").
+  // Fetch the item's current status/name before overwriting — needed for a
+  // readable activity log entry, and to know whether this is a custom item
+  // (no templateId) — only custom items can be renamed.
   const [before] = await db
-    .select({ status: projectChecklistItems.status, name: checklistTemplates.name })
+    .select({
+      status: projectChecklistItems.status,
+      templateId: projectChecklistItems.templateId,
+      customName: projectChecklistItems.customName,
+      templateName: checklistTemplates.name,
+    })
     .from(projectChecklistItems)
-    .innerJoin(checklistTemplates, eq(projectChecklistItems.templateId, checklistTemplates.id))
+    .leftJoin(checklistTemplates, eq(projectChecklistItems.templateId, checklistTemplates.id))
     .where(and(eq(projectChecklistItems.id, itemId), eq(projectChecklistItems.projectId, projectId)))
     .limit(1);
 
   if (!before) {
     return NextResponse.json({ error: "Checklist item not found." }, { status: 404 });
   }
+
+  if (name !== undefined && before.templateId !== null) {
+    return NextResponse.json({ error: "Only custom items you added yourself can be renamed." }, { status: 403 });
+  }
+
+  const beforeName = before.customName ?? before.templateName ?? "Untitled item";
 
   const update: Partial<typeof projectChecklistItems.$inferInsert> = {
     updatedBy: auth.user.id,
@@ -50,6 +66,7 @@ export async function PATCH(
   if (status !== undefined) update.status = status;
   if (remarks !== undefined) update.remarks = remarks || null;
   if (hasDueDate) update.dueDate = dueDate ?? null;
+  if (name !== undefined) update.customName = name;
 
   // Submitting is the staff action worth crediting; approval is the
   // municipality's decision, so it only gets a timestamp, no person.
@@ -79,9 +96,40 @@ export async function PATCH(
       projectId,
       action: "checklist_status_changed",
       targetName: project?.name ?? "",
-      details: `${before.name}: ${ITEM_STATUS_LABELS[before.status]} → ${ITEM_STATUS_LABELS[status]}`,
+      details: `${beforeName}: ${ITEM_STATUS_LABELS[before.status]} → ${ITEM_STATUS_LABELS[status]}`,
     });
   }
+
+  return NextResponse.json({ success: true });
+}
+
+// Only custom items (no templateId) can be deleted — the standard
+// checklist that comes from linking a category isn't removable item by
+// item, only the whole category can be unlinked.
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string; itemId: string }> }
+) {
+  const auth = await authorizePermissionApi("projects.edit");
+  if (!auth.ok) return auth.response;
+
+  const { id: projectId, itemId } = await params;
+
+  const [item] = await db
+    .select({ templateId: projectChecklistItems.templateId, customName: projectChecklistItems.customName })
+    .from(projectChecklistItems)
+    .where(and(eq(projectChecklistItems.id, itemId), eq(projectChecklistItems.projectId, projectId)))
+    .limit(1);
+
+  if (!item) {
+    return NextResponse.json({ error: "Checklist item not found." }, { status: 404 });
+  }
+  if (item.templateId !== null) {
+    return NextResponse.json({ error: "Only custom items you added yourself can be deleted." }, { status: 403 });
+  }
+
+  await db.delete(projectChecklistItems).where(eq(projectChecklistItems.id, itemId));
+  await touchProject(projectId, auth.user.id);
 
   return NextResponse.json({ success: true });
 }

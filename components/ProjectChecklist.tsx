@@ -3,6 +3,7 @@
 import { CATEGORY_LABELS, CATEGORY_ACCENT_BORDER, type ProjectCategory } from "@/lib/checklist";
 import ChecklistItemRow, { type ChecklistItem } from "@/components/ChecklistItemRow";
 import AddChecklistItemButton from "@/components/AddChecklistItemButton";
+import DeleteCategoryButton from "@/components/DeleteCategoryButton";
 
 type CategorySection = { category: ProjectCategory; items: ChecklistItem[] };
 
@@ -48,12 +49,13 @@ export default function ProjectChecklist({
     <div className="space-y-6">
       {sections.map(({ category, items }) => (
         <div key={category} className={`rounded-lg border border-l-4 border-[var(--sec-line)] bg-white ${CATEGORY_ACCENT_BORDER[category]}`}>
-          <div className="border-b border-[var(--sec-line)] px-4 py-3">
+          <div className="flex items-center justify-between border-b border-[var(--sec-line)] px-4 py-3">
             <h3 className="font-bold text-base text-[var(--sec-ink)]">{CATEGORY_LABELS[category]}</h3>
+            {canEdit && <DeleteCategoryButton projectId={projectId} category={category} />}
           </div>
           <div className="px-4 py-1">{renderTree(items, projectId, canEdit, currentUserName)}</div>
           {canEdit && (
-            <div className="border-t border-[var(--sec-line)]">
+            <div className="no-print border-t border-[var(--sec-line)]">
               <AddChecklistItemButton projectId={projectId} category={category} />
             </div>
           )}

@@ -42,4 +42,17 @@ html, body {
   body {
     background: white;
   }
+  /* A printed page can't be clicked — links read as plain text, not a
+     blue, underlined invitation to click. */
+  a {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+  /* Never let a scrollable container clip its own content when printed —
+     force everything to lay out in full instead of hiding behind a
+     scrollbar that obviously can't be scrolled on paper. */
+  .overflow-x-auto,
+  .overflow-y-auto {
+    overflow: visible !important;
+  }
 }

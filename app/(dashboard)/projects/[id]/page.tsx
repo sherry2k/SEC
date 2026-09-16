@@ -13,6 +13,7 @@ import ProjectChecklist from "@/components/ProjectChecklist";
 import AddCategoryButton from "@/components/AddCategoryButton";
 import DeleteProjectButton from "@/components/DeleteProjectButton";
 import ProjectStatusControl from "@/components/ProjectStatusControl";
+import PrintButton from "@/components/PrintButton";
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requirePermission("projects.view");
@@ -55,6 +56,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       submittedByRole: users.role,
       approvedAt: projectChecklistItems.approvedAt,
       category: projectChecklistItems.category,
+      templateId: projectChecklistItems.templateId,
       customName: projectChecklistItems.customName,
       templateName: checklistTemplates.name,
       sortOrder: projectChecklistItems.sortOrder,
@@ -100,6 +102,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         submittedAt: i.submittedAt ? i.submittedAt.toISOString() : null,
         approvedAt: i.approvedAt ? i.approvedAt.toISOString() : null,
         comments: commentsByItem.get(i.id) ?? [],
+        isCustom: i.templateId === null,
       })),
   }));
 
@@ -132,13 +135,14 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           {canEdit && (
             <Link
               href={`/projects/${project.id}/edit`}
-              className="flex items-center gap-1.5 rounded-md border border-[var(--sec-line)] px-3 py-1.5 text-xs font-medium text-[var(--sec-ink)] transition-colors hover:border-[var(--sec-blue)]"
+              className="no-print flex items-center gap-1.5 rounded-md border border-[var(--sec-line)] px-3 py-1.5 text-xs font-medium text-[var(--sec-ink)] transition-colors hover:border-[var(--sec-blue)]"
             >
               <Pencil size={13} />
               Edit
             </Link>
           )}
           {canDelete && <DeleteProjectButton projectId={project.id} />}
+          <PrintButton />
         </div>
       </div>
 
@@ -170,7 +174,11 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
       <div className="mt-8 flex items-center justify-between">
         <h2 className="font-bold text-lg text-[var(--sec-ink)]">Checklist</h2>
-        {canEdit && <AddCategoryButton projectId={project.id} availableCategories={availableCategories} />}
+        {canEdit && (
+          <div className="no-print">
+            <AddCategoryButton projectId={project.id} availableCategories={availableCategories} />
+          </div>
+        )}
       </div>
 
       <div className="mt-4">

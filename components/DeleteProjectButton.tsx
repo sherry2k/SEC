@@ -31,7 +31,7 @@ export default function DeleteProjectButton({ projectId }: { projectId: string }
 
   if (confirming) {
     return (
-      <div className="flex items-center gap-2">
+      <div className="no-print flex items-center gap-2">
         {error && <span className="text-xs text-red-600">{error}</span>}
         <button
           onClick={handleDelete}
@@ -54,7 +54,7 @@ export default function DeleteProjectButton({ projectId }: { projectId: string }
   return (
     <button
       onClick={() => setConfirming(true)}
-      className="flex items-center gap-1.5 rounded-md border border-[var(--sec-line)] px-3 py-1.5 text-xs font-medium text-[var(--sec-muted)] transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600"
+      className="no-print flex items-center gap-1.5 rounded-md border border-[var(--sec-line)] px-3 py-1.5 text-xs font-medium text-[var(--sec-muted)] transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600"
     >
       <Trash2 size={13} />
       Delete

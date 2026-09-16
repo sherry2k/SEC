@@ -62,13 +62,13 @@ export default function ProjectStatusControl({
 
   return (
     <span className="flex items-center gap-1.5">
-      {saving && <Loader2 size={13} className="animate-spin text-[var(--sec-muted)]" />}
-      {error && <span className="text-xs text-red-600">{error}</span>}
+      {saving && <Loader2 size={13} className="no-print animate-spin text-[var(--sec-muted)]" />}
+      {error && <span className="no-print text-xs text-red-600">{error}</span>}
       <select
         value={status}
         onChange={(e) => handleChange(e.target.value as ProjectStatus)}
         disabled={saving}
-        className={`rounded-full border px-3 py-1 text-xs font-medium outline-none disabled:opacity-60 ${STATUS_BADGE_STYLES[status]}`}
+        className={`no-print rounded-full border px-3 py-1 text-xs font-medium outline-none disabled:opacity-60 ${STATUS_BADGE_STYLES[status]}`}
       >
         {PROJECT_STATUSES.map((s) => (
           <option key={s} value={s}>
@@ -76,6 +76,10 @@ export default function ProjectStatusControl({
           </option>
         ))}
       </select>
+      {/* Plain badge, print only — the <select> above is hidden from print */}
+      <span className={`hidden rounded-full border px-3 py-1 text-xs font-medium print:inline ${STATUS_BADGE_STYLES[status]}`}>
+        {PROJECT_STATUS_LABELS[status]}
+      </span>
     </span>
   );
 }
