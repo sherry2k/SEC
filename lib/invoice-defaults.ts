@@ -1,31 +1,31 @@
 // Plain module, no "use client" — same reasoning as lib/quotation-defaults.ts.
-// Server Components call defaultPerformaInvoiceValues() directly (New page),
+// Server Components call defaultInvoiceValues() directly (New page),
 // so it can't live inside a client-boundary file.
 
-export type PerformaInvoiceItemDraft = {
+export type InvoiceItemDraft = {
   key: string;
   itemDate: string;
   description: string;
   amount: string;
 };
 
-export function emptyPIItem(): PerformaInvoiceItemDraft {
+export function emptyInvoiceItem(): InvoiceItemDraft {
   return {
-    key: `pi-item-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+    key: `inv-item-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
     itemDate: "",
     description: "",
     amount: "",
   };
 }
 
-export type PerformaInvoiceFormValues = {
+export type InvoiceFormValues = {
   issueDate: string;
   customerName: string;
   project: string;
   customerAddress: string;
   vatRatePercent: number;
   signatoryName: string;
-  items: PerformaInvoiceItemDraft[];
+  items: InvoiceItemDraft[];
 };
 
 function todayFormatted(): string {
@@ -37,7 +37,7 @@ function todayFormatted(): string {
 
 // issueDate defaults to today (a sensible starting value, not "content" to
 // delete) — every other field starts blank, per the no-prewritten-text rule.
-export function defaultPerformaInvoiceValues(): PerformaInvoiceFormValues {
+export function defaultInvoiceValues(): InvoiceFormValues {
   return {
     issueDate: todayFormatted(),
     customerName: "",
@@ -45,6 +45,6 @@ export function defaultPerformaInvoiceValues(): PerformaInvoiceFormValues {
     customerAddress: "Abu Dhabi - UAE",
     vatRatePercent: 5,
     signatoryName: "Eng. Mohammad Abu Eisa",
-    items: [emptyPIItem()],
+    items: [emptyInvoiceItem()],
   };
 }

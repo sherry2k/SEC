@@ -21,7 +21,10 @@ export type ActivityAction =
   | "tax_invoice_deleted"
   | "receipt_voucher_created"
   | "receipt_voucher_updated"
-  | "receipt_voucher_deleted";
+  | "receipt_voucher_deleted"
+  | "invoice_created"
+  | "invoice_updated"
+  | "invoice_deleted";
 
 export const ACTIVITY_LABELS: Record<ActivityAction, string> = {
   project_created: "created",
@@ -43,4 +46,7 @@ export const ACTIVITY_LABELS: Record<ActivityAction, string> = {
   receipt_voucher_created: "created receipt voucher",
   receipt_voucher_updated: "updated receipt voucher",
   receipt_voucher_deleted: "deleted receipt voucher",
+  invoice_created: "created invoice",
+  invoice_updated: "updated invoice",
+  invoice_deleted: "deleted invoice",
 };

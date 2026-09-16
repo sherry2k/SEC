@@ -349,3 +349,37 @@ export const receiptVoucherItems = pgTable("receipt_voucher_items", {
   description: text("description").notNull(),
   amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
 });
+
+// ---------------------------------------------------------------------------
+// Finance — Invoice. Structurally the same shape as Performa Invoice, but
+// it's a different real document: titled "Invoice" and on the shared INV
+// numbering sequence with Tax Invoice and Receipt Voucher, not Performa
+// Invoice's own separate PINV counter.
+// ---------------------------------------------------------------------------
+
+export const invoices = pgTable("invoices", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  invoiceNo: text("invoice_no").notNull().unique(),
+  issueDate: text("issue_date").notNull(),
+  customerName: text("customer_name"),
+  project: text("project"),
+  customerAddress: text("customer_address"),
+  vatRatePercent: numeric("vat_rate_percent", { precision: 5, scale: 2 }).notNull().default("5"),
+  signatoryName: text("signatory_name"),
+  status: text("status").notNull().default("draft"),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedBy: integer("updated_by").references(() => users.id),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const invoiceItems = pgTable("invoice_items", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  invoiceId: uuid("invoice_id")
+    .notNull()
+    .references(() => invoices.id, { onDelete: "cascade" }),
+  sortOrder: integer("sort_order").notNull().default(0),
+  itemDate: text("item_date"),
+  description: text("description").notNull(),
+  amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+});

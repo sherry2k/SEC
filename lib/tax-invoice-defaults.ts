@@ -39,10 +39,10 @@ export function defaultTaxInvoiceValues(): TaxInvoiceFormValues {
   return {
     issueDate: todayFormatted(),
     clientName: "",
-    clientAddress: "",
+    clientAddress: "Abu Dhabi - UAE",
     clientTrn: "",
     vatRatePercent: 5,
-    signatoryName: "",
+    signatoryName: "Eng. Mohammad Abu Eisa",
     items: [emptyTaxItem()],
   };
 }

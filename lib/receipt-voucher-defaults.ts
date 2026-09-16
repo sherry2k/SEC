@@ -36,9 +36,9 @@ export function defaultReceiptVoucherValues(): ReceiptVoucherFormValues {
     issueDate: todayFormatted(),
     toName: "",
     project: "",
-    location: "",
+    location: "Abu Dhabi - UAE",
     vatRatePercent: 5,
-    signatoryName: "",
+    signatoryName: "Eng. Mohammad Abu Eisa",
     items: [emptyReceiptItem()],
   };
 }
