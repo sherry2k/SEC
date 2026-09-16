@@ -118,7 +118,7 @@ export default function QuotationPrintView({ quotation }: { quotation: Printable
           const scopeLines = item.scopeOfWork.split("\n").map((l) => l.trim()).filter(Boolean);
           return (
             <div key={i} className="mt-8 break-inside-avoid">
-              <p className="font-bold text-[var(--sec-ink)]">
+              <p className="text-base font-bold text-[var(--sec-ink)]">
                 {index + 1} {item.description}
               </p>
               {item.classification && (
@@ -127,11 +127,16 @@ export default function QuotationPrintView({ quotation }: { quotation: Printable
                 </p>
               )}
               <p className="mt-2 text-sm font-bold text-[var(--sec-blue)]">Scope of Work</p>
-              <ol className="mt-1 list-decimal space-y-0.5 pl-5 text-sm">
+              {/* No auto-numbering here on purpose — scope text pasted from
+                  Word already carries its own numbering (and any nested
+                  lettering, like A/B/C under one numbered point). Adding a
+                  second, separate numbered list on top just duplicated and
+                  flattened it. This prints each line exactly as typed. */}
+              <div className="mt-1 space-y-0.5 pl-1 text-sm">
                 {scopeLines.map((line, li) => (
-                  <li key={li}>{line}</li>
+                  <p key={li}>{line}</p>
                 ))}
-              </ol>
+              </div>
 
               <table className="mt-3 w-full border-collapse text-sm">
                 <thead>
@@ -191,7 +196,7 @@ export default function QuotationPrintView({ quotation }: { quotation: Printable
 
       {quotation.paymentTerms && (
         <div className="mt-6">
-          <p className="text-center text-sm font-bold">Payment Terms</p>
+          <p className="text-sm font-bold">Payment Terms</p>
           <ul className="mt-1 list-disc space-y-0.5 pl-5 text-sm">
             {quotation.paymentTerms.split("\n").map((l) => l.trim()).filter(Boolean).map((line, i) => (
               <li key={i}>{line}</li>
@@ -202,7 +207,7 @@ export default function QuotationPrintView({ quotation }: { quotation: Printable
 
       {quotation.commercialConditions && (
         <div className="mt-5">
-          <p className="text-center text-sm font-bold">Commercial Conditions</p>
+          <p className="text-sm font-bold">Commercial Conditions</p>
           <ol className="mt-1 list-decimal space-y-0.5 pl-5 text-sm">
             {quotation.commercialConditions.split("\n").map((l) => l.trim()).filter(Boolean).map((line, i) => (
               <li key={i}>{line}</li>
@@ -213,7 +218,7 @@ export default function QuotationPrintView({ quotation }: { quotation: Printable
 
       {quotation.notes && (
         <div className="mt-5">
-          <p className="text-center text-sm font-bold">Notes</p>
+          <p className="text-sm font-bold">Notes</p>
           <ul className="mt-1 list-disc space-y-0.5 pl-5 text-sm">
             {quotation.notes.split("\n").map((l) => l.trim()).filter(Boolean).map((line, i) => (
               <li key={i}>{line}</li>
