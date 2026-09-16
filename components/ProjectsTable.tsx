@@ -7,6 +7,7 @@ import { Search, Pencil, Trash2, Loader2, Check } from "lucide-react";
 import { PROJECT_CATEGORIES, CATEGORY_LABELS, CATEGORY_BADGE_STYLES, PROJECT_STATUS_LABELS, type ProjectCategory, type ProjectStatus } from "@/lib/checklist";
 import type { Role } from "@/lib/roles";
 import MyTasksView, { type MyTask } from "@/components/MyTasksView";
+import { URGENCY_STYLES, formatDueLabel, type TaskUrgency } from "@/lib/task-urgency";
 
 export type { MyTask };
 
@@ -29,6 +30,7 @@ type ProjectRow = {
   categories: ProjectCategory[];
   progress: { approved: number; total: number };
   currentActivity: string | null;
+  dueInfo: { dueDate: string; urgency: TaskUrgency } | null;
 };
 
 function formatDate(iso: string) {
@@ -168,7 +170,7 @@ export default function ProjectsTable({
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-[var(--sec-line)] bg-white">
-          <table className="w-full min-w-[1240px] text-left text-sm">
+          <table className="w-full min-w-[1330px] text-left text-sm">
             <thead>
               <tr className="border-b border-[var(--sec-line)] text-xs uppercase tracking-wide text-[var(--sec-muted)]">
                 <th className="px-4 py-3 font-medium">S.No.</th>
@@ -178,6 +180,7 @@ export default function ProjectsTable({
                 <th className="w-40 px-4 py-3 font-medium">Location</th>
                 <th className="px-4 py-3 font-medium">Progress</th>
                 <th className="px-4 py-3 font-medium">Current activity</th>
+                <th className="w-32 px-4 py-3 font-medium">Due</th>
                 <th className="w-36 px-4 py-3 font-medium">Responsible</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Last updated</th>
@@ -235,6 +238,16 @@ export default function ProjectsTable({
                       {p.currentActivity ? (
                         <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
                           {p.currentActivity}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-[var(--sec-muted)]">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {p.dueInfo ? (
+                        <span className="flex items-center gap-1.5 text-xs">
+                          <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${URGENCY_STYLES[p.dueInfo.urgency]}`} aria-hidden="true" />
+                          <span className="text-[var(--sec-ink)]">{formatDueLabel(p.dueInfo.dueDate)}</span>
                         </span>
                       ) : (
                         <span className="text-xs text-[var(--sec-muted)]">—</span>

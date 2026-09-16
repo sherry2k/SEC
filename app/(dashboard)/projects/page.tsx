@@ -11,6 +11,7 @@ import { can } from "@/lib/permissions";
 import { visibleActorName } from "@/lib/visibility";
 import { getAssignableUsers } from "@/lib/assignable-users";
 import { classifyTask } from "@/lib/task-urgency";
+import type { TaskUrgency } from "@/lib/task-urgency";
 import type { ProjectCategory } from "@/lib/checklist";
 import ProjectsTable, { type MyTask } from "@/components/ProjectsTable";
 
@@ -93,6 +94,26 @@ export default async function ProjectsPage() {
     currentActivityByProject.set(projectId, best.name);
   }
 
+  // Same idea as Current Activity, but for the due date: whichever open
+  // task on this project is most urgent (overdue beats due-today beats a
+  // future date), so the list shows at a glance which projects are behind.
+  const dueUrgencyOrder: Record<TaskUrgency, number> = { overdue: 0, due_today: 1, in_progress: 2 };
+  const dueByProject = new Map<string, { dueDate: string; urgency: TaskUrgency }>();
+  for (const item of checklistRows) {
+    if (!item.dueDate) continue;
+    const urgency = classifyTask(item.dueDate, item.status);
+    if (!urgency) continue;
+    const dueDate = item.dueDate.toISOString().slice(0, 10);
+    const current = dueByProject.get(item.projectId);
+    if (
+      !current ||
+      dueUrgencyOrder[urgency] < dueUrgencyOrder[current.urgency] ||
+      (dueUrgencyOrder[urgency] === dueUrgencyOrder[current.urgency] && dueDate < current.dueDate)
+    ) {
+      dueByProject.set(item.projectId, { dueDate, urgency });
+    }
+  }
+
   const tableRows = rows.map((p) => ({
     id: p.id,
     projectCode: p.projectCode,
@@ -110,6 +131,7 @@ export default async function ProjectsPage() {
     categories: categoriesByProject.get(p.id) ?? [],
     progress: progressByProject.get(p.id) ?? { approved: 0, total: 0 },
     currentActivity: currentActivityByProject.get(p.id) ?? null,
+    dueInfo: dueByProject.get(p.id) ?? null,
   }));
 
   // My Tasks — every open checklist item across projects where the viewer

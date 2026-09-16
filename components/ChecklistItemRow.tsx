@@ -82,6 +82,7 @@ export default function ChecklistItemRow({
 
         {canEdit ? (
           <>
+            <span className="text-xs text-[var(--sec-muted)]">Due</span>
             <input
               type="date"
               value={toDateInputValue(dueDate)}
@@ -105,7 +106,7 @@ export default function ChecklistItemRow({
           </>
         ) : (
           <>
-            {dueDate && <span className="text-xs text-[var(--sec-muted)]">{toDateInputValue(dueDate)}</span>}
+            {dueDate && <span className="text-xs text-[var(--sec-muted)]">Due {toDateInputValue(dueDate)}</span>}
             <span className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${ITEM_STATUS_STYLES[status]}`}>
               {ITEM_STATUS_LABELS[status]}
             </span>
