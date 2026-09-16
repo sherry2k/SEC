@@ -1,20 +1,28 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Loader2, MessageSquarePlus } from "lucide-react";
 import { ITEM_STATUSES, ITEM_STATUS_LABELS, ITEM_STATUS_STYLES, type ItemStatus } from "@/lib/checklist";
 import { classifyTask, URGENCY_STYLES } from "@/lib/task-urgency";
+
+export type ChecklistComment = {
+  id: string;
+  comment: string;
+  authorName: string | null;
+  createdAt: string;
+};
 
 export type ChecklistItem = {
   id: string;
   name: string;
   status: ItemStatus;
-  remarks: string | null;
   parentItemId: string | null;
   dueDate: string | null; // "YYYY-MM-DD" or null
   submittedByName: string | null;
   submittedAt: string | null;
   approvedAt: string | null;
+  comments: ChecklistComment[];
 };
 
 function toDateInputValue(iso: string | null): string {
@@ -39,17 +47,22 @@ export default function ChecklistItemRow({
   canEdit: boolean;
   currentUserName: string;
 }) {
+  const router = useRouter();
   const [status, setStatus] = useState(item.status);
   const [dueDate, setDueDate] = useState(item.dueDate);
-  const [remarks, setRemarks] = useState(item.remarks ?? "");
   const [submittedByName, setSubmittedByName] = useState(item.submittedByName);
   const [submittedAt, setSubmittedAt] = useState(item.submittedAt);
   const [approvedAt, setApprovedAt] = useState(item.approvedAt);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const save = async (patch: { status?: ItemStatus; dueDate?: string | null; remarks?: string }) => {
-    const previous = { status, dueDate, remarks, submittedByName, submittedAt, approvedAt };
+  const [comments, setComments] = useState(item.comments);
+  const [addingComment, setAddingComment] = useState(false);
+  const [newComment, setNewComment] = useState("");
+  const [commentSaving, setCommentSaving] = useState(false);
+
+  const save = async (patch: { status?: ItemStatus; dueDate?: string | null }) => {
+    const previous = { status, dueDate, submittedByName, submittedAt, approvedAt };
 
     if (patch.status !== undefined) {
       setStatus(patch.status);
@@ -68,7 +81,6 @@ export default function ChecklistItemRow({
       }
     }
     if (patch.dueDate !== undefined) setDueDate(patch.dueDate);
-    if (patch.remarks !== undefined) setRemarks(patch.remarks);
 
     setSaving(true);
     setError("");
@@ -82,7 +94,6 @@ export default function ChecklistItemRow({
         const data: { error?: string } = await res.json().catch(() => ({}));
         setStatus(previous.status);
         setDueDate(previous.dueDate);
-        setRemarks(previous.remarks);
         setSubmittedByName(previous.submittedByName);
         setSubmittedAt(previous.submittedAt);
         setApprovedAt(previous.approvedAt);
@@ -91,13 +102,36 @@ export default function ChecklistItemRow({
     } catch {
       setStatus(previous.status);
       setDueDate(previous.dueDate);
-      setRemarks(previous.remarks);
       setSubmittedByName(previous.submittedByName);
       setSubmittedAt(previous.submittedAt);
       setApprovedAt(previous.approvedAt);
       setError("Couldn't reach the server.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const saveComment = async () => {
+    if (!newComment.trim()) return;
+    setCommentSaving(true);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/checklist/${item.id}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ comment: newComment.trim() }),
+      });
+      if (res.ok) {
+        const data: { comment: { id: string; comment: string; createdAt: string } } = await res.json();
+        setComments((prev) => [
+          ...prev,
+          { id: data.comment.id, comment: data.comment.comment, authorName: currentUserName, createdAt: data.comment.createdAt },
+        ]);
+        setNewComment("");
+        setAddingComment(false);
+        router.refresh();
+      }
+    } finally {
+      setCommentSaving(false);
     }
   };
 
@@ -163,21 +197,58 @@ export default function ChecklistItemRow({
         </div>
       </div>
 
-      {canEdit ? (
-        <input
-          value={remarks}
-          onChange={(e) => setRemarks(e.target.value)}
-          onBlur={() => {
-            if (remarks !== (item.remarks ?? "")) save({ remarks });
-          }}
-          disabled={saving}
-          placeholder="Comments — e.g. feedback received from the authority"
-          aria-label={`Comments for ${item.name}`}
-          className="mt-1.5 w-full rounded-md border border-[var(--sec-line)] px-2 py-1 text-xs text-[var(--sec-ink)] outline-none focus:border-[var(--sec-blue)] disabled:opacity-60"
-        />
-      ) : (
-        remarks && <p className="mt-1.5 text-xs text-[var(--sec-muted)]">{remarks}</p>
+      {/* Comment thread — every entry is dated and kept, not one box that
+          gets overwritten each time new feedback comes in. */}
+      {comments.length > 0 && (
+        <div className="mt-2 space-y-1.5">
+          {comments.map((c) => (
+            <div key={c.id} className="rounded-md bg-slate-50 px-2.5 py-1.5 text-xs">
+              <p className="text-[var(--sec-ink)]">{c.comment}</p>
+              <p className="mt-0.5 text-[var(--sec-muted)]">
+                {c.authorName ?? "Someone"} · {formatDate(c.createdAt)}
+              </p>
+            </div>
+          ))}
+        </div>
       )}
+
+      {canEdit &&
+        (addingComment ? (
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <input
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Comment — e.g. feedback received from the authority"
+              autoFocus
+              disabled={commentSaving}
+              className="min-w-[220px] flex-1 rounded-md border border-[var(--sec-line)] px-2.5 py-1.5 text-xs text-[var(--sec-ink)] outline-none focus:border-[var(--sec-blue)]"
+            />
+            <button
+              onClick={saveComment}
+              disabled={commentSaving}
+              className="rounded-md bg-[var(--sec-blue)] px-3 py-1.5 text-xs font-medium text-white hover:bg-[var(--sec-blue-deep)] disabled:opacity-50"
+            >
+              {commentSaving ? <Loader2 size={12} className="animate-spin" /> : "Save"}
+            </button>
+            <button
+              onClick={() => {
+                setAddingComment(false);
+                setNewComment("");
+              }}
+              className="text-xs font-medium text-[var(--sec-muted)] hover:text-[var(--sec-ink)]"
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setAddingComment(true)}
+            className="mt-1.5 flex items-center gap-1 text-xs font-medium text-[var(--sec-blue)] hover:underline"
+          >
+            <MessageSquarePlus size={12} />
+            Add comment
+          </button>
+        ))}
     </div>
   );
 }

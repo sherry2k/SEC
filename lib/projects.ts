@@ -33,7 +33,7 @@ export async function addCategoryToProject(projectId: string, category: ProjectC
   for (const t of topLevel) {
     const [row] = await db
       .insert(projectChecklistItems)
-      .values({ projectId, templateId: t.id })
+      .values({ projectId, templateId: t.id, category, sortOrder: t.sortOrder })
       .returning({ id: projectChecklistItems.id });
     templateIdToItemId.set(t.id, row.id);
   }
@@ -42,7 +42,7 @@ export async function addCategoryToProject(projectId: string, category: ProjectC
     const parentItemId = t.parentId ? templateIdToItemId.get(t.parentId) : undefined;
     const [row] = await db
       .insert(projectChecklistItems)
-      .values({ projectId, templateId: t.id, parentItemId })
+      .values({ projectId, templateId: t.id, category, sortOrder: t.sortOrder, parentItemId })
       .returning({ id: projectChecklistItems.id });
     templateIdToItemId.set(t.id, row.id);
   }

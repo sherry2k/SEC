@@ -44,10 +44,11 @@ export default async function DashboardHome() {
     .select({
       status: projectChecklistItems.status,
       projectId: projectChecklistItems.projectId,
-      itemName: checklistTemplates.name,
+      customName: projectChecklistItems.customName,
+      templateName: checklistTemplates.name,
     })
     .from(projectChecklistItems)
-    .innerJoin(checklistTemplates, eq(projectChecklistItems.templateId, checklistTemplates.id));
+    .leftJoin(checklistTemplates, eq(projectChecklistItems.templateId, checklistTemplates.id));
 
   const totalProjects = allProjects.length;
   const activeCount = allProjects.filter((p) => p.status === "active").length;
@@ -329,7 +330,7 @@ export default async function DashboardHome() {
                   className="flex items-center justify-between gap-3 rounded-md px-1 py-1.5 hover:bg-slate-50"
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-sm text-[var(--sec-ink)]">{item.itemName}</p>
+                    <p className="truncate text-sm text-[var(--sec-ink)]">{item.customName ?? item.templateName ?? "Untitled item"}</p>
                     <p className="truncate text-xs text-[var(--sec-muted)]">{item.project!.name}</p>
                   </div>
                   <span

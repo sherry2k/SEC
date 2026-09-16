@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Pencil, ArrowLeft } from "lucide-react";
-import { eq } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
 import { db } from "@/db";
-import { projects, projectCategories, projectChecklistItems, checklistTemplates, users } from "@/db/schema";
+import { projects, projectCategories, projectChecklistItems, checklistTemplates, checklistItemComments, users } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import { financeCanEditProjects } from "@/lib/settings";
 import { can } from "@/lib/permissions";
@@ -49,20 +49,41 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       id: projectChecklistItems.id,
       parentItemId: projectChecklistItems.parentItemId,
       status: projectChecklistItems.status,
-      remarks: projectChecklistItems.remarks,
       dueDate: projectChecklistItems.dueDate,
       submittedAt: projectChecklistItems.submittedAt,
       submittedByName: users.name,
       submittedByRole: users.role,
       approvedAt: projectChecklistItems.approvedAt,
-      category: checklistTemplates.category,
-      name: checklistTemplates.name,
-      sortOrder: checklistTemplates.sortOrder,
+      category: projectChecklistItems.category,
+      customName: projectChecklistItems.customName,
+      templateName: checklistTemplates.name,
+      sortOrder: projectChecklistItems.sortOrder,
     })
     .from(projectChecklistItems)
-    .innerJoin(checklistTemplates, eq(projectChecklistItems.templateId, checklistTemplates.id))
+    .leftJoin(checklistTemplates, eq(projectChecklistItems.templateId, checklistTemplates.id))
     .leftJoin(users, eq(projectChecklistItems.submittedBy, users.id))
     .where(eq(projectChecklistItems.projectId, id));
+
+  const commentRows = await db
+    .select({
+      id: checklistItemComments.id,
+      itemId: checklistItemComments.itemId,
+      comment: checklistItemComments.comment,
+      createdAt: checklistItemComments.createdAt,
+      authorName: users.name,
+    })
+    .from(checklistItemComments)
+    .innerJoin(projectChecklistItems, eq(checklistItemComments.itemId, projectChecklistItems.id))
+    .leftJoin(users, eq(checklistItemComments.userId, users.id))
+    .where(eq(projectChecklistItems.projectId, id))
+    .orderBy(asc(checklistItemComments.createdAt));
+
+  const commentsByItem = new Map<string, { id: string; comment: string; authorName: string | null; createdAt: string }[]>();
+  for (const c of commentRows) {
+    const list = commentsByItem.get(c.itemId) ?? [];
+    list.push({ id: c.id, comment: c.comment, authorName: c.authorName, createdAt: c.createdAt.toISOString() });
+    commentsByItem.set(c.itemId, list);
+  }
 
   const sections = linkedCategories.map((category) => ({
     category,
@@ -71,14 +92,14 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       .sort((a, b) => a.sortOrder - b.sortOrder)
       .map((i) => ({
         id: i.id,
-        name: i.name,
+        name: i.customName ?? i.templateName ?? "Untitled item",
         status: i.status,
-        remarks: i.remarks,
         parentItemId: i.parentItemId,
         dueDate: i.dueDate ? i.dueDate.toISOString().slice(0, 10) : null,
         submittedByName: visibleActorName(i.submittedByRole, i.submittedByName, user.role),
         submittedAt: i.submittedAt ? i.submittedAt.toISOString() : null,
         approvedAt: i.approvedAt ? i.approvedAt.toISOString() : null,
+        comments: commentsByItem.get(i.id) ?? [],
       })),
   }));
 

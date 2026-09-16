@@ -30,7 +30,7 @@ type ProjectRow = {
   completedByName: string | null;
   completedAt: string | null;
   categories: ProjectCategory[];
-  progress: { approved: number; total: number };
+  progress: { completed: number; total: number };
   currentActivity: string | null;
   dueInfo: { dueDate: string; urgency: TaskUrgency } | null;
 };
@@ -193,7 +193,7 @@ export default function ProjectsTable({
             </thead>
             <tbody>
               {filtered.map((p, index) => {
-                const pct = p.progress.total > 0 ? Math.round((p.progress.approved / p.progress.total) * 100) : 0;
+                const pct = p.progress.total > 0 ? Math.round((p.progress.completed / p.progress.total) * 100) : 0;
                 return (
                   <tr
                     key={p.id}
@@ -228,10 +228,13 @@ export default function ProjectsTable({
                       {p.progress.total > 0 ? (
                         <div className="flex items-center gap-2">
                           <div className="h-1.5 w-20 overflow-hidden rounded-full bg-slate-100">
-                            <div className="h-full rounded-full bg-[var(--sec-blue)]" style={{ width: `${pct}%` }} />
+                            <div
+                              className={`h-full rounded-full ${pct === 100 ? "bg-emerald-500" : "bg-[var(--sec-blue)]"}`}
+                              style={{ width: `${pct}%` }}
+                            />
                           </div>
-                          <span className="whitespace-nowrap text-xs text-[var(--sec-muted)]">
-                            {p.progress.approved}/{p.progress.total}
+                          <span className={`whitespace-nowrap text-xs ${pct === 100 ? "font-medium text-emerald-700" : "text-[var(--sec-muted)]"}`}>
+                            {p.progress.completed}/{p.progress.total}
                           </span>
                         </div>
                       ) : (

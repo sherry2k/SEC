@@ -131,9 +131,15 @@ export const projectChecklistItems = pgTable("project_checklist_items", {
   projectId: uuid("project_id")
     .notNull()
     .references(() => projects.id, { onDelete: "cascade" }),
-  templateId: integer("template_id")
-    .notNull()
-    .references(() => checklistTemplates.id),
+  // Nullable now: a template-based item has one; a custom item added by
+  // staff for just this project has customName instead. category and
+  // sortOrder are stored directly on every item (not just derived via the
+  // template join) so custom items — which have no template — still group
+  // and sort correctly.
+  templateId: integer("template_id").references(() => checklistTemplates.id),
+  customName: text("custom_name"),
+  category: projectCategoryEnum("category").notNull(),
+  sortOrder: integer("sort_order").notNull().default(0),
   parentItemId: uuid("parent_item_id").references((): AnyPgColumn => projectChecklistItems.id),
   status: itemStatusEnum("status").notNull().default("not_started"),
   // The one field this needs — "days in current status" comes free from
@@ -152,6 +158,19 @@ export const projectChecklistItems = pgTable("project_checklist_items", {
   approvedAt: timestamp("approved_at", { withTimezone: true }),
   updatedBy: integer("updated_by").references(() => users.id),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// A running thread, not a single overwritable box — every time feedback
+// comes back from an authority, that's a new dated entry, not a
+// replacement of the last one.
+export const checklistItemComments = pgTable("checklist_item_comments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  itemId: uuid("item_id")
+    .notNull()
+    .references(() => projectChecklistItems.id, { onDelete: "cascade" }),
+  userId: integer("user_id").references(() => users.id),
+  comment: text("comment").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 // ---------------------------------------------------------------------------

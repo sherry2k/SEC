@@ -2,6 +2,7 @@
 
 import { CATEGORY_LABELS, CATEGORY_ACCENT_BORDER, type ProjectCategory } from "@/lib/checklist";
 import ChecklistItemRow, { type ChecklistItem } from "@/components/ChecklistItemRow";
+import AddChecklistItemButton from "@/components/AddChecklistItemButton";
 
 type CategorySection = { category: ProjectCategory; items: ChecklistItem[] };
 
@@ -51,6 +52,11 @@ export default function ProjectChecklist({
             <h3 className="font-bold text-base text-[var(--sec-ink)]">{CATEGORY_LABELS[category]}</h3>
           </div>
           <div className="px-4 py-1">{renderTree(items, projectId, canEdit, currentUserName)}</div>
+          {canEdit && (
+            <div className="border-t border-[var(--sec-line)]">
+              <AddChecklistItemButton projectId={projectId} category={category} />
+            </div>
+          )}
         </div>
       ))}
     </div>

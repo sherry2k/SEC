@@ -60,11 +60,12 @@ export default async function ProjectsPage() {
       status: projectChecklistItems.status,
       dueDate: projectChecklistItems.dueDate,
       updatedAt: projectChecklistItems.updatedAt,
-      name: checklistTemplates.name,
-      sortOrder: checklistTemplates.sortOrder,
+      customName: projectChecklistItems.customName,
+      templateName: checklistTemplates.name,
+      sortOrder: projectChecklistItems.sortOrder,
     })
     .from(projectChecklistItems)
-    .innerJoin(checklistTemplates, eq(projectChecklistItems.templateId, checklistTemplates.id));
+    .leftJoin(checklistTemplates, eq(projectChecklistItems.templateId, checklistTemplates.id));
 
   const categoriesByProject = new Map<string, ProjectCategory[]>();
   for (const link of categoryLinks) {
@@ -73,7 +74,10 @@ export default async function ProjectsPage() {
     categoriesByProject.set(link.projectId, list);
   }
 
-  const progressByProject = new Map<string, { approved: number; total: number }>();
+  // "Completed" for progress purposes = Approved OR Not Required — an item
+  // marked Not Required isn't outstanding work, so it shouldn't keep a
+  // project looking incomplete forever.
+  const progressByProject = new Map<string, { completed: number; total: number }>();
   // Whichever item is currently "submitted" or "resubmission" is the one
   // actively blocking progress — that's what shows in Current Activity.
   // Submitted takes priority over resubmission when both exist, and ties
@@ -83,16 +87,17 @@ export default async function ProjectsPage() {
 
   const bestForProject = new Map<string, { priority: number; sortOrder: number; name: string }>();
   for (const item of checklistRows) {
-    const progress = progressByProject.get(item.projectId) ?? { approved: 0, total: 0 };
+    const progress = progressByProject.get(item.projectId) ?? { completed: 0, total: 0 };
     progress.total += 1;
-    if (item.status === "approved") progress.approved += 1;
+    if (item.status === "approved" || item.status === "not_applicable") progress.completed += 1;
     progressByProject.set(item.projectId, progress);
 
     const priority = activityPriority[item.status];
     if (priority === undefined) continue;
     const current = bestForProject.get(item.projectId);
+    const name = item.customName ?? item.templateName ?? "Untitled item";
     if (!current || priority < current.priority || (priority === current.priority && item.sortOrder < current.sortOrder)) {
-      bestForProject.set(item.projectId, { priority, sortOrder: item.sortOrder, name: item.name });
+      bestForProject.set(item.projectId, { priority, sortOrder: item.sortOrder, name });
     }
   }
   for (const [projectId, best] of bestForProject) {
@@ -136,7 +141,7 @@ export default async function ProjectsPage() {
     completedByName: visibleActorName(p.completedByRole, p.completedByName, user.role),
     completedAt: p.completedAt ? p.completedAt.toISOString() : null,
     categories: categoriesByProject.get(p.id) ?? [],
-    progress: progressByProject.get(p.id) ?? { approved: 0, total: 0 },
+    progress: progressByProject.get(p.id) ?? { completed: 0, total: 0 },
     currentActivity: currentActivityByProject.get(p.id) ?? null,
     dueInfo: dueByProject.get(p.id) ?? null,
   }));
@@ -151,7 +156,7 @@ export default async function ProjectsPage() {
     .map((i) => ({
       projectId: i.projectId,
       projectLabel: projectLabelById.get(i.projectId) ?? "",
-      taskName: i.name,
+      taskName: i.customName ?? i.templateName ?? "Untitled item",
       dueDate: i.dueDate ? i.dueDate.toISOString().slice(0, 10) : null,
       urgency: classifyTask(i.dueDate, i.status)!,
     }));
