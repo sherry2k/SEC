@@ -35,7 +35,6 @@ export async function POST(request: NextRequest) {
           feeExclVat: String(feeExclVat),
           scopeOfWork: str(record?.scopeOfWork) || null,
           duration: str(record?.duration) || null,
-          note: str(record?.note) || null,
         };
       })
       .filter((r): r is NonNullable<typeof r> => r !== null);
@@ -63,6 +62,7 @@ export async function POST(request: NextRequest) {
         intro: str(body?.intro) || null,
         paymentTerms: str(body?.paymentTerms) || null,
         commercialConditions: str(body?.commercialConditions) || null,
+        notes: str(body?.notes) || null,
         signatoryName: str(body?.signatoryName) || null,
         signatoryTitle: str(body?.signatoryTitle) || null,
         createdBy: auth.user.id,

@@ -11,7 +11,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const todayAttendance = user.role === "staff" ? await getTodayAttendance(user.id) : null;
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-[var(--sec-bg)] lg:flex-row">
+    <div className="dashboard-shell flex h-screen flex-col overflow-hidden bg-[var(--sec-bg)] lg:flex-row">
       <MobileShell>
         <Sidebar user={user} todayAttendance={todayAttendance} />
       </MobileShell>

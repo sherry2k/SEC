@@ -9,7 +9,6 @@ export type PrintableItem = {
   feeExclVat: number;
   scopeOfWork: string;
   duration: string;
-  note: string;
 };
 
 export type PrintableQuotation = {
@@ -25,6 +24,7 @@ export type PrintableQuotation = {
   intro: string;
   paymentTerms: string;
   commercialConditions: string;
+  notes: string;
   signatoryName: string;
   signatoryTitle: string;
   createdAt: Date;
@@ -135,7 +135,6 @@ export default function QuotationPrintView({ quotation }: { quotation: Printable
                   <li key={li}>{line}</li>
                 ))}
               </ol>
-              {item.note && <p className="mt-2 text-sm"><span className="font-semibold">Note:</span> {item.note}</p>}
 
               <table className="mt-3 w-full border-collapse text-sm">
                 <thead>
@@ -212,6 +211,17 @@ export default function QuotationPrintView({ quotation }: { quotation: Printable
               <li key={i}>{line}</li>
             ))}
           </ol>
+        </div>
+      )}
+
+      {quotation.notes && (
+        <div className="mt-5">
+          <p className="text-center text-sm font-bold">Notes</p>
+          <ul className="mt-1 list-disc space-y-0.5 pl-5 text-sm">
+            {quotation.notes.split("\n").map((l) => l.trim()).filter(Boolean).map((line, i) => (
+              <li key={i}>{line}</li>
+            ))}
+          </ul>
         </div>
       )}
 

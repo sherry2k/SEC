@@ -55,6 +55,7 @@ export default async function QuotationViewPage({ params }: { params: Promise<{ 
           intro: quotation.intro ?? "",
           paymentTerms: quotation.paymentTerms ?? "",
           commercialConditions: quotation.commercialConditions ?? "",
+          notes: quotation.notes ?? "",
           signatoryName: quotation.signatoryName ?? "",
           signatoryTitle: quotation.signatoryTitle ?? "",
           createdAt: quotation.createdAt,
@@ -64,7 +65,6 @@ export default async function QuotationViewPage({ params }: { params: Promise<{ 
             feeExclVat: Number(i.feeExclVat),
             scopeOfWork: i.scopeOfWork ?? "",
             duration: i.duration ?? "",
-            note: i.note ?? "",
           })),
         }}
       />

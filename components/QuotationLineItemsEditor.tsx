@@ -125,26 +125,14 @@ export default function QuotationLineItemsEditor({
                           placeholder={"Review the available documents and drawings.\nPrepare and submit the application through the applicable platform."}
                           className={inputClass}
                         />
-                        <div className="mt-2 grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="mb-1 block text-xs font-medium text-[var(--sec-muted)]">Duration</label>
-                            <input
-                              value={item.duration}
-                              onChange={(e) => update(item.key, { duration: e.target.value })}
-                              placeholder="e.g. 30 Working Days"
-                              className={inputClass}
-                            />
-                          </div>
-                          <div>
-                            <label className="mb-1 block text-xs font-medium text-[var(--sec-muted)]">
-                              Note (optional caveat, shown under the scope)
-                            </label>
-                            <input
-                              value={item.note}
-                              onChange={(e) => update(item.key, { note: e.target.value })}
-                              className={inputClass}
-                            />
-                          </div>
+                        <div className="mt-2">
+                          <label className="mb-1 block text-xs font-medium text-[var(--sec-muted)]">Duration</label>
+                          <input
+                            value={item.duration}
+                            onChange={(e) => update(item.key, { duration: e.target.value })}
+                            placeholder="e.g. 30 Working Days"
+                            className={inputClass}
+                          />
                         </div>
                       </td>
                       <td />

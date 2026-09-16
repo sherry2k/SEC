@@ -31,6 +31,7 @@ export default async function EditQuotationPage({ params }: { params: Promise<{ 
     intro: quotation.intro ?? "",
     paymentTerms: quotation.paymentTerms ?? "",
     commercialConditions: quotation.commercialConditions ?? "",
+    notes: quotation.notes ?? "",
     signatoryName: quotation.signatoryName ?? "",
     signatoryTitle: quotation.signatoryTitle ?? "",
     items: items.map(
@@ -41,7 +42,6 @@ export default async function EditQuotationPage({ params }: { params: Promise<{ 
         feeExclVat: i.feeExclVat,
         scopeOfWork: i.scopeOfWork ?? "",
         duration: i.duration ?? "",
-        note: i.note ?? "",
       })
     ),
   };

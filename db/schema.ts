@@ -194,6 +194,9 @@ export const quotations = pgTable("quotations", {
   intro: text("intro"),
   paymentTerms: text("payment_terms"),
   commercialConditions: text("commercial_conditions"),
+  // A free-form area for whatever's specific to one quotation — separate
+  // from the standing commercial conditions above.
+  notes: text("notes"),
   signatoryName: text("signatory_name"),
   signatoryTitle: text("signatory_title"),
   status: text("status").notNull().default("draft"),

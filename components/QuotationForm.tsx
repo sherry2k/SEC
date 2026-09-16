@@ -199,6 +199,17 @@ export default function QuotationForm({
         </div>
       </div>
 
+      <div>
+        <label className={labelClass}>Notes</label>
+        <textarea
+          value={values.notes}
+          onChange={(e) => set("notes", e.target.value)}
+          rows={3}
+          placeholder="Anything specific to this quotation — one point per line"
+          className={inputClass}
+        />
+      </div>
+
       <button
         type="submit"
         disabled={loading}

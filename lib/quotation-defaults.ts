@@ -11,8 +11,9 @@ export type QuotationItemDraft = {
   feeExclVat: string;
   scopeOfWork: string;
   duration: string;
-  note: string;
 };
+
+const DEFAULT_DURATION = "30 Working Days";
 
 export function emptyItem(): QuotationItemDraft {
   return {
@@ -21,8 +22,7 @@ export function emptyItem(): QuotationItemDraft {
     classification: "Mandatory",
     feeExclVat: "",
     scopeOfWork: "",
-    duration: "",
-    note: "",
+    duration: DEFAULT_DURATION,
   };
 }
 
@@ -38,10 +38,14 @@ export type QuotationFormValues = {
   intro: string;
   paymentTerms: string;
   commercialConditions: string;
+  notes: string;
   signatoryName: string;
   signatoryTitle: string;
   items: QuotationItemDraft[];
 };
+
+const DEFAULT_INTRO =
+  "We are pleased to submit our technical and commercial proposal for the requested mandatory and optional consultancy services. Each service is separately priced and will be executed in accordance with the approved scope and applicable authority requirements.";
 
 const DEFAULT_PAYMENT_TERMS =
   "50% down payment upon approval of each service item and before commencement.\n50% upon completion of the respective service item.";
@@ -57,10 +61,10 @@ const DEFAULT_COMMERCIAL_CONDITIONS = [
   "This proposal is valid for 30 days from the proposal date.",
 ].join("\n");
 
-// Payment terms and commercial conditions ARE pre-filled — they're SEC's
-// standing boilerplate, edited per quotation rather than typed from scratch
-// each time. The intro paragraph and signatory fields stay blank, since
-// those genuinely vary per document.
+// Intro, payment terms, and commercial conditions are all pre-filled now —
+// standing boilerplate you'd otherwise retype on every quotation. Notes
+// stays blank on purpose: it's the free-form area for whatever's specific
+// to that one document.
 export function defaultQuotationValues(): QuotationFormValues {
   return {
     title: "Technical and Commercial Proposal",
@@ -71,9 +75,10 @@ export function defaultQuotationValues(): QuotationFormValues {
     location: "",
     buildingConfig: "",
     vatRatePercent: 5,
-    intro: "",
+    intro: DEFAULT_INTRO,
     paymentTerms: DEFAULT_PAYMENT_TERMS,
     commercialConditions: DEFAULT_COMMERCIAL_CONDITIONS,
+    notes: "",
     signatoryName: "",
     signatoryTitle: "",
     items: [emptyItem()],
