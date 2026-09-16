@@ -1,7 +1,7 @@
 import { calcItemTotals, groupByClassification, calcGrandTotals } from "@/lib/quotation-calc";
 import { amountToWordsAED } from "@/lib/number-to-words";
 import { COMPANY } from "@/lib/company";
-import PrintLetterhead from "@/components/PrintLetterhead";
+import PrintDocumentShell from "@/components/PrintDocumentShell";
 
 export type PrintableItem = {
   description: string;
@@ -49,15 +49,12 @@ export default function QuotationPrintView({ quotation }: { quotation: Printable
   ].filter(([, v]) => v) as [string, string][];
 
   return (
-    <div className="mx-auto max-w-[850px] bg-white p-8 text-[13px] leading-relaxed text-[var(--sec-ink)] shadow-sm print:shadow-none sm:p-12">
-      {/* Letterhead */}
-      <PrintLetterhead
-        dateLabel="Date"
-        dateValue={quotation.createdAt.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}
-        refLabel="Ref."
-        refValue={quotation.quotationNo}
-      />
-
+    <PrintDocumentShell
+      dateLabel="Date"
+      dateValue={quotation.createdAt.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}
+      refLabel="Ref."
+      refValue={quotation.quotationNo}
+    >
       <div className="mt-6 text-center">
         <h1 className="text-xl font-bold text-[var(--sec-ink)]">{quotation.title}</h1>
         {quotation.subtitle && <p className="mt-1 text-sm font-medium text-[var(--sec-blue)]">{quotation.subtitle}</p>}
@@ -231,10 +228,6 @@ export default function QuotationPrintView({ quotation }: { quotation: Printable
         {quotation.signatoryName && <p className="mt-3 font-semibold">{quotation.signatoryName}</p>}
         {quotation.signatoryTitle && <p>{quotation.signatoryTitle}</p>}
       </div>
-
-      <div className="mt-10 border-t border-[var(--sec-line)] pt-3 text-center text-[11px] text-[var(--sec-muted)]">
-        {COMPANY.address}, Tel: {COMPANY.tel}, Mobile: {COMPANY.mobile}, Email: {COMPANY.email}
-      </div>
-    </div>
+    </PrintDocumentShell>
   );
 }

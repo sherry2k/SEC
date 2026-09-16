@@ -2,7 +2,7 @@ import { calcItemTotals } from "@/lib/quotation-calc";
 import { calcTaxInvoiceTotals } from "@/lib/tax-invoice-calc";
 import { amountToWordsAED } from "@/lib/number-to-words";
 import { COMPANY, BANK_DETAILS } from "@/lib/company";
-import PrintLetterhead from "@/components/PrintLetterhead";
+import PrintDocumentShell from "@/components/PrintDocumentShell";
 
 export type PrintableTaxItem = { itemDate: string; description: string; amount: number };
 
@@ -25,9 +25,7 @@ export default function TaxInvoicePrintView({ invoice }: { invoice: PrintableTax
   const totals = calcTaxInvoiceTotals(invoice.items, invoice.vatRatePercent);
 
   return (
-    <div className="mx-auto max-w-[850px] bg-white p-8 text-[13px] leading-relaxed text-[var(--sec-ink)] shadow-sm print:shadow-none sm:p-12">
-      <PrintLetterhead dateLabel="Date" dateValue={invoice.issueDate} refLabel="No." refValue={invoice.invoiceNo} />
-
+    <PrintDocumentShell dateLabel="Date" dateValue={invoice.issueDate} refLabel="No." refValue={invoice.invoiceNo}>
       <h1 className="mt-6 text-center text-lg font-bold uppercase underline">Tax Invoice</h1>
 
       <div className="mt-5 text-sm">
@@ -106,10 +104,6 @@ export default function TaxInvoicePrintView({ invoice }: { invoice: PrintableTax
         <p className="mt-6">Signature</p>
         {invoice.signatoryName && <p className="mt-3 font-semibold">{invoice.signatoryName}</p>}
       </div>
-
-      <div className="mt-10 border-t border-[var(--sec-line)] pt-3 text-center text-[11px] text-[var(--sec-muted)]">
-        {COMPANY.address}, Tel: {COMPANY.tel}, Mobile: {COMPANY.mobile}, Email: {COMPANY.email}
-      </div>
-    </div>
+    </PrintDocumentShell>
   );
 }

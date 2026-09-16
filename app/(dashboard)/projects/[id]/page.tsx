@@ -14,6 +14,8 @@ import AddCategoryButton from "@/components/AddCategoryButton";
 import DeleteProjectButton from "@/components/DeleteProjectButton";
 import ProjectStatusControl from "@/components/ProjectStatusControl";
 import PrintButton from "@/components/PrintButton";
+import PrintLetterhead from "@/components/PrintLetterhead";
+import PrintFooterStrip from "@/components/PrintFooterStrip";
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requirePermission("projects.view");
@@ -127,6 +129,22 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         <ArrowLeft size={14} />
         Back to projects
       </Link>
+
+      {/* Print-only letterhead — matches the finance documents' branding.
+          Unlike Quotations/Invoices, this shows once at the top rather than
+          repeating on every printed page, since turning this whole page
+          into the same repeating-header table structure would mean a much
+          bigger rework of the page. Worth doing later if projects commonly
+          print past one page. */}
+      <div className="hidden print:mb-6 print:block">
+        <PrintLetterhead
+          dateLabel="Printed"
+          dateValue={new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}
+          refLabel="Ref."
+          refValue={project.projectCode}
+        />
+      </div>
+
       <p className="font-mono text-xs text-[var(--sec-muted)]">Ref: {project.projectCode}</p>
       <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
         <h1 className="font-bold text-2xl text-[var(--sec-ink)]">{project.name}</h1>
@@ -183,6 +201,12 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
       <div className="mt-4">
         <ProjectChecklist sections={sections} projectId={project.id} canEdit={canEdit} currentUserName={user.name} />
+      </div>
+
+      {/* Print-only footer — same certification logos and contact line as
+          Quotations/Invoices. */}
+      <div className="hidden print:mt-8 print:block">
+        <PrintFooterStrip />
       </div>
     </div>
   );

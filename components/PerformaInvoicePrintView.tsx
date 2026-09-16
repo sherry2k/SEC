@@ -1,7 +1,7 @@
 import { calcItemTotals } from "@/lib/quotation-calc";
 import { calcPerformaInvoiceTotals } from "@/lib/performa-invoice-calc";
-import { COMPANY, BANK_DETAILS } from "@/lib/company";
-import PrintLetterhead from "@/components/PrintLetterhead";
+import { BANK_DETAILS } from "@/lib/company";
+import PrintDocumentShell from "@/components/PrintDocumentShell";
 
 export type PrintablePIItem = { itemDate: string; description: string; amount: number };
 
@@ -24,14 +24,7 @@ export default function PerformaInvoicePrintView({ invoice }: { invoice: Printab
   const totals = calcPerformaInvoiceTotals(invoice.items, invoice.vatRatePercent);
 
   return (
-    <div className="mx-auto max-w-[850px] bg-white p-8 text-[13px] leading-relaxed text-[var(--sec-ink)] shadow-sm print:shadow-none sm:p-12">
-      <PrintLetterhead
-        dateLabel="Date"
-        dateValue={invoice.issueDate}
-        refLabel="Ref. No."
-        refValue={invoice.invoiceNo}
-      />
-
+    <PrintDocumentShell dateLabel="Date" dateValue={invoice.issueDate} refLabel="Ref. No." refValue={invoice.invoiceNo}>
       <h1 className="mt-6 text-center text-lg font-bold uppercase underline">Performa Invoice</h1>
 
       <div className="mt-4 text-sm">
@@ -93,10 +86,6 @@ export default function PerformaInvoicePrintView({ invoice }: { invoice: Printab
         <p>Best Regards,</p>
         {invoice.signatoryName && <p className="mt-6">{invoice.signatoryName}</p>}
       </div>
-
-      <div className="mt-10 border-t border-[var(--sec-line)] pt-3 text-center text-[11px] text-[var(--sec-muted)]">
-        {COMPANY.address}, Tel: {COMPANY.tel}, Mobil: {COMPANY.mobile}, Email: {COMPANY.email}
-      </div>
-    </div>
+    </PrintDocumentShell>
   );
 }
