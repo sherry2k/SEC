@@ -18,9 +18,16 @@ export async function PATCH(
   const body = await request.json().catch(() => null);
   const status = body?.status as ItemStatus | undefined;
   const remarks = typeof body?.remarks === "string" ? body.remarks : undefined;
+  // dueDate: "YYYY-MM-DD" string sets it, null clears it, undefined leaves it alone
+  const dueDateRaw = body?.dueDate;
+  const hasDueDate = "dueDate" in (body ?? {});
+  const dueDate = dueDateRaw === null ? null : typeof dueDateRaw === "string" ? new Date(dueDateRaw) : undefined;
 
   if (status !== undefined && !ITEM_STATUSES.includes(status)) {
     return NextResponse.json({ error: "Invalid status." }, { status: 400 });
+  }
+  if (hasDueDate && dueDateRaw !== null && (typeof dueDateRaw !== "string" || Number.isNaN(new Date(dueDateRaw).getTime()))) {
+    return NextResponse.json({ error: "Invalid due date." }, { status: 400 });
   }
 
   // Fetch the item's current status and name before overwriting — needed
@@ -42,6 +49,7 @@ export async function PATCH(
   };
   if (status !== undefined) update.status = status;
   if (remarks !== undefined) update.remarks = remarks || null;
+  if (hasDueDate) update.dueDate = dueDate ?? null;
 
   await db
     .update(projectChecklistItems)

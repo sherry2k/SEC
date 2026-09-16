@@ -42,6 +42,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       parentItemId: projectChecklistItems.parentItemId,
       status: projectChecklistItems.status,
       remarks: projectChecklistItems.remarks,
+      dueDate: projectChecklistItems.dueDate,
       category: checklistTemplates.category,
       name: checklistTemplates.name,
       sortOrder: checklistTemplates.sortOrder,
@@ -55,7 +56,14 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     items: items
       .filter((i) => i.category === category)
       .sort((a, b) => a.sortOrder - b.sortOrder)
-      .map((i) => ({ id: i.id, name: i.name, status: i.status, remarks: i.remarks, parentItemId: i.parentItemId })),
+      .map((i) => ({
+        id: i.id,
+        name: i.name,
+        status: i.status,
+        remarks: i.remarks,
+        parentItemId: i.parentItemId,
+        dueDate: i.dueDate ? i.dueDate.toISOString().slice(0, 10) : null,
+      })),
   }));
 
   const availableCategories: ProjectCategory[] = PROJECT_CATEGORIES.filter((c) => !linkedCategories.includes(c));

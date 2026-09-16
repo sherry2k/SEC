@@ -10,8 +10,9 @@ import { financeCanEditProjects } from "@/lib/settings";
 import { can } from "@/lib/permissions";
 import { visibleActorName } from "@/lib/visibility";
 import { getAssignableUsers } from "@/lib/assignable-users";
+import { classifyTask } from "@/lib/task-urgency";
 import type { ProjectCategory } from "@/lib/checklist";
-import ProjectsTable from "@/components/ProjectsTable";
+import ProjectsTable, { type MyTask } from "@/components/ProjectsTable";
 
 export default async function ProjectsPage() {
   const user = await requirePermission("projects.view");
@@ -48,8 +49,11 @@ export default async function ProjectsPage() {
   const categoryLinks = await db.select().from(projectCategories);
   const checklistRows = await db
     .select({
+      id: projectChecklistItems.id,
       projectId: projectChecklistItems.projectId,
       status: projectChecklistItems.status,
+      dueDate: projectChecklistItems.dueDate,
+      updatedAt: projectChecklistItems.updatedAt,
       name: checklistTemplates.name,
       sortOrder: checklistTemplates.sortOrder,
     })
@@ -108,6 +112,37 @@ export default async function ProjectsPage() {
     currentActivity: currentActivityByProject.get(p.id) ?? null,
   }));
 
+  // My Tasks — every open checklist item across projects where the viewer
+  // is Responsible. "Open" = not yet Approved or marked Not applicable.
+  const myProjectIds = new Set(rows.filter((p) => p.responsibleId === user.id).map((p) => p.id));
+  const projectLabelById = new Map(rows.map((p) => [p.id, p.municipalityNo || p.projectCode]));
+
+  const myTasks: MyTask[] = checklistRows
+    .filter((i) => myProjectIds.has(i.projectId) && classifyTask(i.dueDate, i.status) !== null)
+    .map((i) => ({
+      projectId: i.projectId,
+      projectLabel: projectLabelById.get(i.projectId) ?? "",
+      taskName: i.name,
+      dueDate: i.dueDate ? i.dueDate.toISOString().slice(0, 10) : null,
+      urgency: classifyTask(i.dueDate, i.status)!,
+    }));
+
+  const urgencyOrder = { overdue: 0, due_today: 1, in_progress: 2 };
+  myTasks.sort((a, b) => {
+    const byUrgency = urgencyOrder[a.urgency] - urgencyOrder[b.urgency];
+    if (byUrgency !== 0) return byUrgency;
+    if (a.dueDate && b.dueDate) return a.dueDate.localeCompare(b.dueDate);
+    if (a.dueDate) return -1;
+    if (b.dueDate) return 1;
+    return 0;
+  });
+
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  const completedThisWeekCount = checklistRows.filter(
+    (i) => myProjectIds.has(i.projectId) && i.status === "approved" && i.updatedAt >= weekAgo
+  ).length;
+
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -144,8 +179,11 @@ export default async function ProjectsPage() {
             canEdit={canEdit}
             canDelete={canDelete}
             currentUserId={user.id}
+            currentUserName={user.name}
             defaultToMine={user.role === "staff"}
             assignableUsers={assignableUsers}
+            myTasks={myTasks}
+            completedThisWeekCount={completedThisWeekCount}
           />
         </div>
       )}

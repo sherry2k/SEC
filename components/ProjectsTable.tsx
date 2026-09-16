@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation";
 import { Search, Pencil, Trash2, Loader2, Check } from "lucide-react";
 import { PROJECT_CATEGORIES, CATEGORY_LABELS, CATEGORY_BADGE_STYLES, PROJECT_STATUS_LABELS, type ProjectCategory, type ProjectStatus } from "@/lib/checklist";
 import type { Role } from "@/lib/roles";
+import MyTasksView, { type MyTask } from "@/components/MyTasksView";
+
+export type { MyTask };
 
 type AssignableUser = { id: number; name: string; role: Role };
 
@@ -37,15 +40,21 @@ export default function ProjectsTable({
   canEdit,
   canDelete,
   currentUserId,
+  currentUserName,
   defaultToMine = false,
   assignableUsers,
+  myTasks,
+  completedThisWeekCount,
 }: {
   rows: ProjectRow[];
   canEdit: boolean;
   canDelete: boolean;
   currentUserId: number;
+  currentUserName: string;
   defaultToMine?: boolean;
   assignableUsers: AssignableUser[];
+  myTasks: MyTask[];
+  completedThisWeekCount: number;
 }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -110,7 +119,7 @@ export default function ProjectsTable({
           </button>
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className={`flex flex-col gap-3 sm:flex-row sm:items-center ${responsibleFilter === "me" ? "hidden" : ""}`}>
           <div className="relative flex-1 sm:max-w-xs">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--sec-muted)]" />
             <input
@@ -151,9 +160,11 @@ export default function ProjectsTable({
         </div>
       </div>
 
-      {filtered.length === 0 ? (
+      {responsibleFilter === "me" ? (
+        <MyTasksView tasks={myTasks} completedThisWeekCount={completedThisWeekCount} currentUserName={currentUserName} />
+      ) : filtered.length === 0 ? (
         <div className="rounded-lg border border-dashed border-[var(--sec-line)] bg-white py-12 text-center text-sm text-[var(--sec-muted)]">
-          {responsibleFilter === "me" ? "No projects assigned to you yet." : "No projects match that search."}
+          No projects match that search.
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-[var(--sec-line)] bg-white">

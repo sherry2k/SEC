@@ -7,6 +7,7 @@ import {
   integer,
   numeric,
   timestamp,
+  date,
   uuid,
   primaryKey,
   type AnyPgColumn,
@@ -130,6 +131,9 @@ export const projectChecklistItems = pgTable("project_checklist_items", {
     .references(() => checklistTemplates.id),
   parentItemId: uuid("parent_item_id").references((): AnyPgColumn => projectChecklistItems.id),
   status: itemStatusEnum("status").notNull().default("not_started"),
+  // The one field this needs — "days in current status" comes free from
+  // updatedAt below, no separate field required for that.
+  dueDate: date("due_date", { mode: "date" }),
   remarks: text("remarks"),
   fileUrl: text("file_url"),
   updatedBy: integer("updated_by").references(() => users.id),
