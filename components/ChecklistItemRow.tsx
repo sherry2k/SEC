@@ -59,6 +59,8 @@ export default function ChecklistItemRow({
   const [error, setError] = useState("");
 
   const [comments, setComments] = useState(item.comments);
+  const [confirmingCommentId, setConfirmingCommentId] = useState<string | null>(null);
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
   const [addingComment, setAddingComment] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [commentSaving, setCommentSaving] = useState(false);
@@ -170,6 +172,22 @@ export default function ChecklistItemRow({
       }
     } finally {
       setCommentSaving(false);
+    }
+  };
+
+  const deleteComment = async (commentId: string) => {
+    setDeletingCommentId(commentId);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/checklist/${item.id}/comments/${commentId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setComments((prev) => prev.filter((c) => c.id !== commentId));
+        router.refresh();
+      }
+    } finally {
+      setDeletingCommentId(null);
+      setConfirmingCommentId(null);
     }
   };
 
@@ -306,11 +324,41 @@ export default function ChecklistItemRow({
       {comments.length > 0 && (
         <div className="mt-2 space-y-1.5">
           {comments.map((c) => (
-            <div key={c.id} className="rounded-md bg-slate-50 px-2.5 py-1.5 text-xs">
-              <p className="text-[var(--sec-ink)]">{c.comment}</p>
-              <p className="mt-0.5 text-[var(--sec-muted)]">
-                {c.authorName ?? "Someone"} · {formatDate(c.createdAt)}
-              </p>
+            <div key={c.id} className="flex items-start justify-between gap-2 rounded-md bg-slate-50 px-2.5 py-1.5 text-xs">
+              <div>
+                <p className="text-[var(--sec-ink)]">{c.comment}</p>
+                <p className="mt-0.5 text-[var(--sec-muted)]">
+                  {c.authorName ?? "Someone"} · {formatDate(c.createdAt)}
+                </p>
+              </div>
+              {canEdit &&
+                (confirmingCommentId === c.id ? (
+                  <div className="no-print flex shrink-0 items-center gap-1">
+                    <button
+                      onClick={() => deleteComment(c.id)}
+                      disabled={deletingCommentId === c.id}
+                      className="rounded p-0.5 text-red-600 hover:bg-red-100"
+                      aria-label="Confirm delete comment"
+                    >
+                      {deletingCommentId === c.id ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                    </button>
+                    <button
+                      onClick={() => setConfirmingCommentId(null)}
+                      className="rounded p-0.5 text-[var(--sec-muted)] hover:bg-slate-200"
+                      aria-label="Cancel delete comment"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirmingCommentId(c.id)}
+                    className="no-print shrink-0 rounded p-0.5 text-[var(--sec-muted)] hover:bg-red-100 hover:text-red-600"
+                    aria-label="Delete comment"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                ))}
             </div>
           ))}
         </div>
