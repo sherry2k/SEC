@@ -6,6 +6,7 @@ import { Loader2, Plus, Trash2 } from "lucide-react";
 import { calcTaxInvoiceTotals } from "@/lib/tax-invoice-calc";
 import { calcItemTotals } from "@/lib/quotation-calc";
 import { emptyTaxItem, type TaxInvoiceFormValues, type TaxInvoiceItemDraft } from "@/lib/tax-invoice-defaults";
+import StampToggle from "@/components/StampToggle";
 
 export default function TaxInvoiceForm({
   mode,
@@ -230,6 +231,8 @@ export default function TaxInvoiceForm({
           className={inputClass}
         />
       </div>
+
+      <StampToggle checked={values.showStamp} onChange={(v) => set("showStamp", v)} />
 
       <button
         type="submit"

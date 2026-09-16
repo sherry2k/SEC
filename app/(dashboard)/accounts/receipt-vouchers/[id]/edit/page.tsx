@@ -26,6 +26,7 @@ export default async function EditReceiptVoucherPage({ params }: { params: Promi
     location: voucher.location ?? "",
     vatRatePercent: Number(voucher.vatRatePercent),
     signatoryName: voucher.signatoryName ?? "",
+    showStamp: voucher.showStamp,
     items: items.map(
       (i): ReceiptVoucherItemDraft => ({
         key: i.id,

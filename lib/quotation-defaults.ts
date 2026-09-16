@@ -40,6 +40,7 @@ export type QuotationFormValues = {
   commercialConditions: string;
   notes: string;
   signatoryName: string;
+  showStamp: boolean;
   signatoryTitle: string;
   items: QuotationItemDraft[];
 };
@@ -80,6 +81,7 @@ export function defaultQuotationValues(): QuotationFormValues {
     commercialConditions: DEFAULT_COMMERCIAL_CONDITIONS,
     notes: "",
     signatoryName: "Eng. Mohammad Abu Eisa",
+    showStamp: false,
     signatoryTitle: "",
     items: [emptyItem()],
   };

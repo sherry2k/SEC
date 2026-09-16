@@ -14,6 +14,7 @@ export type PrintableTaxInvoice = {
   clientTrn: string;
   vatRatePercent: number;
   signatoryName: string;
+  showStamp: boolean;
   items: PrintableTaxItem[];
 };
 
@@ -103,6 +104,7 @@ export default function TaxInvoicePrintView({ invoice }: { invoice: PrintableTax
         <p>Thank you.</p>
         <p className="mt-6">Signature</p>
         {invoice.signatoryName && <p className="mt-3 font-semibold">{invoice.signatoryName}</p>}
+        {invoice.showStamp && <img src="/images/stamp.png" alt="Company stamp" className="mt-2 h-28 object-contain" />}
       </div>
     </PrintDocumentShell>
   );

@@ -50,6 +50,7 @@ export default async function ReceiptVoucherViewPage({ params }: { params: Promi
           location: voucher.location ?? "",
           vatRatePercent: Number(voucher.vatRatePercent),
           signatoryName: voucher.signatoryName ?? "",
+          showStamp: voucher.showStamp,
           items: items.map((i) => ({
             itemDate: i.itemDate ?? "",
             description: i.description,

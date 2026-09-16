@@ -26,6 +26,7 @@ export default async function EditPerformaInvoicePage({ params }: { params: Prom
     customerAddress: invoice.customerAddress ?? "",
     vatRatePercent: Number(invoice.vatRatePercent),
     signatoryName: invoice.signatoryName ?? "",
+    showStamp: invoice.showStamp,
     items: items.map(
       (i): PerformaInvoiceItemDraft => ({
         key: i.id,

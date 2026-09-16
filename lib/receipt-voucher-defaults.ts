@@ -21,6 +21,7 @@ export type ReceiptVoucherFormValues = {
   location: string;
   vatRatePercent: number;
   signatoryName: string;
+  showStamp: boolean;
   items: ReceiptVoucherItemDraft[];
 };
 
@@ -39,6 +40,7 @@ export function defaultReceiptVoucherValues(): ReceiptVoucherFormValues {
     location: "Abu Dhabi - UAE",
     vatRatePercent: 5,
     signatoryName: "Eng. Mohammad Abu Eisa",
+    showStamp: false,
     items: [emptyReceiptItem()],
   };
 }

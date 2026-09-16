@@ -10,6 +10,7 @@ import {
   type ReceiptVoucherFormValues,
   type ReceiptVoucherItemDraft,
 } from "@/lib/receipt-voucher-defaults";
+import StampToggle from "@/components/StampToggle";
 
 export default function ReceiptVoucherForm({
   mode,
@@ -229,6 +230,8 @@ export default function ReceiptVoucherForm({
           className={inputClass}
         />
       </div>
+
+      <StampToggle checked={values.showStamp} onChange={(v) => set("showStamp", v)} />
 
       <button
         type="submit"

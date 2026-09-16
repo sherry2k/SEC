@@ -64,6 +64,7 @@ export async function POST(request: NextRequest) {
         commercialConditions: str(body?.commercialConditions) || null,
         notes: str(body?.notes) || null,
         signatoryName: str(body?.signatoryName) || null,
+        showStamp: Boolean(body?.showStamp),
         signatoryTitle: str(body?.signatoryTitle) || null,
         createdBy: auth.user.id,
         updatedBy: auth.user.id,

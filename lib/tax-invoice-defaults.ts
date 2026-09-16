@@ -25,6 +25,7 @@ export type TaxInvoiceFormValues = {
   clientTrn: string;
   vatRatePercent: number;
   signatoryName: string;
+  showStamp: boolean;
   items: TaxInvoiceItemDraft[];
 };
 
@@ -43,6 +44,7 @@ export function defaultTaxInvoiceValues(): TaxInvoiceFormValues {
     clientTrn: "",
     vatRatePercent: 5,
     signatoryName: "Eng. Mohammad Abu Eisa",
+    showStamp: false,
     items: [emptyTaxItem()],
   };
 }

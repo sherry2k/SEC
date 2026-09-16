@@ -50,6 +50,7 @@ export default async function TaxInvoiceViewPage({ params }: { params: Promise<{
           clientTrn: invoice.clientTrn ?? "",
           vatRatePercent: Number(invoice.vatRatePercent),
           signatoryName: invoice.signatoryName ?? "",
+          showStamp: invoice.showStamp,
           items: items.map((i) => ({
             itemDate: i.itemDate ?? "",
             description: i.description,

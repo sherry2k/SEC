@@ -30,6 +30,15 @@ html, body {
 /* Printable documents (quotations, invoices): elements marked .no-print
    (sidebar, topbar, action buttons) vanish, and the dashboard's centered
    max-width column expands to use the full printable page. */
+
+/* Explicitly declares the thead's row-group role rather than relying on
+   the browser's implicit default — this is what makes it repeat reliably
+   on every printed page. (There's no tfoot rule here anymore — see
+   PrintDocumentShell for why the footer is handled differently.) */
+.print-doc-table > thead {
+  display: table-header-group;
+}
+
 @media print {
   .no-print {
     display: none !important;

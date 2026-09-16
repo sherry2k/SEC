@@ -54,6 +54,7 @@ export async function POST(request: NextRequest) {
         clientTrn: str(body?.clientTrn) || null,
         vatRatePercent: String(vatRatePercent),
         signatoryName: str(body?.signatoryName) || null,
+        showStamp: Boolean(body?.showStamp),
         createdBy: auth.user.id,
         updatedBy: auth.user.id,
       })

@@ -6,6 +6,7 @@ import { Loader2, Plus, Trash2 } from "lucide-react";
 import { calcPerformaInvoiceTotals } from "@/lib/performa-invoice-calc";
 import { calcItemTotals } from "@/lib/quotation-calc";
 import { emptyPIItem, type PerformaInvoiceFormValues, type PerformaInvoiceItemDraft } from "@/lib/performa-invoice-defaults";
+import StampToggle from "@/components/StampToggle";
 
 export default function PerformaInvoiceForm({
   mode,
@@ -216,6 +217,8 @@ export default function PerformaInvoiceForm({
           className={inputClass}
         />
       </div>
+
+      <StampToggle checked={values.showStamp} onChange={(v) => set("showStamp", v)} />
 
       <button
         type="submit"

@@ -25,6 +25,7 @@ export type InvoiceFormValues = {
   customerAddress: string;
   vatRatePercent: number;
   signatoryName: string;
+  showStamp: boolean;
   items: InvoiceItemDraft[];
 };
 
@@ -45,6 +46,7 @@ export function defaultInvoiceValues(): InvoiceFormValues {
     customerAddress: "Abu Dhabi - UAE",
     vatRatePercent: 5,
     signatoryName: "Eng. Mohammad Abu Eisa",
+    showStamp: false,
     items: [emptyInvoiceItem()],
   };
 }

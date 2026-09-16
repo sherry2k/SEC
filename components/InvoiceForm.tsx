@@ -6,6 +6,7 @@ import { Loader2, Plus, Trash2 } from "lucide-react";
 import { calcInvoiceTotals } from "@/lib/invoice-calc";
 import { calcItemTotals } from "@/lib/quotation-calc";
 import { emptyInvoiceItem, type InvoiceFormValues, type InvoiceItemDraft } from "@/lib/invoice-defaults";
+import StampToggle from "@/components/StampToggle";
 
 export default function InvoiceForm({
   mode,
@@ -216,6 +217,8 @@ export default function InvoiceForm({
           className={inputClass}
         />
       </div>
+
+      <StampToggle checked={values.showStamp} onChange={(v) => set("showStamp", v)} />
 
       <button
         type="submit"

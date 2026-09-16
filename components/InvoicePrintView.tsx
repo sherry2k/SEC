@@ -13,6 +13,7 @@ export type PrintableInvoice = {
   customerAddress: string;
   vatRatePercent: number;
   signatoryName: string;
+  showStamp: boolean;
   items: PrintableInvoiceItem[];
 };
 
@@ -85,6 +86,7 @@ export default function InvoicePrintView({ invoice }: { invoice: PrintableInvoic
       <div className="mt-8 text-sm">
         <p>Best Regards,</p>
         {invoice.signatoryName && <p className="mt-6">{invoice.signatoryName}</p>}
+        {invoice.showStamp && <img src="/images/stamp.png" alt="Company stamp" className="mt-2 h-28 object-contain" />}
       </div>
     </PrintDocumentShell>
   );

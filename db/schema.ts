@@ -6,6 +6,7 @@ import {
   varchar,
   integer,
   numeric,
+  boolean,
   timestamp,
   date,
   uuid,
@@ -198,6 +199,9 @@ export const quotations = pgTable("quotations", {
   // from the standing commercial conditions above.
   notes: text("notes"),
   signatoryName: text("signatory_name"),
+  // Toggle, off by default — the stamp only appears on the printed page
+  // when explicitly turned on for that document.
+  showStamp: boolean("show_stamp").notNull().default(false),
   signatoryTitle: text("signatory_title"),
   status: text("status").notNull().default("draft"),
   createdBy: integer("created_by").references(() => users.id),
@@ -238,6 +242,9 @@ export const performaInvoices = pgTable("performa_invoices", {
   customerAddress: text("customer_address"),
   vatRatePercent: numeric("vat_rate_percent", { precision: 5, scale: 2 }).notNull().default("5"),
   signatoryName: text("signatory_name"),
+  // Toggle, off by default — the stamp only appears on the printed page
+  // when explicitly turned on for that document.
+  showStamp: boolean("show_stamp").notNull().default(false),
   status: text("status").notNull().default("draft"),
   createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -272,6 +279,9 @@ export const taxInvoices = pgTable("tax_invoices", {
   clientTrn: text("client_trn"),
   vatRatePercent: numeric("vat_rate_percent", { precision: 5, scale: 2 }).notNull().default("5"),
   signatoryName: text("signatory_name"),
+  // Toggle, off by default — the stamp only appears on the printed page
+  // when explicitly turned on for that document.
+  showStamp: boolean("show_stamp").notNull().default(false),
   status: text("status").notNull().default("draft"),
   createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -332,6 +342,9 @@ export const receiptVouchers = pgTable("receipt_vouchers", {
   location: text("location"),
   vatRatePercent: numeric("vat_rate_percent", { precision: 5, scale: 2 }).notNull().default("5"),
   signatoryName: text("signatory_name"),
+  // Toggle, off by default — the stamp only appears on the printed page
+  // when explicitly turned on for that document.
+  showStamp: boolean("show_stamp").notNull().default(false),
   status: text("status").notNull().default("draft"),
   createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -366,6 +379,9 @@ export const invoices = pgTable("invoices", {
   customerAddress: text("customer_address"),
   vatRatePercent: numeric("vat_rate_percent", { precision: 5, scale: 2 }).notNull().default("5"),
   signatoryName: text("signatory_name"),
+  // Toggle, off by default — the stamp only appears on the printed page
+  // when explicitly turned on for that document.
+  showStamp: boolean("show_stamp").notNull().default(false),
   status: text("status").notNull().default("draft"),
   createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

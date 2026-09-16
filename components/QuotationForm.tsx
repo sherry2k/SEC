@@ -7,6 +7,7 @@ import QuotationLineItemsEditor from "@/components/QuotationLineItemsEditor";
 import { calcGrandTotals, groupByClassification } from "@/lib/quotation-calc";
 import { amountToWordsAED } from "@/lib/number-to-words";
 import type { QuotationFormValues } from "@/lib/quotation-defaults";
+import StampToggle from "@/components/StampToggle";
 
 export type { QuotationFormValues };
 
@@ -199,6 +200,7 @@ export default function QuotationForm({
         </div>
       </div>
 
+      <StampToggle checked={values.showStamp} onChange={(v) => set("showStamp", v)} />
       <div>
         <label className={labelClass}>Notes</label>
         <textarea

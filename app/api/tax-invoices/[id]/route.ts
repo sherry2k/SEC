@@ -62,6 +62,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       clientTrn: str(body?.clientTrn) || null,
       vatRatePercent: String(vatRatePercent),
       signatoryName: str(body?.signatoryName) || null,
+      showStamp: Boolean(body?.showStamp),
       status: str(body?.status) || undefined,
       updatedBy: auth.user.id,
       updatedAt: new Date(),

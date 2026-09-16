@@ -33,6 +33,7 @@ export default async function EditQuotationPage({ params }: { params: Promise<{ 
     commercialConditions: quotation.commercialConditions ?? "",
     notes: quotation.notes ?? "",
     signatoryName: quotation.signatoryName ?? "",
+    showStamp: quotation.showStamp,
     signatoryTitle: quotation.signatoryTitle ?? "",
     items: items.map(
       (i): QuotationItemDraft => ({

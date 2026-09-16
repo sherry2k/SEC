@@ -72,6 +72,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       commercialConditions: str(body?.commercialConditions) || null,
       notes: str(body?.notes) || null,
       signatoryName: str(body?.signatoryName) || null,
+      showStamp: Boolean(body?.showStamp),
       signatoryTitle: str(body?.signatoryTitle) || null,
       status: str(body?.status) || undefined,
       updatedBy: auth.user.id,

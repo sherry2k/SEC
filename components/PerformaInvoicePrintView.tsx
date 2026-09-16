@@ -13,6 +13,7 @@ export type PrintablePerformaInvoice = {
   customerAddress: string;
   vatRatePercent: number;
   signatoryName: string;
+  showStamp: boolean;
   items: PrintablePIItem[];
 };
 
@@ -85,6 +86,7 @@ export default function PerformaInvoicePrintView({ invoice }: { invoice: Printab
       <div className="mt-8 text-sm">
         <p>Best Regards,</p>
         {invoice.signatoryName && <p className="mt-6">{invoice.signatoryName}</p>}
+        {invoice.showStamp && <img src="/images/stamp.png" alt="Company stamp" className="mt-2 h-28 object-contain" />}
       </div>
     </PrintDocumentShell>
   );

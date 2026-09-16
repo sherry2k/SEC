@@ -57,6 +57,7 @@ export default async function QuotationViewPage({ params }: { params: Promise<{ 
           commercialConditions: quotation.commercialConditions ?? "",
           notes: quotation.notes ?? "",
           signatoryName: quotation.signatoryName ?? "",
+          showStamp: quotation.showStamp,
           signatoryTitle: quotation.signatoryTitle ?? "",
           createdAt: quotation.createdAt,
           items: items.map((i) => ({

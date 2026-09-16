@@ -26,6 +26,7 @@ export type PrintableQuotation = {
   commercialConditions: string;
   notes: string;
   signatoryName: string;
+  showStamp: boolean;
   signatoryTitle: string;
   createdAt: Date;
   items: PrintableItem[];
@@ -232,6 +233,7 @@ export default function QuotationPrintView({ quotation }: { quotation: Printable
         <p className="font-bold">{COMPANY.legalName}</p>
         {quotation.signatoryName && <p className="mt-3 font-semibold">{quotation.signatoryName}</p>}
         {quotation.signatoryTitle && <p>{quotation.signatoryTitle}</p>}
+        {quotation.showStamp && <img src="/images/stamp.png" alt="Company stamp" className="mt-2 h-28 object-contain" />}
       </div>
     </PrintDocumentShell>
   );

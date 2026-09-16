@@ -1,11 +1,14 @@
-// Wraps a printable document (Quotation, Tax Invoice, Performa Invoice) in
-// a real HTML <table> with the letterhead in <thead> and the certification
-// logos + contact line in <tfoot>. This isn't decorative — browsers
-// natively repeat a table's <thead> and <tfoot> on every printed page when
-// the <tbody> content spans more than one page, which is the only
-// reliable, cross-browser way to get a repeating header/footer without a
-// headless-browser PDF pipeline. On screen it renders the same three
-// sections top to bottom, so nothing changes there.
+// Wraps a printable document (Quotation, Tax Invoice, Performa Invoice,
+// Receipt Voucher, Invoice) in a real HTML <table> with the letterhead in
+// <thead> — browsers reliably repeat a table's <thead> on every printed
+// page when content spans more than one page, which is the standard
+// cross-browser trick for a repeating header. The footer, though, is
+// deliberately NOT a <tfoot>: repeating <tfoot> on literally every page,
+// including guaranteeing it on the true last page, turned out to be
+// inconsistent across browsers/PDF engines — some browsers only show it
+// once, and not reliably at the actual end. So the footer is just the
+// last piece of ordinary flowing content instead, which reliably lands
+// at the bottom of wherever the document actually ends.
 import PrintLetterhead from "@/components/PrintLetterhead";
 import PrintFooterStrip from "@/components/PrintFooterStrip";
 
@@ -23,7 +26,7 @@ export default function PrintDocumentShell({
   children: React.ReactNode;
 }) {
   return (
-    <table className="mx-auto w-full max-w-[850px] border-collapse bg-white text-[13px] leading-relaxed text-[var(--sec-ink)] shadow-sm print:shadow-none">
+    <table className="print-doc-table mx-auto w-full max-w-[850px] border-collapse bg-white text-[13px] leading-relaxed text-[var(--sec-ink)] shadow-sm print:shadow-none">
       <thead>
         <tr>
           <td>
@@ -37,18 +40,12 @@ export default function PrintDocumentShell({
         <tr>
           <td>
             <div className="px-8 sm:px-12">{children}</div>
-          </td>
-        </tr>
-      </tbody>
-      <tfoot>
-        <tr>
-          <td>
             <div className="px-8 pb-8 pt-4 sm:px-12 sm:pb-12">
               <PrintFooterStrip />
             </div>
           </td>
         </tr>
-      </tfoot>
+      </tbody>
     </table>
   );
 }

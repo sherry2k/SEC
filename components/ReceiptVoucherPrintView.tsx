@@ -13,6 +13,7 @@ export type PrintableReceiptVoucher = {
   location: string;
   vatRatePercent: number;
   signatoryName: string;
+  showStamp: boolean;
   items: PrintableRVItem[];
 };
 
@@ -88,6 +89,7 @@ export default function ReceiptVoucherPrintView({ voucher }: { voucher: Printabl
       <div className="mt-8 text-sm">
         <p>Best Regards,</p>
         {voucher.signatoryName && <p className="mt-6">{voucher.signatoryName}</p>}
+        {voucher.showStamp && <img src="/images/stamp.png" alt="Company stamp" className="mt-2 h-28 object-contain" />}
       </div>
     </PrintDocumentShell>
   );
