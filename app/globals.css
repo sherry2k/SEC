@@ -60,8 +60,8 @@ html, body {
     padding: 0 !important;
     margin: 0 !important;
   }
-  body {
-    background: white;
+  html, body {
+    background: white !important;
   }
   /* A printed page can't be clicked — links read as plain text, not a
      blue, underlined invitation to click. */

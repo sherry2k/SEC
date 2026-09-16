@@ -18,7 +18,10 @@ export type ActivityAction =
   | "performa_invoice_deleted"
   | "tax_invoice_created"
   | "tax_invoice_updated"
-  | "tax_invoice_deleted";
+  | "tax_invoice_deleted"
+  | "receipt_voucher_created"
+  | "receipt_voucher_updated"
+  | "receipt_voucher_deleted";
 
 export const ACTIVITY_LABELS: Record<ActivityAction, string> = {
   project_created: "created",
@@ -37,4 +40,7 @@ export const ACTIVITY_LABELS: Record<ActivityAction, string> = {
   tax_invoice_created: "created tax invoice",
   tax_invoice_updated: "updated tax invoice",
   tax_invoice_deleted: "deleted tax invoice",
+  receipt_voucher_created: "created receipt voucher",
+  receipt_voucher_updated: "updated receipt voucher",
+  receipt_voucher_deleted: "deleted receipt voucher",
 };

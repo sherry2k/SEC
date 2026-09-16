@@ -315,3 +315,37 @@ export const attendanceRecords = pgTable(
   },
   (t) => [unique().on(t.userId, t.date)]
 );
+
+// ---------------------------------------------------------------------------
+// Finance — Receipt Vouchers. Same INV numbering sequence as Tax Invoice —
+// both were planned from the start to share one counter (along with a
+// future Tax Invoice IN), since they're all variants of the same "money
+// changed hands" document family.
+// ---------------------------------------------------------------------------
+
+export const receiptVouchers = pgTable("receipt_vouchers", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  voucherNo: text("voucher_no").notNull().unique(),
+  issueDate: text("issue_date").notNull(),
+  toName: text("to_name"),
+  project: text("project"),
+  location: text("location"),
+  vatRatePercent: numeric("vat_rate_percent", { precision: 5, scale: 2 }).notNull().default("5"),
+  signatoryName: text("signatory_name"),
+  status: text("status").notNull().default("draft"),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedBy: integer("updated_by").references(() => users.id),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const receiptVoucherItems = pgTable("receipt_voucher_items", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  voucherId: uuid("voucher_id")
+    .notNull()
+    .references(() => receiptVouchers.id, { onDelete: "cascade" }),
+  sortOrder: integer("sort_order").notNull().default(0),
+  itemDate: text("item_date"),
+  description: text("description").notNull(),
+  amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+});
