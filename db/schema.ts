@@ -10,6 +10,7 @@ import {
   date,
   uuid,
   primaryKey,
+  unique,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { ROLES, USER_STATUSES } from "@/lib/roles";
@@ -287,3 +288,27 @@ export const taxInvoiceItems = pgTable("tax_invoice_items", {
   description: text("description").notNull(),
   amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
 });
+
+// ---------------------------------------------------------------------------
+// Attendance — self check-in/out for Staff, visible only to Admin/Master
+// admin. One row per person per calendar day (UAE local date).
+// ---------------------------------------------------------------------------
+
+export const attendanceRecords = pgTable(
+  "attendance_records",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id),
+    date: date("date", { mode: "date" }).notNull(),
+    checkInAt: timestamp("check_in_at", { withTimezone: true }),
+    checkOutAt: timestamp("check_out_at", { withTimezone: true }),
+    // Who created/last touched this row — a self check-in, or an Admin's
+    // manual correction for a day someone forgot to check in.
+    createdBy: integer("created_by").references(() => users.id),
+    updatedBy: integer("updated_by").references(() => users.id),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.userId, t.date)]
+);

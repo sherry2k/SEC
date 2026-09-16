@@ -11,6 +11,9 @@ const ALWAYS: Record<string, readonly Role[]> = {
   "accounts.edit": ["master_admin", "admin", "finance"],
   "users.manage": USER_MANAGEMENT_ROLES,
   "settings.manage": ["master_admin", "admin"],
+  "attendance.view": ["master_admin", "admin"],
+  "attendance.manage": ["master_admin", "admin"],
+  "attendance.checkin": ["staff"],
 };
 
 export type Permission = keyof typeof ALWAYS;

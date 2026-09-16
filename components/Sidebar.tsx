@@ -2,24 +2,32 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, FolderKanban, Wallet, Users, Settings } from "lucide-react";
+import { LayoutGrid, FolderKanban, Wallet, Users, Settings, CalendarCheck } from "lucide-react";
 import type { CurrentUser } from "@/lib/auth";
 import { can } from "@/lib/permissions";
 import { ROLE_LABELS } from "@/lib/roles";
 import SignOutButton from "@/components/SignOutButton";
 import LogoBadge from "@/components/LogoBadge";
+import AttendanceWidget from "@/components/AttendanceWidget";
 
 // Client component so the active nav item can be highlighted from the
 // current route (usePathname). The permission checks below are pure and
 // synchronous — no data fetching happens here, so this stays just as safe
 // as a server component for hiding items a role shouldn't see.
-export default function Sidebar({ user }: { user: CurrentUser }) {
+export default function Sidebar({
+  user,
+  todayAttendance,
+}: {
+  user: CurrentUser;
+  todayAttendance: { checkInAt: string | null; checkOutAt: string | null } | null;
+}) {
   const pathname = usePathname();
 
   const navItems = [
     { href: "/dashboard", label: "Overview", icon: LayoutGrid, show: true },
     { href: "/projects", label: "Projects", icon: FolderKanban, show: can(user.role, "projects.view") },
     { href: "/accounts", label: "Accounts", icon: Wallet, show: can(user.role, "accounts.view") },
+    { href: "/attendance", label: "Attendance", icon: CalendarCheck, show: can(user.role, "attendance.view") },
     { href: "/users", label: "User Management", icon: Users, show: can(user.role, "users.manage") },
     { href: "/settings", label: "Settings", icon: Settings, show: can(user.role, "settings.manage") },
   ];
@@ -71,6 +79,12 @@ export default function Sidebar({ user }: { user: CurrentUser }) {
             );
           })}
       </nav>
+
+      {user.role === "staff" && todayAttendance && (
+        <div className="relative border-t border-white/10 px-3 py-3">
+          <AttendanceWidget initialCheckInAt={todayAttendance.checkInAt} initialCheckOutAt={todayAttendance.checkOutAt} />
+        </div>
+      )}
 
       <div className="relative border-t border-white/10 px-3 py-3">
         <Link
