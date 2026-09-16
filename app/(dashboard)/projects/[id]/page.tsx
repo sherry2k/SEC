@@ -8,10 +8,11 @@ import { requirePermission } from "@/lib/auth";
 import { financeCanEditProjects } from "@/lib/settings";
 import { can } from "@/lib/permissions";
 import { visibleActorName } from "@/lib/visibility";
-import { PROJECT_CATEGORIES, CATEGORY_LABELS, PROJECT_STATUS_LABELS, type ProjectCategory } from "@/lib/checklist";
+import { PROJECT_CATEGORIES, CATEGORY_LABELS, type ProjectCategory } from "@/lib/checklist";
 import ProjectChecklist from "@/components/ProjectChecklist";
 import AddCategoryButton from "@/components/AddCategoryButton";
 import DeleteProjectButton from "@/components/DeleteProjectButton";
+import ProjectStatusControl from "@/components/ProjectStatusControl";
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requirePermission("projects.view");
@@ -32,6 +33,13 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   const [responsibleUser] = project.responsibleId
     ? await db.select({ name: users.name }).from(users).where(eq(users.id, project.responsibleId)).limit(1)
     : [null];
+
+  const [completedByUser] = project.completedBy
+    ? await db.select({ name: users.name, role: users.role }).from(users).where(eq(users.id, project.completedBy)).limit(1)
+    : [null];
+  const completedByDisplayName = completedByUser
+    ? visibleActorName(completedByUser.role, completedByUser.name, user.role)
+    : null;
 
   const links = await db.select().from(projectCategories).where(eq(projectCategories.projectId, id));
   const linkedCategories = links.map((l) => l.category);
@@ -84,9 +92,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
         <h1 className="font-bold text-2xl text-[var(--sec-ink)]">{project.name}</h1>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full border border-[var(--sec-line)] bg-white px-3 py-1 text-xs font-medium text-[var(--sec-muted)]">
-            {PROJECT_STATUS_LABELS[project.status]}
-          </span>
+          <ProjectStatusControl projectId={project.id} initialStatus={project.status} canEdit={canEdit} />
           {canEdit && (
             <Link
               href={`/projects/${project.id}/edit`}
@@ -116,6 +122,13 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         {project.updatedAt.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
         {updatedByDisplayName && ` by ${updatedByDisplayName}`}
       </p>
+
+      {project.status === "completed" && project.completedAt && (
+        <p className="mt-1 text-xs font-medium text-emerald-700">
+          Completed{completedByDisplayName && ` by ${completedByDisplayName}`} on{" "}
+          {project.completedAt.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+        </p>
+      )}
 
       {project.notes && <p className="mt-4 text-sm text-[var(--sec-muted)]">{project.notes}</p>}
 

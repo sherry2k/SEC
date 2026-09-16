@@ -5,6 +5,7 @@ import { projects } from "@/db/schema";
 import { authorizePermissionApi } from "@/lib/auth";
 import { getAssignableUsers } from "@/lib/assignable-users";
 import { logActivity } from "@/lib/activity";
+import { PROJECT_STATUSES, type ProjectStatus } from "@/lib/checklist";
 
 const EDITABLE_TEXT_FIELDS = ["name", "clientName", "buildingName", "unitNo", "plotNo", "municipalityNo", "location", "notes"] as const;
 
@@ -38,8 +39,36 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
   }
 
-  if (Object.keys(update).length === 0 && responsibleId === undefined) {
+  let status: ProjectStatus | undefined;
+  if ("status" in (body ?? {})) {
+    status = body.status as ProjectStatus;
+    if (!PROJECT_STATUSES.includes(status)) {
+      return NextResponse.json({ error: "Invalid status." }, { status: 400 });
+    }
+  }
+
+  if (Object.keys(update).length === 0 && responsibleId === undefined && status === undefined) {
     return NextResponse.json({ error: "Nothing to update." }, { status: 400 });
+  }
+
+  // Fetch the current row when status is changing — need its existing
+  // status (to detect a real transition) and responsibleId (to freeze as
+  // completedBy the moment it becomes Completed).
+  let completionUpdate: { completedBy: number | null; completedAt: Date | null } | undefined;
+  if (status !== undefined) {
+    const [existing] = await db
+      .select({ status: projects.status, responsibleId: projects.responsibleId })
+      .from(projects)
+      .where(eq(projects.id, id))
+      .limit(1);
+    if (!existing) {
+      return NextResponse.json({ error: "Project not found." }, { status: 404 });
+    }
+    if (status === "completed" && existing.status !== "completed") {
+      completionUpdate = { completedBy: existing.responsibleId, completedAt: new Date() };
+    } else if (status !== "completed" && existing.status === "completed") {
+      completionUpdate = { completedBy: null, completedAt: null };
+    }
   }
 
   const result = await db
@@ -47,6 +76,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     .set({
       ...update,
       ...(responsibleId !== undefined ? { responsibleId } : {}),
+      ...(status !== undefined ? { status } : {}),
+      ...(completionUpdate ?? {}),
       updatedBy: auth.user.id,
       updatedAt: new Date(),
     } as Partial<typeof projects.$inferInsert>)
@@ -57,12 +88,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: "Project not found." }, { status: 404 });
   }
 
+  const changedFields = [...Object.keys(update), ...(status !== undefined ? ["status"] : [])];
   await logActivity({
     userId: auth.user.id,
     projectId: id,
     action: "project_updated",
     targetName: result[0].name,
-    details: `Fields changed: ${Object.keys(update).join(", ")}`,
+    details: `Fields changed: ${changedFields.join(", ")}`,
   });
 
   return NextResponse.json({ success: true });

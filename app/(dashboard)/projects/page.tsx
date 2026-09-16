@@ -24,6 +24,7 @@ export default async function ProjectsPage() {
   const assignableUsers = await getAssignableUsers();
 
   const responsibleUsers = alias(users, "responsible_users");
+  const completedByUsers = alias(users, "completed_by_users");
 
   const rows = await db
     .select({
@@ -41,10 +42,14 @@ export default async function ProjectsPage() {
       updatedByRole: users.role,
       responsibleId: projects.responsibleId,
       responsibleName: responsibleUsers.name,
+      completedByName: completedByUsers.name,
+      completedByRole: completedByUsers.role,
+      completedAt: projects.completedAt,
     })
     .from(projects)
     .leftJoin(users, eq(projects.updatedBy, users.id))
     .leftJoin(responsibleUsers, eq(projects.responsibleId, responsibleUsers.id))
+    .leftJoin(completedByUsers, eq(projects.completedBy, completedByUsers.id))
     .orderBy(desc(projects.updatedAt));
 
   const categoryLinks = await db.select().from(projectCategories);
@@ -128,6 +133,8 @@ export default async function ProjectsPage() {
     updatedByName: visibleActorName(p.updatedByRole, p.updatedByName, user.role),
     responsibleId: p.responsibleId,
     responsibleName: p.responsibleName,
+    completedByName: visibleActorName(p.completedByRole, p.completedByName, user.role),
+    completedAt: p.completedAt ? p.completedAt.toISOString() : null,
     categories: categoriesByProject.get(p.id) ?? [],
     progress: progressByProject.get(p.id) ?? { approved: 0, total: 0 },
     currentActivity: currentActivityByProject.get(p.id) ?? null,

@@ -74,6 +74,11 @@ export const projects = pgTable("projects", {
   // Who owns this project day to day — separate from createdBy/updatedBy,
   // which track who touched the record, not who's accountable for the work.
   responsibleId: integer("responsible_id").references(() => users.id),
+  // Frozen at the moment a project is marked Completed — stays correct as
+  // the record of who actually finished it even if Responsible is later
+  // reassigned to someone else for follow-up work.
+  completedBy: integer("completed_by").references(() => users.id),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
   createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedBy: integer("updated_by").references(() => users.id),

@@ -27,6 +27,8 @@ type ProjectRow = {
   updatedByName: string | null;
   responsibleId: number | null;
   responsibleName: string | null;
+  completedByName: string | null;
+  completedAt: string | null;
   categories: ProjectCategory[];
   progress: { approved: number; total: number };
   currentActivity: string | null;
@@ -254,7 +256,16 @@ export default function ProjectsTable({
                       )}
                     </td>
                     <td className="px-4 py-3 text-[var(--sec-muted)]">{p.responsibleName || "—"}</td>
-                    <td className="px-4 py-3 text-[var(--sec-muted)]">{PROJECT_STATUS_LABELS[p.status]}</td>
+                    <td className="px-4 py-3 text-[var(--sec-muted)]">
+                      <p>{PROJECT_STATUS_LABELS[p.status]}</p>
+                      {p.status === "completed" && (p.completedByName || p.completedAt) && (
+                        <p className="whitespace-nowrap text-xs text-emerald-700">
+                          {p.completedByName ? `by ${p.completedByName}` : ""}
+                          {p.completedByName && p.completedAt ? " · " : ""}
+                          {p.completedAt ? formatDate(p.completedAt) : ""}
+                        </p>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-[var(--sec-muted)]">
                       <p className="whitespace-nowrap">{formatDate(p.updatedAt)}</p>
                       {p.updatedByName && <p className="text-xs">by {p.updatedByName}</p>}
