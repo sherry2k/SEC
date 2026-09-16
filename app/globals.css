@@ -31,12 +31,15 @@ html, body {
    (sidebar, topbar, action buttons) vanish, and the dashboard's centered
    max-width column expands to use the full printable page. */
 
-/* Explicitly declares the thead's row-group role rather than relying on
-   the browser's implicit default — this is what makes it repeat reliably
-   on every printed page. (There's no tfoot rule here anymore — see
-   PrintDocumentShell for why the footer is handled differently.) */
+/* Explicitly declares these table row-group roles rather than relying on
+   the browser's implicit default — this is what makes <thead> repeat on
+   every page and <tfoot> pin to the bottom of every page (last page
+   included) reliably. */
 .print-doc-table > thead {
   display: table-header-group;
+}
+.print-doc-table > tfoot {
+  display: table-footer-group;
 }
 
 @media print {
