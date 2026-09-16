@@ -258,12 +258,11 @@ export default function ProjectsTable({
                     <td className="px-4 py-3 text-[var(--sec-muted)]">{p.responsibleName || "—"}</td>
                     <td className="px-4 py-3 text-[var(--sec-muted)]">
                       <p>{PROJECT_STATUS_LABELS[p.status]}</p>
-                      {p.status === "completed" && (p.completedByName || p.completedAt) && (
-                        <p className="whitespace-nowrap text-xs text-emerald-700">
-                          {p.completedByName ? `by ${p.completedByName}` : ""}
-                          {p.completedByName && p.completedAt ? " · " : ""}
-                          {p.completedAt ? formatDate(p.completedAt) : ""}
-                        </p>
+                      {p.status === "completed" && p.completedByName && (
+                        <p className="text-xs text-emerald-700">by {p.completedByName}</p>
+                      )}
+                      {p.status === "completed" && p.completedAt && (
+                        <p className="text-xs text-emerald-700">{formatDate(p.completedAt)}</p>
                       )}
                     </td>
                     <td className="px-4 py-3 text-[var(--sec-muted)]">
