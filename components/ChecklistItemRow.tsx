@@ -12,6 +12,8 @@ export type ChecklistItem = {
   remarks: string | null;
   parentItemId: string | null;
   dueDate: string | null; // "YYYY-MM-DD" or null
+  completedByName: string | null;
+  completedAt: string | null;
 };
 
 function toDateInputValue(iso: string | null): string {
@@ -19,27 +21,48 @@ function toDateInputValue(iso: string | null): string {
   return iso.slice(0, 10);
 }
 
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
+
 export default function ChecklistItemRow({
   item,
   projectId,
   depth,
   canEdit,
+  currentUserName,
 }: {
   item: ChecklistItem;
   projectId: string;
   depth: number;
   canEdit: boolean;
+  currentUserName: string;
 }) {
   const [status, setStatus] = useState(item.status);
   const [dueDate, setDueDate] = useState(item.dueDate);
+  const [completedByName, setCompletedByName] = useState(item.completedByName);
+  const [completedAt, setCompletedAt] = useState(item.completedAt);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   const save = async (patch: { status?: ItemStatus; dueDate?: string | null }) => {
-    const previousStatus = status;
-    const previousDueDate = dueDate;
-    if (patch.status !== undefined) setStatus(patch.status);
+    const previous = { status, dueDate, completedByName, completedAt };
+
+    if (patch.status !== undefined) {
+      setStatus(patch.status);
+      // Mirror the server's freeze-on-approve / clear-on-reopen logic here
+      // too, so the "Completed by" line shows immediately, not just after
+      // the next page load.
+      if (patch.status === "approved" && previous.status !== "approved") {
+        setCompletedByName(currentUserName);
+        setCompletedAt(new Date().toISOString());
+      } else if (patch.status !== "approved" && previous.status === "approved") {
+        setCompletedByName(null);
+        setCompletedAt(null);
+      }
+    }
     if (patch.dueDate !== undefined) setDueDate(patch.dueDate);
+
     setSaving(true);
     setError("");
     try {
@@ -50,13 +73,17 @@ export default function ChecklistItemRow({
       });
       if (!res.ok) {
         const data: { error?: string } = await res.json().catch(() => ({}));
-        setStatus(previousStatus);
-        setDueDate(previousDueDate);
+        setStatus(previous.status);
+        setDueDate(previous.dueDate);
+        setCompletedByName(previous.completedByName);
+        setCompletedAt(previous.completedAt);
         setError(data.error || "Couldn't save that.");
       }
     } catch {
-      setStatus(previousStatus);
-      setDueDate(previousDueDate);
+      setStatus(previous.status);
+      setDueDate(previous.dueDate);
+      setCompletedByName(previous.completedByName);
+      setCompletedAt(previous.completedAt);
       setError("Couldn't reach the server.");
     } finally {
       setSaving(false);
@@ -70,10 +97,17 @@ export default function ChecklistItemRow({
       className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--sec-line)] py-2.5 last:border-0"
       style={{ paddingLeft: depth * 20 }}
     >
-      <span className={`flex items-center gap-2 text-sm ${depth > 0 ? "text-[var(--sec-muted)]" : "text-[var(--sec-ink)]"}`}>
-        {depth > 0 && <span className="text-[var(--sec-line)]">└</span>}
-        {urgency && <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${URGENCY_STYLES[urgency]}`} aria-hidden="true" />}
-        {item.name}
+      <span className={depth > 0 ? "text-[var(--sec-muted)]" : "text-[var(--sec-ink)]"}>
+        <span className="flex items-center gap-2 text-sm">
+          {depth > 0 && <span className="text-[var(--sec-line)]">└</span>}
+          {urgency && <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${URGENCY_STYLES[urgency]}`} aria-hidden="true" />}
+          {item.name}
+        </span>
+        {status === "approved" && completedByName && completedAt && (
+          <span className="mt-0.5 block text-xs text-emerald-700">
+            Approved by {completedByName} · {formatDate(completedAt)}
+          </span>
+        )}
       </span>
 
       <div className="flex items-center gap-2">

@@ -7,7 +7,7 @@ type CategorySection = { category: ProjectCategory; items: ChecklistItem[] };
 
 // Renders each linked category as its own card, with items indented one
 // level under their parent (only Contractor → Inspection currently nests).
-function renderTree(items: ChecklistItem[], projectId: string, canEdit: boolean) {
+function renderTree(items: ChecklistItem[], projectId: string, canEdit: boolean, currentUserName: string) {
   const topLevel = items.filter((i) => i.parentItemId === null);
   const childrenByParent = new Map<string, ChecklistItem[]>();
   for (const i of items) {
@@ -20,9 +20,9 @@ function renderTree(items: ChecklistItem[], projectId: string, canEdit: boolean)
 
   return topLevel.map((item) => (
     <div key={item.id}>
-      <ChecklistItemRow item={item} projectId={projectId} depth={0} canEdit={canEdit} />
+      <ChecklistItemRow item={item} projectId={projectId} depth={0} canEdit={canEdit} currentUserName={currentUserName} />
       {(childrenByParent.get(item.id) ?? []).map((child) => (
-        <ChecklistItemRow key={child.id} item={child} projectId={projectId} depth={1} canEdit={canEdit} />
+        <ChecklistItemRow key={child.id} item={child} projectId={projectId} depth={1} canEdit={canEdit} currentUserName={currentUserName} />
       ))}
     </div>
   ));
@@ -32,10 +32,12 @@ export default function ProjectChecklist({
   sections,
   projectId,
   canEdit,
+  currentUserName,
 }: {
   sections: CategorySection[];
   projectId: string;
   canEdit: boolean;
+  currentUserName: string;
 }) {
   if (sections.length === 0) {
     return <p className="text-sm text-[var(--sec-muted)]">No categories linked yet.</p>;
@@ -48,7 +50,7 @@ export default function ProjectChecklist({
           <div className="border-b border-[var(--sec-line)] px-4 py-3">
             <h3 className="font-bold text-base text-[var(--sec-ink)]">{CATEGORY_LABELS[category]}</h3>
           </div>
-          <div className="px-4 py-1">{renderTree(items, projectId, canEdit)}</div>
+          <div className="px-4 py-1">{renderTree(items, projectId, canEdit, currentUserName)}</div>
         </div>
       ))}
     </div>

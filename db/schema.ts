@@ -141,6 +141,12 @@ export const projectChecklistItems = pgTable("project_checklist_items", {
   dueDate: date("due_date", { mode: "date" }),
   remarks: text("remarks"),
   fileUrl: text("file_url"),
+  // Frozen the moment this specific stage is marked Approved — the same
+  // reasoning as projects.completedBy: updatedBy/updatedAt get overwritten
+  // by any later edit (e.g. fixing the due date after approval), so they
+  // can't reliably answer "who finished this stage."
+  completedBy: integer("completed_by").references(() => users.id),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
   updatedBy: integer("updated_by").references(() => users.id),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

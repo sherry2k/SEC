@@ -51,6 +51,19 @@ export async function PATCH(
   if (remarks !== undefined) update.remarks = remarks || null;
   if (hasDueDate) update.dueDate = dueDate ?? null;
 
+  // Freeze who approved this specific stage, the moment it happens — not
+  // the project's Responsible person, since different staff can work on
+  // different stages. Reopening a stage (moving it off Approved) clears it.
+  if (status !== undefined && status !== before.status) {
+    if (status === "approved") {
+      update.completedBy = auth.user.id;
+      update.completedAt = new Date();
+    } else if (before.status === "approved") {
+      update.completedBy = null;
+      update.completedAt = null;
+    }
+  }
+
   await db
     .update(projectChecklistItems)
     .set(update)

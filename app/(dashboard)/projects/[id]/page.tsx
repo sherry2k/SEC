@@ -51,12 +51,16 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       status: projectChecklistItems.status,
       remarks: projectChecklistItems.remarks,
       dueDate: projectChecklistItems.dueDate,
+      completedAt: projectChecklistItems.completedAt,
+      completedByName: users.name,
+      completedByRole: users.role,
       category: checklistTemplates.category,
       name: checklistTemplates.name,
       sortOrder: checklistTemplates.sortOrder,
     })
     .from(projectChecklistItems)
     .innerJoin(checklistTemplates, eq(projectChecklistItems.templateId, checklistTemplates.id))
+    .leftJoin(users, eq(projectChecklistItems.completedBy, users.id))
     .where(eq(projectChecklistItems.projectId, id));
 
   const sections = linkedCategories.map((category) => ({
@@ -71,6 +75,8 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         remarks: i.remarks,
         parentItemId: i.parentItemId,
         dueDate: i.dueDate ? i.dueDate.toISOString().slice(0, 10) : null,
+        completedByName: visibleActorName(i.completedByRole, i.completedByName, user.role),
+        completedAt: i.completedAt ? i.completedAt.toISOString() : null,
       })),
   }));
 
@@ -138,7 +144,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       </div>
 
       <div className="mt-4">
-        <ProjectChecklist sections={sections} projectId={project.id} canEdit={canEdit} />
+        <ProjectChecklist sections={sections} projectId={project.id} canEdit={canEdit} currentUserName={user.name} />
       </div>
     </div>
   );
