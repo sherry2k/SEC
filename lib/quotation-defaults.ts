@@ -34,6 +34,7 @@ export type QuotationFormValues = {
   projectDescription: string;
   location: string;
   buildingConfig: string;
+  projectId: string; // "" = not linked to a project
   vatRatePercent: number;
   intro: string;
   paymentTerms: string;
@@ -75,6 +76,7 @@ export function defaultQuotationValues(): QuotationFormValues {
     projectDescription: "",
     location: "Abu Dhabi - UAE",
     buildingConfig: "",
+    projectId: "",
     vatRatePercent: 5,
     intro: DEFAULT_INTRO,
     paymentTerms: DEFAULT_PAYMENT_TERMS,

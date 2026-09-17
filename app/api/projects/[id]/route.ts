@@ -47,7 +47,17 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
   }
 
-  if (Object.keys(update).length === 0 && responsibleId === undefined && status === undefined) {
+  let statementShowStamp: boolean | undefined;
+  if ("statementShowStamp" in (body ?? {})) {
+    statementShowStamp = Boolean(body.statementShowStamp);
+  }
+
+  if (
+    Object.keys(update).length === 0 &&
+    responsibleId === undefined &&
+    status === undefined &&
+    statementShowStamp === undefined
+  ) {
     return NextResponse.json({ error: "Nothing to update." }, { status: 400 });
   }
 
@@ -77,6 +87,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       ...update,
       ...(responsibleId !== undefined ? { responsibleId } : {}),
       ...(status !== undefined ? { status } : {}),
+      ...(statementShowStamp !== undefined ? { statementShowStamp } : {}),
       ...(completionUpdate ?? {}),
       updatedBy: auth.user.id,
       updatedAt: new Date(),
@@ -88,7 +99,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: "Project not found." }, { status: 404 });
   }
 
-  const changedFields = [...Object.keys(update), ...(status !== undefined ? ["status"] : [])];
+  const changedFields = [
+    ...Object.keys(update),
+    ...(status !== undefined ? ["status"] : []),
+    ...(statementShowStamp !== undefined ? ["statementShowStamp"] : []),
+  ];
   await logActivity({
     userId: auth.user.id,
     projectId: id,

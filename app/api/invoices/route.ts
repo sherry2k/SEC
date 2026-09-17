@@ -50,6 +50,7 @@ export async function POST(request: NextRequest) {
         invoiceNo,
         issueDate: str(body?.issueDate) || new Date().toLocaleDateString("en-GB"),
         customerName,
+        projectId: str(body?.projectId) || null,
         project: str(body?.project) || null,
         customerAddress: str(body?.customerAddress) || null,
         vatRatePercent: String(vatRatePercent),

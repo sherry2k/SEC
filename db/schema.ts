@@ -81,6 +81,10 @@ export const projects = pgTable("projects", {
   // reassigned to someone else for follow-up work.
   completedBy: integer("completed_by").references(() => users.id),
   completedAt: timestamp("completed_at", { withTimezone: true }),
+  // Remembered per project since the Statement of Account is generated
+  // fresh each time rather than saved as its own row — there's nowhere
+  // else for this toggle's state to live.
+  statementShowStamp: boolean("statement_show_stamp").notNull().default(false),
   createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedBy: integer("updated_by").references(() => users.id),
@@ -182,6 +186,8 @@ export const checklistItemComments = pgTable("checklist_item_comments", {
 
 export const quotations = pgTable("quotations", {
   id: uuid("id").primaryKey().defaultRandom(),
+  // Optional — links this quotation to a project so its value counts
+  // toward that project's financial summary and Statement of Account.
   quotationNo: text("quotation_no").notNull().unique(),
   title: text("title").notNull().default("Technical and Commercial Proposal"),
   subtitle: text("subtitle"),
@@ -235,6 +241,7 @@ export const quotationItems = pgTable("quotation_items", {
 
 export const performaInvoices = pgTable("performa_invoices", {
   id: uuid("id").primaryKey().defaultRandom(),
+  projectId: uuid("project_id").references(() => projects.id),
   invoiceNo: text("invoice_no").notNull().unique(),
   issueDate: text("issue_date").notNull(),
   customerName: text("customer_name"),
@@ -272,6 +279,7 @@ export const performaInvoiceItems = pgTable("performa_invoice_items", {
 
 export const taxInvoices = pgTable("tax_invoices", {
   id: uuid("id").primaryKey().defaultRandom(),
+  projectId: uuid("project_id").references(() => projects.id),
   invoiceNo: text("invoice_no").notNull().unique(),
   issueDate: text("issue_date").notNull(),
   clientName: text("client_name"),
@@ -335,6 +343,7 @@ export const attendanceRecords = pgTable(
 
 export const receiptVouchers = pgTable("receipt_vouchers", {
   id: uuid("id").primaryKey().defaultRandom(),
+  projectId: uuid("project_id").references(() => projects.id),
   voucherNo: text("voucher_no").notNull().unique(),
   issueDate: text("issue_date").notNull(),
   toName: text("to_name"),
@@ -372,6 +381,7 @@ export const receiptVoucherItems = pgTable("receipt_voucher_items", {
 
 export const invoices = pgTable("invoices", {
   id: uuid("id").primaryKey().defaultRandom(),
+  projectId: uuid("project_id").references(() => projects.id),
   invoiceNo: text("invoice_no").notNull().unique(),
   issueDate: text("issue_date").notNull(),
   customerName: text("customer_name"),

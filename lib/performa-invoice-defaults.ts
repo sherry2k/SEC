@@ -23,6 +23,7 @@ export type PerformaInvoiceFormValues = {
   customerName: string;
   project: string;
   customerAddress: string;
+  projectId: string; // "" = not linked to a project
   vatRatePercent: number;
   signatoryName: string;
   showStamp: boolean;
@@ -44,6 +45,7 @@ export function defaultPerformaInvoiceValues(): PerformaInvoiceFormValues {
     customerName: "",
     project: "",
     customerAddress: "Abu Dhabi - UAE",
+    projectId: "",
     vatRatePercent: 5,
     signatoryName: "Eng. Mohammad Abu Eisa",
     showStamp: false,

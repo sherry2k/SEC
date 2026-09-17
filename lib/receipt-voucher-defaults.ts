@@ -19,6 +19,7 @@ export type ReceiptVoucherFormValues = {
   toName: string;
   project: string;
   location: string;
+  projectId: string; // "" = not linked to a project
   vatRatePercent: number;
   signatoryName: string;
   showStamp: boolean;
@@ -38,6 +39,7 @@ export function defaultReceiptVoucherValues(): ReceiptVoucherFormValues {
     toName: "",
     project: "",
     location: "Abu Dhabi - UAE",
+    projectId: "",
     vatRatePercent: 5,
     signatoryName: "Eng. Mohammad Abu Eisa",
     showStamp: false,

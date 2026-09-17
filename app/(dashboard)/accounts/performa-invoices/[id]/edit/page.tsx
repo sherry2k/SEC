@@ -5,6 +5,7 @@ import { performaInvoices, performaInvoiceItems } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import PerformaInvoiceForm from "@/components/PerformaInvoiceForm";
 import type { PerformaInvoiceFormValues, PerformaInvoiceItemDraft } from "@/lib/performa-invoice-defaults";
+import { getProjectOptions } from "@/lib/project-options";
 
 export default async function EditPerformaInvoicePage({ params }: { params: Promise<{ id: string }> }) {
   await requirePermission("accounts.edit");
@@ -19,7 +20,10 @@ export default async function EditPerformaInvoicePage({ params }: { params: Prom
     .where(eq(performaInvoiceItems.invoiceId, id))
     .orderBy(asc(performaInvoiceItems.sortOrder));
 
+  const projectOptions = await getProjectOptions();
+
   const initial: PerformaInvoiceFormValues = {
+    projectId: invoice.projectId ?? "",
     issueDate: invoice.issueDate,
     customerName: invoice.customerName ?? "",
     project: invoice.project ?? "",
@@ -42,7 +46,7 @@ export default async function EditPerformaInvoicePage({ params }: { params: Prom
       <p className="font-mono text-xs text-[var(--sec-muted)]">{invoice.invoiceNo}</p>
       <h1 className="mt-1 text-2xl font-bold text-[var(--sec-ink)]">Edit performa invoice</h1>
       <div className="mt-8 max-w-3xl">
-        <PerformaInvoiceForm mode="edit" invoiceId={invoice.id} initial={initial} />
+        <PerformaInvoiceForm mode="edit" invoiceId={invoice.id} initial={initial} projectOptions={projectOptions} />
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { taxInvoices, taxInvoiceItems } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import TaxInvoiceForm from "@/components/TaxInvoiceForm";
 import type { TaxInvoiceFormValues, TaxInvoiceItemDraft } from "@/lib/tax-invoice-defaults";
+import { getProjectOptions } from "@/lib/project-options";
 
 export default async function EditTaxInvoicePage({ params }: { params: Promise<{ id: string }> }) {
   await requirePermission("accounts.edit");
@@ -19,7 +20,10 @@ export default async function EditTaxInvoicePage({ params }: { params: Promise<{
     .where(eq(taxInvoiceItems.invoiceId, id))
     .orderBy(asc(taxInvoiceItems.sortOrder));
 
+  const projectOptions = await getProjectOptions();
+
   const initial: TaxInvoiceFormValues = {
+    projectId: invoice.projectId ?? "",
     issueDate: invoice.issueDate,
     clientName: invoice.clientName ?? "",
     clientAddress: invoice.clientAddress ?? "",
@@ -42,7 +46,7 @@ export default async function EditTaxInvoicePage({ params }: { params: Promise<{
       <p className="font-mono text-xs text-[var(--sec-muted)]">{invoice.invoiceNo}</p>
       <h1 className="mt-1 text-2xl font-bold text-[var(--sec-ink)]">Edit tax invoice</h1>
       <div className="mt-8 max-w-3xl">
-        <TaxInvoiceForm mode="edit" invoiceId={invoice.id} initial={initial} />
+        <TaxInvoiceForm mode="edit" invoiceId={invoice.id} initial={initial} projectOptions={projectOptions} />
       </div>
     </div>
   );

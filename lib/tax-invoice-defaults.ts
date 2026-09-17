@@ -23,6 +23,7 @@ export type TaxInvoiceFormValues = {
   clientName: string;
   clientAddress: string;
   clientTrn: string;
+  projectId: string; // "" = not linked to a project
   vatRatePercent: number;
   signatoryName: string;
   showStamp: boolean;
@@ -42,6 +43,7 @@ export function defaultTaxInvoiceValues(): TaxInvoiceFormValues {
     clientName: "",
     clientAddress: "Abu Dhabi - UAE",
     clientTrn: "",
+    projectId: "",
     vatRatePercent: 5,
     signatoryName: "Eng. Mohammad Abu Eisa",
     showStamp: false,

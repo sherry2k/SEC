@@ -52,6 +52,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     .set({
       issueDate: str(body?.issueDate) || existing.issueDate,
       toName,
+      projectId: str(body?.projectId) || null,
       project: str(body?.project) || null,
       location: str(body?.location) || null,
       vatRatePercent: String(vatRatePercent),

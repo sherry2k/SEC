@@ -35,7 +35,6 @@ export default async function DashboardHome() {
   const user = await requireRole();
   const allowFinanceEdit = await financeCanEditProjects();
   const canCreateProject = can(user.role, "projects.create", allowFinanceEdit);
-  const canUseFinance = can(user.role, "accounts.edit");
   const canViewFinance = can(user.role, "accounts.view");
 
   const allProjects = await db.select().from(projects).orderBy(desc(projects.createdAt));
@@ -176,31 +175,6 @@ export default async function DashboardHome() {
               <Plus size={15} />
               Project
             </Link>
-          )}
-          {canUseFinance && (
-            <>
-              <Link
-                href="/accounts/quotations/new"
-                className="flex items-center gap-1.5 rounded-md border border-[var(--sec-line)] bg-white px-3 py-2 text-sm font-medium text-[var(--sec-ink)] transition-colors hover:border-[var(--sec-blue)]"
-              >
-                <Plus size={15} />
-                Quotation
-              </Link>
-              <Link
-                href="/accounts/tax-invoices/new"
-                className="flex items-center gap-1.5 rounded-md border border-[var(--sec-line)] bg-white px-3 py-2 text-sm font-medium text-[var(--sec-ink)] transition-colors hover:border-[var(--sec-blue)]"
-              >
-                <Plus size={15} />
-                Tax invoice
-              </Link>
-              <Link
-                href="/accounts/performa-invoices/new"
-                className="flex items-center gap-1.5 rounded-md border border-[var(--sec-line)] bg-white px-3 py-2 text-sm font-medium text-[var(--sec-ink)] transition-colors hover:border-[var(--sec-blue)]"
-              >
-                <Plus size={15} />
-                Performa invoice
-              </Link>
-            </>
           )}
         </div>
       </div>

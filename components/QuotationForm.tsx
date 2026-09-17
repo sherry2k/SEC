@@ -15,9 +15,11 @@ export default function QuotationForm({
   mode,
   quotationId,
   initial,
+  projectOptions,
 }: {
   mode: "create" | "edit";
   quotationId?: string;
+  projectOptions: { id: string; label: string }[];
   initial: QuotationFormValues;
 }) {
   const router = useRouter();
@@ -84,6 +86,22 @@ export default function QuotationForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       {error && <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
+
+      <div>
+        <label className={labelClass}>Project</label>
+        <select
+          value={values.projectId}
+          onChange={(e) => set("projectId", e.target.value)}
+          className={inputClass}
+        >
+          <option value="">Not linked to a project</option>
+          {projectOptions.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.label}
+            </option>
+          ))}
+        </select>
+      </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>

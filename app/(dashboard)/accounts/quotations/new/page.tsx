@@ -1,9 +1,11 @@
 import { requirePermission } from "@/lib/auth";
 import QuotationForm from "@/components/QuotationForm";
 import { defaultQuotationValues } from "@/lib/quotation-defaults";
+import { getProjectOptions } from "@/lib/project-options";
 
 export default async function NewQuotationPage() {
   await requirePermission("accounts.edit");
+  const projectOptions = await getProjectOptions();
 
   return (
     <div>
@@ -12,7 +14,7 @@ export default async function NewQuotationPage() {
         Numbered automatically once saved. Payment terms and commercial conditions are pre-filled — edit freely.
       </p>
       <div className="mt-8 max-w-4xl">
-        <QuotationForm mode="create" initial={defaultQuotationValues()} />
+        <QuotationForm mode="create" initial={defaultQuotationValues()} projectOptions={projectOptions} />
       </div>
     </div>
   );

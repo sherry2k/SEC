@@ -5,6 +5,7 @@ import { invoices, invoiceItems } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import InvoiceForm from "@/components/InvoiceForm";
 import type { InvoiceFormValues, InvoiceItemDraft } from "@/lib/invoice-defaults";
+import { getProjectOptions } from "@/lib/project-options";
 
 export default async function EditInvoicePage({ params }: { params: Promise<{ id: string }> }) {
   await requirePermission("accounts.edit");
@@ -19,7 +20,10 @@ export default async function EditInvoicePage({ params }: { params: Promise<{ id
     .where(eq(invoiceItems.invoiceId, id))
     .orderBy(asc(invoiceItems.sortOrder));
 
+  const projectOptions = await getProjectOptions();
+
   const initial: InvoiceFormValues = {
+    projectId: invoice.projectId ?? "",
     issueDate: invoice.issueDate,
     customerName: invoice.customerName ?? "",
     project: invoice.project ?? "",
@@ -42,7 +46,7 @@ export default async function EditInvoicePage({ params }: { params: Promise<{ id
       <p className="font-mono text-xs text-[var(--sec-muted)]">{invoice.invoiceNo}</p>
       <h1 className="mt-1 text-2xl font-bold text-[var(--sec-ink)]">Edit invoice</h1>
       <div className="mt-8 max-w-3xl">
-        <InvoiceForm mode="edit" invoiceId={invoice.id} initial={initial} />
+        <InvoiceForm mode="edit" invoiceId={invoice.id} initial={initial} projectOptions={projectOptions} />
       </div>
     </div>
   );
