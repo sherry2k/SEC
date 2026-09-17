@@ -98,10 +98,7 @@ export default function ProjectPrintView({ project }: { project: PrintableProjec
                   style={{ paddingLeft: item.parentItemId ? 16 : 0 }}
                 >
                   <div>
-                    <span>
-                      {item.parentItemId && <span className="text-[var(--sec-line)]">└ </span>}
-                      {item.name}
-                    </span>
+                    <span>{item.name}</span>
                     {creditLine && <span className="block text-xs text-emerald-700">{creditLine}</span>}
                     {item.comments.map((c) => (
                       <span key={c.id} className="mt-0.5 block text-xs text-[var(--sec-muted)]">

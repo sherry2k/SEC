@@ -5,9 +5,16 @@ import { Pencil } from "lucide-react";
 import { db } from "@/db";
 import { receiptVouchers, receiptVoucherItems } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
+import { toFilenameSafe } from "@/lib/pdf-filename";
 import ReceiptVoucherPrintView from "@/components/ReceiptVoucherPrintView";
 import PrintButton from "@/components/PrintButton";
 import DeleteReceiptVoucherButton from "@/components/DeleteReceiptVoucherButton";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const [doc] = await db.select({ ref: receiptVouchers.voucherNo }).from(receiptVouchers).where(eq(receiptVouchers.id, id)).limit(1);
+  return { title: doc ? toFilenameSafe(doc.ref) : "Document" };
+}
 
 export default async function ReceiptVoucherViewPage({ params }: { params: Promise<{ id: string }> }) {
   await requirePermission("accounts.view");

@@ -5,9 +5,16 @@ import { Pencil } from "lucide-react";
 import { db } from "@/db";
 import { quotations, quotationItems } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
+import { toFilenameSafe } from "@/lib/pdf-filename";
 import QuotationPrintView from "@/components/QuotationPrintView";
 import PrintButton from "@/components/PrintButton";
 import DeleteQuotationButton from "@/components/DeleteQuotationButton";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const [doc] = await db.select({ ref: quotations.quotationNo }).from(quotations).where(eq(quotations.id, id)).limit(1);
+  return { title: doc ? toFilenameSafe(doc.ref) : "Document" };
+}
 
 export default async function QuotationViewPage({ params }: { params: Promise<{ id: string }> }) {
   await requirePermission("accounts.view");

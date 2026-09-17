@@ -5,9 +5,16 @@ import { Pencil } from "lucide-react";
 import { db } from "@/db";
 import { invoices, invoiceItems } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
+import { toFilenameSafe } from "@/lib/pdf-filename";
 import InvoicePrintView from "@/components/InvoicePrintView";
 import PrintButton from "@/components/PrintButton";
 import DeleteInvoiceButton from "@/components/DeleteInvoiceButton";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const [doc] = await db.select({ ref: invoices.invoiceNo }).from(invoices).where(eq(invoices.id, id)).limit(1);
+  return { title: doc ? toFilenameSafe(doc.ref) : "Document" };
+}
 
 export default async function InvoiceViewPage({ params }: { params: Promise<{ id: string }> }) {
   await requirePermission("accounts.view");

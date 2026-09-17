@@ -8,6 +8,13 @@ import { getProjectFinancials } from "@/lib/project-finance";
 import StatementOfAccountPrintView from "@/components/StatementOfAccountPrintView";
 import StatementStampToggle from "@/components/StatementStampToggle";
 import PrintButton from "@/components/PrintButton";
+import { toFilenameSafe } from "@/lib/pdf-filename";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const [project] = await db.select({ projectCode: projects.projectCode }).from(projects).where(eq(projects.id, id)).limit(1);
+  return { title: project ? `${toFilenameSafe(project.projectCode)}-Statement` : "Statement of Account" };
+}
 
 export default async function StatementOfAccountPage({ params }: { params: Promise<{ id: string }> }) {
   await requirePermission("accounts.view");

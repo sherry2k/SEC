@@ -18,6 +18,13 @@ import ProjectPrintView from "@/components/ProjectPrintView";
 import { getProjectFinancials } from "@/lib/project-finance";
 import LinkExistingDocument from "@/components/LinkExistingDocument";
 import ProjectAttachments, { type Attachment } from "@/components/ProjectAttachments";
+import { toFilenameSafe } from "@/lib/pdf-filename";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const [project] = await db.select({ projectCode: projects.projectCode }).from(projects).where(eq(projects.id, id)).limit(1);
+  return { title: project ? toFilenameSafe(project.projectCode) : "Project" };
+}
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requirePermission("projects.view");
