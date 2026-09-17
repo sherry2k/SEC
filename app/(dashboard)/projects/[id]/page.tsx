@@ -17,6 +17,7 @@ import PrintButton from "@/components/PrintButton";
 import PrintLetterhead from "@/components/PrintLetterhead";
 import PrintFooterStrip from "@/components/PrintFooterStrip";
 import { getProjectFinancials } from "@/lib/project-finance";
+import LinkExistingDocument from "@/components/LinkExistingDocument";
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requirePermission("projects.view");
@@ -205,6 +206,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               View Statement of Account →
             </Link>
           </div>
+          {can(user.role, "accounts.edit") && <LinkExistingDocument projectId={project.id} />}
           <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
             <div>
               <p className="text-xs uppercase tracking-wide text-[var(--sec-muted)]">Quoted</p>
