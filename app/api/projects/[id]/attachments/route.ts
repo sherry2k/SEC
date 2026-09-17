@@ -44,14 +44,19 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       addRandomSuffix: false,
     });
   } catch (error) {
+    // Vercel's current default way of connecting a Blob store to a
+    // project uses OIDC credentials (BLOB_STORE_ID + an auto-rotated
+    // token Vercel injects at deploy time), not the older static
+    // BLOB_READ_WRITE_TOKEN — so don't assume that specific variable is
+    // the problem. The most common real cause either way is a
+    // deployment that predates the store being connected, since neither
+    // credential type is added to an already-running deployment.
     console.error("Blob upload failed:", error);
-    const message = error instanceof Error ? error.message : "";
-    const missingToken = !process.env.BLOB_READ_WRITE_TOKEN || /token/i.test(message);
     return NextResponse.json(
       {
-        error: missingToken
-          ? "File storage isn't set up yet — create a Blob store in Vercel's Storage tab, then redeploy so the app picks up the new token."
-          : "Upload failed. Try again in a moment.",
+        error:
+          "Upload failed. If you just connected the Blob store, make sure you've redeployed since then — " +
+          "Vercel only gives a deployment access to storage that existed before it was built.",
       },
       { status: 500 }
     );
