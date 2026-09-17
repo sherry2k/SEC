@@ -37,10 +37,25 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "File is larger than the 50MB limit." }, { status: 400 });
   }
 
-  const blob = await put(`projects/${projectId}/${Date.now()}-${file.name}`, file, {
-    access: "public",
-    addRandomSuffix: false,
-  });
+  let blob;
+  try {
+    blob = await put(`projects/${projectId}/${Date.now()}-${file.name}`, file, {
+      access: "public",
+      addRandomSuffix: false,
+    });
+  } catch (error) {
+    console.error("Blob upload failed:", error);
+    const message = error instanceof Error ? error.message : "";
+    const missingToken = !process.env.BLOB_READ_WRITE_TOKEN || /token/i.test(message);
+    return NextResponse.json(
+      {
+        error: missingToken
+          ? "File storage isn't set up yet — create a Blob store in Vercel's Storage tab, then redeploy so the app picks up the new token."
+          : "Upload failed. Try again in a moment.",
+      },
+      { status: 500 }
+    );
+  }
 
   const [attachment] = await db
     .insert(projectAttachments)

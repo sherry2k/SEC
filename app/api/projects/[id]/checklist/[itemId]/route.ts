@@ -105,7 +105,10 @@ export async function PATCH(
 
 // Only custom items (no templateId) can be deleted — the standard
 // checklist that comes from linking a category isn't removable item by
-// item, only the whole category can be unlinked.
+// Any checklist item can be deleted now — standard (template-based) items
+// included, not just custom ones — for the case where a standard step
+// genuinely doesn't apply to a specific project and marking it "Not
+// Required" isn't what's wanted.
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string; itemId: string }> }
@@ -116,16 +119,13 @@ export async function DELETE(
   const { id: projectId, itemId } = await params;
 
   const [item] = await db
-    .select({ templateId: projectChecklistItems.templateId, customName: projectChecklistItems.customName })
+    .select({ id: projectChecklistItems.id })
     .from(projectChecklistItems)
     .where(and(eq(projectChecklistItems.id, itemId), eq(projectChecklistItems.projectId, projectId)))
     .limit(1);
 
   if (!item) {
     return NextResponse.json({ error: "Checklist item not found." }, { status: 404 });
-  }
-  if (item.templateId !== null) {
-    return NextResponse.json({ error: "Only custom items you added yourself can be deleted." }, { status: 403 });
   }
 
   await db.delete(projectChecklistItems).where(eq(projectChecklistItems.id, itemId));

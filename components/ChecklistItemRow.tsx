@@ -233,15 +233,17 @@ export default function ChecklistItemRow({
               {depth > 0 && <span className="text-[var(--sec-line)]">└</span>}
               {urgency && <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${URGENCY_STYLES[urgency]}`} aria-hidden="true" />}
               {name}
-              {item.isCustom && canEdit && (
+              {canEdit && (
                 <span className="no-print flex items-center gap-1">
-                  <button
-                    onClick={() => setRenaming(true)}
-                    aria-label={`Rename ${name}`}
-                    className="rounded p-0.5 text-[var(--sec-muted)] hover:bg-slate-100 hover:text-[var(--sec-ink)]"
-                  >
-                    <Pencil size={12} />
-                  </button>
+                  {item.isCustom && (
+                    <button
+                      onClick={() => setRenaming(true)}
+                      aria-label={`Rename ${name}`}
+                      className="rounded p-0.5 text-[var(--sec-muted)] hover:bg-slate-100 hover:text-[var(--sec-ink)]"
+                    >
+                      <Pencil size={12} />
+                    </button>
+                  )}
                   {confirmingDelete ? (
                     <>
                       <button
