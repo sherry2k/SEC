@@ -45,6 +45,7 @@ export default function ProjectAttachments({
   const [error, setError] = useState("");
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [justUploaded, setJustUploaded] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -52,15 +53,35 @@ export default function ProjectAttachments({
     if (!file) return;
     setUploading(true);
     setError("");
+    setJustUploaded("");
     try {
       const formData = new FormData();
       formData.append("file", file);
       const res = await fetch(`/api/projects/${projectId}/attachments`, { method: "POST", body: formData });
-      const data: { error?: string; attachment?: Record<string, unknown> } = await res.json().catch(() => ({}));
-      if (!res.ok) {
+      const data: {
+        error?: string;
+        uploaderName?: string;
+        attachment?: { id: string; fileName: string; fileUrl: string; fileSizeBytes: number; uploadedAt: string };
+      } = await res.json().catch(() => ({}));
+      if (!res.ok || !data.attachment) {
         setError(data.error || "Couldn't upload that file.");
         return;
       }
+      // Add it straight into the visible list — router.refresh() alone
+      // doesn't do this, since this component already mounted with its
+      // own copy of the list and won't re-read a prop that changes later.
+      setAttachments((prev) => [
+        {
+          id: data.attachment!.id,
+          fileName: data.attachment!.fileName,
+          fileUrl: data.attachment!.fileUrl,
+          fileSizeBytes: data.attachment!.fileSizeBytes,
+          uploadedByName: data.uploaderName ?? null,
+          uploadedAt: data.attachment!.uploadedAt,
+        },
+        ...prev,
+      ]);
+      setJustUploaded(data.attachment.fileName);
       router.refresh();
     } catch {
       setError("Couldn't reach the server.");
@@ -108,6 +129,12 @@ export default function ProjectAttachments({
       </div>
 
       {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+      {justUploaded && !error && (
+        <p className="mt-2 flex items-center gap-1 text-xs text-emerald-600">
+          <Check size={12} />
+          {justUploaded} uploaded
+        </p>
+      )}
 
       {attachments.length === 0 ? (
         <p className="mt-3 text-sm text-[var(--sec-muted)]">No drawings or files attached yet.</p>

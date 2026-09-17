@@ -82,7 +82,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     targetName: file.name,
   });
 
-  return NextResponse.json({ success: true, attachment }, { status: 201 });
+  return NextResponse.json({ success: true, attachment, uploaderName: auth.user.name }, { status: 201 });
 }
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
