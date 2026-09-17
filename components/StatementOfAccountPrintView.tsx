@@ -39,7 +39,7 @@ export default function StatementOfAccountPrintView({ data }: { data: StatementO
       <div className="mt-5 flex flex-wrap items-start justify-between gap-6 text-sm">
         <div>
           <p className="font-semibold">To:</p>
-          <p>{data.clientName || "—"}</p>
+          <p>{data.clientName || "-"}</p>
           {data.clientAddress && <p>Address: {data.clientAddress}</p>}
         </div>
         <table className="border-collapse text-sm">

@@ -85,10 +85,10 @@ export default function ProjectPrintView({ project }: { project: PrintableProjec
               let creditLine: string | null = null;
               if (item.status === "approved" && item.approvedAt) {
                 creditLine = item.submittedByName
-                  ? `Submitted by ${item.submittedByName}${item.submittedAt ? ` · ${formatDate(item.submittedAt)}` : ""} — Approved ${formatDate(item.approvedAt)}`
+                  ? `Submitted by ${item.submittedByName}${item.submittedAt ? ` - ${formatDate(item.submittedAt)}` : ""} - Approved ${formatDate(item.approvedAt)}`
                   : `Approved ${formatDate(item.approvedAt)}`;
               } else if (item.submittedByName && item.submittedAt) {
-                creditLine = `Submitted by ${item.submittedByName} · ${formatDate(item.submittedAt)}`;
+                creditLine = `Submitted by ${item.submittedByName} - ${formatDate(item.submittedAt)}`;
               }
 
               return (
@@ -102,7 +102,7 @@ export default function ProjectPrintView({ project }: { project: PrintableProjec
                     {creditLine && <span className="block text-xs text-emerald-700">{creditLine}</span>}
                     {item.comments.map((c) => (
                       <span key={c.id} className="mt-0.5 block text-xs text-[var(--sec-muted)]">
-                        “{c.comment}” — {c.authorName ?? "Someone"}, {formatDate(c.createdAt)}
+                        "{c.comment}" - {c.authorName ?? "Someone"}, {formatDate(c.createdAt)}
                       </span>
                     ))}
                   </div>
