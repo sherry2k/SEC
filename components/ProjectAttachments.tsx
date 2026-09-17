@@ -116,7 +116,7 @@ export default function ProjectAttachments({
           {attachments.map((a) => (
             <div key={a.id} className="flex items-center justify-between gap-3 py-2.5">
               <a
-                href={a.fileUrl}
+                href={`/api/projects/${projectId}/attachments/${a.id}/download`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex min-w-0 items-center gap-2.5 hover:underline"

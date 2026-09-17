@@ -40,7 +40,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   let blob;
   try {
     blob = await put(`projects/${projectId}/${Date.now()}-${file.name}`, file, {
-      access: "public",
+      access: "private",
       addRandomSuffix: false,
     });
   } catch (error) {
