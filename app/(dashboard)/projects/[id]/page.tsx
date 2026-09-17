@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Pencil, ArrowLeft } from "lucide-react";
 import { eq, asc } from "drizzle-orm";
 import { db } from "@/db";
-import { projects, projectCategories, projectChecklistItems, checklistTemplates, checklistItemComments, users } from "@/db/schema";
+import { projects, projectCategories, projectChecklistItems, checklistTemplates, checklistItemComments, users, projectAttachments } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import { financeCanEditProjects } from "@/lib/settings";
 import { can } from "@/lib/permissions";
@@ -18,6 +18,7 @@ import PrintLetterhead from "@/components/PrintLetterhead";
 import PrintFooterStrip from "@/components/PrintFooterStrip";
 import { getProjectFinancials } from "@/lib/project-finance";
 import LinkExistingDocument from "@/components/LinkExistingDocument";
+import ProjectAttachments, { type Attachment } from "@/components/ProjectAttachments";
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requirePermission("projects.view");
@@ -32,6 +33,31 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   if (!project) notFound();
 
   const financials = canViewFinance ? await getProjectFinancials(id) : null;
+
+  const attachmentRows = await db
+    .select({
+      id: projectAttachments.id,
+      fileName: projectAttachments.fileName,
+      fileUrl: projectAttachments.fileUrl,
+      fileSizeBytes: projectAttachments.fileSizeBytes,
+      uploadedAt: projectAttachments.uploadedAt,
+      uploadedByName: users.name,
+      uploadedByRole: users.role,
+    })
+    .from(projectAttachments)
+    .leftJoin(users, eq(projectAttachments.uploadedBy, users.id))
+    .where(eq(projectAttachments.projectId, id));
+
+  const attachments: Attachment[] = attachmentRows
+    .sort((a, b) => b.uploadedAt.getTime() - a.uploadedAt.getTime())
+    .map((a) => ({
+      id: a.id,
+      fileName: a.fileName,
+      fileUrl: a.fileUrl,
+      fileSizeBytes: a.fileSizeBytes,
+      uploadedByName: visibleActorName(a.uploadedByRole, a.uploadedByName, user.role),
+      uploadedAt: a.uploadedAt.toISOString(),
+    }));
 
   const [updatedByUser] = project.updatedBy
     ? await db.select({ name: users.name, role: users.role }).from(users).where(eq(users.id, project.updatedBy)).limit(1)
@@ -240,6 +266,8 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           )}
         </div>
       )}
+
+      <ProjectAttachments projectId={project.id} initialAttachments={attachments} canEdit={canEdit} />
 
       <div className="mt-8 flex items-center justify-between">
         <h2 className="font-bold text-lg text-[var(--sec-ink)]">Checklist</h2>

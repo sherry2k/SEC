@@ -409,3 +409,22 @@ export const invoiceItems = pgTable("invoice_items", {
   description: text("description").notNull(),
   amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
 });
+
+// ---------------------------------------------------------------------------
+// Project attachments — drawings and other files (DWG, PDF, JPG) uploaded
+// against a project, stored in Vercel Blob. Only the URL and metadata live
+// here; the actual file bytes are on Blob's own storage.
+// ---------------------------------------------------------------------------
+
+export const projectAttachments = pgTable("project_attachments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  projectId: uuid("project_id")
+    .notNull()
+    .references(() => projects.id, { onDelete: "cascade" }),
+  fileName: text("file_name").notNull(),
+  fileUrl: text("file_url").notNull(),
+  fileSizeBytes: integer("file_size_bytes").notNull(),
+  contentType: text("content_type"),
+  uploadedBy: integer("uploaded_by").references(() => users.id),
+  uploadedAt: timestamp("uploaded_at", { withTimezone: true }).notNull().defaultNow(),
+});
