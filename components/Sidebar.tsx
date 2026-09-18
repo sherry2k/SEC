@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, FolderKanban, Wallet, Users, Settings, CalendarCheck } from "lucide-react";
+import { LayoutGrid, FolderKanban, Wallet, Users, Settings, CalendarCheck, ClipboardList } from "lucide-react";
 import type { CurrentUser } from "@/lib/auth";
 import { can } from "@/lib/permissions";
 import { ROLE_LABELS } from "@/lib/roles";
@@ -28,6 +28,8 @@ export default function Sidebar({
     { href: "/projects", label: "Projects", icon: FolderKanban, show: can(user.role, "projects.view") },
     { href: "/accounts", label: "Accounts", icon: Wallet, show: can(user.role, "accounts.view") },
     { href: "/attendance", label: "Attendance", icon: CalendarCheck, show: can(user.role, "attendance.view") },
+    { href: "/daily-report", label: "Daily Report", icon: ClipboardList, show: can(user.role, "daily_report.submit") },
+    { href: "/daily-reports", label: "Daily Reports", icon: ClipboardList, show: can(user.role, "daily_report.view_all") },
     { href: "/users", label: "User Management", icon: Users, show: can(user.role, "users.manage") },
     { href: "/settings", label: "Settings", icon: Settings, show: can(user.role, "settings.manage") },
   ];

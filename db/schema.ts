@@ -428,3 +428,36 @@ export const projectAttachments = pgTable("project_attachments", {
   uploadedBy: integer("uploaded_by").references(() => users.id),
   uploadedAt: timestamp("uploaded_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// ---------------------------------------------------------------------------
+// Daily work reports — one per staff member per calendar day. Hours are
+// allocated across projects (or "general" work, projectId null) and must
+// sum to that day's attendance total (rounded to the nearest 15 minutes)
+// before it can be submitted. Only editable while it's still that day —
+// see lib/daily-report.ts for the cutoff logic.
+// ---------------------------------------------------------------------------
+
+export const dailyWorkReports = pgTable(
+  "daily_work_reports",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id),
+    date: date("date", { mode: "date" }).notNull(),
+    notes: text("notes"),
+    submittedAt: timestamp("submitted_at", { withTimezone: true }),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.userId, t.date)]
+);
+
+export const dailyWorkReportEntries = pgTable("daily_work_report_entries", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  reportId: uuid("report_id")
+    .notNull()
+    .references(() => dailyWorkReports.id, { onDelete: "cascade" }),
+  // Null = "General / office work" — time not tied to one project.
+  projectId: uuid("project_id").references(() => projects.id, { onDelete: "set null" }),
+  hours: numeric("hours", { precision: 5, scale: 2 }).notNull(),
+});
