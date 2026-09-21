@@ -45,7 +45,7 @@ export default function MyTasksView({
     { label: "Due Today", count: dueTodayCount, icon: Clock, className: "border-amber-200 bg-amber-50 text-amber-700" },
     { label: "In Progress", count: inProgressCount, icon: Loader2, className: "border-blue-200 bg-blue-50 text-blue-700" },
     {
-      label: "Completed This Week",
+      label: "Completed Task",
       count: completedThisWeekCount,
       icon: CheckCircle2,
       className: "border-emerald-200 bg-emerald-50 text-emerald-700",

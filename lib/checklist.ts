@@ -1,7 +1,7 @@
 // The five project categories and their checklist statuses.
 // This mirrors Section 3 of the framework document.
 
-export const PROJECT_CATEGORIES = ["boc", "cbc", "permit", "work_permit", "contractor"] as const;
+export const PROJECT_CATEGORIES = ["boc", "cbc", "permit", "work_permit", "contractor", "archives"] as const;
 export type ProjectCategory = (typeof PROJECT_CATEGORIES)[number];
 
 export const CATEGORY_LABELS: Record<ProjectCategory, string> = {
@@ -10,6 +10,7 @@ export const CATEGORY_LABELS: Record<ProjectCategory, string> = {
   permit: "Permit",
   work_permit: "Work Permit",
   contractor: "Contractor",
+  archives: "Archives",
 };
 
 // A distinct colour per category, applied everywhere a category shows up —
@@ -21,6 +22,7 @@ export const CATEGORY_BADGE_STYLES: Record<ProjectCategory, string> = {
   permit: "border-emerald-200 bg-emerald-50 text-emerald-700",
   work_permit: "border-amber-200 bg-amber-50 text-amber-700",
   contractor: "border-rose-200 bg-rose-50 text-rose-700",
+  archives: "border-slate-300 bg-slate-100 text-slate-600",
 };
 
 // Solid version — background is the full category colour, text is white.
@@ -33,6 +35,7 @@ export const CATEGORY_SOLID_STYLES: Record<ProjectCategory, string> = {
   permit: "bg-emerald-600 border-emerald-600",
   work_permit: "bg-amber-600 border-amber-600",
   contractor: "bg-rose-600 border-rose-600",
+  archives: "bg-slate-500 border-slate-500",
 };
 
 export const CATEGORY_ACCENT_BORDER: Record<ProjectCategory, string> = {
@@ -41,6 +44,7 @@ export const CATEGORY_ACCENT_BORDER: Record<ProjectCategory, string> = {
   permit: "border-l-emerald-400",
   work_permit: "border-l-amber-400",
   contractor: "border-l-rose-400",
+  archives: "border-l-slate-400",
 };
 
 export const CATEGORY_FULL_NAMES: Record<ProjectCategory, string> = {
@@ -49,6 +53,7 @@ export const CATEGORY_FULL_NAMES: Record<ProjectCategory, string> = {
   permit: "Permit",
   work_permit: "Work Permit",
   contractor: "Contractor",
+  archives: "Archives",
 };
 
 export const ITEM_STATUSES = [

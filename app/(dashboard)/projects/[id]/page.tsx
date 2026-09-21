@@ -145,6 +145,13 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       })),
   }));
 
+  // Same "completed" definition as the Projects list: Approved or Not
+  // Required both count as done, so a project isn't stuck looking
+  // incomplete forever over items that were never actually needed.
+  const totalItems = items.length;
+  const completedItems = items.filter((i) => i.status === "approved" || i.status === "not_applicable").length;
+  const progressPct = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+
   const availableCategories: ProjectCategory[] = PROJECT_CATEGORIES.filter((c) => !linkedCategories.includes(c));
 
   const details = [
@@ -200,6 +207,23 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
             </div>
           ))}
         </dl>
+      )}
+
+      {totalItems > 0 && (
+        <div className="no-print mt-4">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-medium text-[var(--sec-muted)]">Progress</span>
+            <span className={`font-semibold ${progressPct === 100 ? "text-emerald-600" : "text-[var(--sec-ink)]"}`}>
+              {progressPct}% ({completedItems}/{totalItems})
+            </span>
+          </div>
+          <div className="mt-1 h-2 overflow-hidden rounded-full bg-slate-100">
+            <div
+              className={`h-full rounded-full ${progressPct === 100 ? "bg-emerald-500" : "bg-[var(--sec-blue)]"}`}
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+        </div>
       )}
 
       <p className="mt-4 text-xs text-[var(--sec-muted)]">

@@ -60,6 +60,7 @@ export default async function DashboardHome() {
     permit: 0,
     work_permit: 0,
     contractor: 0,
+    archives: 0,
   };
   for (const link of categoryLinks) categoryCounts[link.category] += 1;
   const maxCategoryCount = Math.max(1, ...Object.values(categoryCounts));
