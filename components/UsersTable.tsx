@@ -10,6 +10,7 @@ type UserRow = {
   name: string;
   username: string;
   role: Role;
+  designation: string | null;
   status: UserStatus;
   lastLoginAt: Date | null;
   createdAt: Date;
@@ -32,8 +33,11 @@ export default function UsersTable({ users, currentUserId }: { users: UserRow[];
   const [isPending, startTransition] = useTransition();
   const [busyId, setBusyId] = useState<number | null>(null);
   const [error, setError] = useState("");
+  const [designationDrafts, setDesignationDrafts] = useState<Record<number, string>>(
+    Object.fromEntries(users.map((u) => [u.id, u.designation ?? ""]))
+  );
 
-  const patchUser = async (id: number, body: { role?: Role; status?: UserStatus }) => {
+  const patchUser = async (id: number, body: { role?: Role; status?: UserStatus; designation?: string }) => {
     setError("");
     setBusyId(id);
     try {
@@ -64,12 +68,13 @@ export default function UsersTable({ users, currentUserId }: { users: UserRow[];
       )}
 
       <div className="overflow-x-auto rounded-lg border border-[var(--sec-line)] bg-white">
-        <table className="w-full min-w-[720px] text-left text-sm">
+        <table className="w-full min-w-[860px] text-left text-sm">
           <thead>
             <tr className="border-b border-[var(--sec-line)] text-xs uppercase tracking-wide text-[var(--sec-muted)]">
               <th className="px-4 py-3 font-medium">Name</th>
               <th className="px-4 py-3 font-medium">Username</th>
               <th className="px-4 py-3 font-medium">Role</th>
+              <th className="px-4 py-3 font-medium">Designation</th>
               <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3 font-medium">Last login</th>
               <th className="px-4 py-3 font-medium">Actions</th>
@@ -105,6 +110,22 @@ export default function UsersTable({ users, currentUserId }: { users: UserRow[];
                           </option>
                         ))}
                       </select>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    {isMasterAdmin ? (
+                      <span className="text-[var(--sec-muted)]">—</span>
+                    ) : (
+                      <input
+                        value={designationDrafts[u.id] ?? ""}
+                        onChange={(e) => setDesignationDrafts((prev) => ({ ...prev, [u.id]: e.target.value }))}
+                        onBlur={(e) => {
+                          if (e.target.value !== (u.designation ?? "")) patchUser(u.id, { designation: e.target.value });
+                        }}
+                        disabled={rowBusy}
+                        placeholder="e.g. Architectural Engineer"
+                        className="w-full rounded-md border border-[var(--sec-line)] bg-white px-2.5 py-1.5 text-sm text-[var(--sec-ink)] outline-none focus:border-[var(--sec-blue)] disabled:opacity-50"
+                      />
                     )}
                   </td>
                   <td className="px-4 py-3">

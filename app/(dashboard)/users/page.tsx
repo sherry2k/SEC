@@ -20,6 +20,7 @@ export default async function UsersPage() {
       name: users.name,
       username: users.username,
       role: users.role,
+      designation: users.designation,
       status: users.status,
       lastLoginAt: users.lastLoginAt,
       createdAt: users.createdAt,

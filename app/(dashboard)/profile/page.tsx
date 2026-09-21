@@ -11,6 +11,7 @@ export default async function ProfilePage() {
       <p className="mt-1 text-sm text-[var(--sec-muted)]">
         {user.name} · @{user.username} · {ROLE_LABELS[user.role]}
       </p>
+      {user.designation && <p className="mt-1 text-sm text-[var(--sec-ink)]">{user.designation}</p>}
 
       <div className="mt-8 border-t border-[var(--sec-line)] pt-8">
         <h2 className="font-bold text-lg text-[var(--sec-ink)]">Change password</h2>

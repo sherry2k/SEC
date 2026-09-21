@@ -19,20 +19,23 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: "Invalid user id." }, { status: 400 });
   }
 
-  // Lock-out guard: nobody edits their own role or status from this screen —
-  // an admin can't accidentally demote or disable themselves.
-  if (targetId === auth.user.id) {
+  const body = await request.json().catch(() => null);
+  const role = typeof body?.role === "string" ? (body.role as Role) : undefined;
+  const status = typeof body?.status === "string" ? (body.status as UserStatus) : undefined;
+  const designation = "designation" in (body ?? {}) ? (typeof body.designation === "string" ? body.designation.trim() : "") : undefined;
+
+  // Lock-out guard: nobody changes their own role or status from this
+  // screen — an admin can't accidentally demote or disable themselves.
+  // Designation isn't part of that guard; setting your own job title
+  // carries no lockout risk.
+  if ((role !== undefined || status !== undefined) && targetId === auth.user.id) {
     return NextResponse.json(
       { error: "You can't change your own role or status here." },
       { status: 400 }
     );
   }
 
-  const body = await request.json().catch(() => null);
-  const role = typeof body?.role === "string" ? (body.role as Role) : undefined;
-  const status = typeof body?.status === "string" ? (body.status as UserStatus) : undefined;
-
-  if (role === undefined && status === undefined) {
+  if (role === undefined && status === undefined && designation === undefined) {
     return NextResponse.json({ error: "Nothing to update." }, { status: 400 });
   }
 
@@ -55,6 +58,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   const update: Partial<typeof users.$inferInsert> = {};
   if (role !== undefined) update.role = role;
+  if (designation !== undefined) update.designation = designation || null;
   if (status !== undefined) {
     update.status = status;
     if (status === "approved") {

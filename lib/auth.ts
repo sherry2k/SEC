@@ -17,6 +17,7 @@ export type CurrentUser = {
   username: string;
   role: Role;
   status: UserStatus;
+  designation: string | null;
 };
 
 export async function setSessionCookie(token: string): Promise<void> {
@@ -55,6 +56,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
       username: users.username,
       role: users.role,
       status: users.status,
+      designation: users.designation,
     })
     .from(users)
     .where(eq(users.id, session.id))

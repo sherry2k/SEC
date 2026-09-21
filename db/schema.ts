@@ -26,6 +26,10 @@ export const users = pgTable("users", {
   username: varchar("username", { length: 30 }).notNull().unique(),
   password: text("password").notNull(),
   role: userRoleEnum("role").notNull().default("staff"),
+  // Job title shown under the person's name — free text ("Architectural
+  // Engineer", "Structural Engineer") since titles vary and aren't
+  // meaningfully tied to the account role.
+  designation: text("designation"),
   status: userStatusEnum("status").notNull().default("pending"),
   approvedBy: integer("approved_by").references((): AnyPgColumn => users.id),
   approvedAt: timestamp("approved_at", { withTimezone: true }),
