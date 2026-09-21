@@ -160,9 +160,11 @@ export default async function DashboardHome() {
     <div>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-[var(--sec-muted)]">
-            {ROLE_LABELS[user.role]}
-          </p>
+          {user.role !== "staff" && (
+            <p className="text-xs font-medium uppercase tracking-wide text-[var(--sec-muted)]">
+              {ROLE_LABELS[user.role]}
+            </p>
+          )}
           <h1 className="mt-1 text-3xl font-bold text-[var(--sec-ink)]">
             Welcome back, {user.name.split(" ")[0]}
           </h1>

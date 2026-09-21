@@ -9,7 +9,8 @@ export default async function ProfilePage() {
     <div>
       <h1 className="font-bold text-2xl text-[var(--sec-ink)]">Your profile</h1>
       <p className="mt-1 text-sm text-[var(--sec-muted)]">
-        {user.name} · @{user.username} · {ROLE_LABELS[user.role]}
+        {user.name} · @{user.username}
+        {user.role !== "staff" && ` · ${ROLE_LABELS[user.role]}`}
       </p>
       {user.designation && <p className="mt-1 text-sm text-[var(--sec-ink)]">{user.designation}</p>}
 

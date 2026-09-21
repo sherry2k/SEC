@@ -96,7 +96,7 @@ export default function Sidebar({
           <div className="leading-tight">
             <p className="text-sm font-medium text-white">{user.name}</p>
             {user.designation && <p className="text-xs text-white/70">{user.designation}</p>}
-            <p className="text-xs text-white/50">{ROLE_LABELS[user.role]}</p>
+            {user.role !== "staff" && <p className="text-xs text-white/50">{ROLE_LABELS[user.role]}</p>}
           </div>
         </Link>
         <SignOutButton />
