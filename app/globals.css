@@ -58,13 +58,6 @@ html, body {
 }
 
 @media print {
-  /* Chrome's default print margin is roughly 1 inch on every side — most
-     of the "too much white space before the logo and after the footer"
-     the person is seeing. Shrinking this at the @page level (not just
-     padding inside the content) is what actually removes it. */
-  @page {
-    margin: 8mm 10mm;
-  }
   .no-print {
     display: none !important;
   }
