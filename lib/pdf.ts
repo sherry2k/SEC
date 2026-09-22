@@ -54,7 +54,7 @@ export async function generatePdf(opts: {
       // standard A4 document margins (roughly matching a normal Word
       // doc's ~2cm-2.5cm), sized to comfortably fit the branded
       // header/footer above and below.
-      margin: { top: "32mm", bottom: "24mm", left: "18mm", right: "18mm" },
+      margin: { top: "36mm", bottom: "24mm", left: "18mm", right: "18mm" },
     });
 
     return Buffer.from(pdfBytes);
