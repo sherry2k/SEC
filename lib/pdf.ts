@@ -49,7 +49,11 @@ export async function generatePdf(opts: {
       displayHeaderFooter: true,
       headerTemplate: opts.headerTemplate,
       footerTemplate: opts.footerTemplate,
-      margin: { top: "30mm", bottom: "22mm", left: "10mm", right: "10mm" },
+      // Generous on purpose: the first attempt at 30mm/22mm still
+      // overlapped the content, so this leaves real buffer above the
+      // calculated header/footer height rather than cutting it close
+      // again.
+      margin: { top: "50mm", bottom: "38mm", left: "10mm", right: "10mm" },
     });
 
     return Buffer.from(pdfBytes);

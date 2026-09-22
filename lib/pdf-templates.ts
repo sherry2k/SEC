@@ -22,12 +22,12 @@ const FONT_STACK = "Arial, Helvetica, sans-serif";
 
 export function buildHeaderTemplate(opts: { dateLabel: string; dateValue: string; refLabel: string; refValue: string }): string {
   return `
-    <div style="width:100%; font-size:9px; padding:0 10mm; box-sizing:border-box; font-family:${FONT_STACK}; color:#101010;">
-      <div style="display:flex; align-items:center; gap:8px; padding-bottom:6px; border-bottom:1px solid #e2e2e2;">
-        <img src="${LOGO_URI}" style="height:26px; width:auto;" />
-        <img src="${WORDMARK_URI}" style="height:14px; width:auto;" />
+    <div style="width:100%; font-size:22px; padding:0 10mm; box-sizing:border-box; font-family:${FONT_STACK}; color:#101010;">
+      <div style="display:flex; align-items:center; gap:20px; padding-bottom:15px; border-bottom:2px solid #e2e2e2;">
+        <img src="${LOGO_URI}" style="height:65px; width:auto;" />
+        <img src="${WORDMARK_URI}" style="height:35px; width:auto;" />
       </div>
-      <div style="text-align:right; margin-top:4px; font-size:8px; color:#555;">
+      <div style="text-align:right; margin-top:10px; font-size:20px; color:#555;">
         <span><b>${opts.dateLabel}:</b> ${opts.dateValue}</span>&nbsp;&nbsp;&nbsp;
         <span><b>${opts.refLabel}</b> ${opts.refValue}</span>
       </div>
@@ -37,9 +37,9 @@ export function buildHeaderTemplate(opts: { dateLabel: string; dateValue: string
 
 export function buildFooterTemplate(): string {
   return `
-    <div style="width:100%; font-size:8px; padding:4px 10mm 0; box-sizing:border-box; font-family:${FONT_STACK}; color:#555; text-align:center; border-top:1px solid #e2e2e2;">
-      <img src="${CERTS_URI}" style="height:20px;" />
-      <div style="margin-top:3px;">
+    <div style="width:100%; font-size:20px; padding:10px 10mm 0; box-sizing:border-box; font-family:${FONT_STACK}; color:#555; text-align:center; border-top:2px solid #e2e2e2;">
+      <img src="${CERTS_URI}" style="height:50px;" />
+      <div style="margin-top:8px;">
         ${COMPANY.address}, Tel: ${COMPANY.tel}, Mobile: ${COMPANY.mobile}, Email: ${COMPANY.email}
       </div>
     </div>
