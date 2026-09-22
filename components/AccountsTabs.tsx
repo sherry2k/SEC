@@ -10,6 +10,7 @@ const TABS = [
   { href: "/accounts/performa-invoices", label: "Performa Invoices" },
   { href: "/accounts/receipt-vouchers", label: "Receipt Vouchers" },
   { href: "/accounts/statement-of-account", label: "Statement of Account" },
+  { href: "/accounts/office-ledger", label: "Income & Expenses" },
 ];
 
 export default function AccountsTabs() {

@@ -510,3 +510,22 @@ export const quotationCategoryTemplates = pgTable("quotation_category_templates"
   acceptanceNote: text("acceptance_note"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// ---------------------------------------------------------------------------
+// Office ledger — internal income and expense entries (rent, utilities,
+// office supplies, etc.), separate from the client-facing finance
+// documents above. Receipt Vouchers count as income too, but aren't
+// duplicated here — they're pulled in live when a monthly summary is
+// computed (see lib/office-ledger.ts), so there's one source of truth.
+// ---------------------------------------------------------------------------
+
+export const officeLedgerEntries = pgTable("office_ledger_entries", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  type: text("type").notNull(), // 'income' | 'expense'
+  date: date("date", { mode: "date" }).notNull(),
+  category: text("category").notNull(),
+  description: text("description"),
+  amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
