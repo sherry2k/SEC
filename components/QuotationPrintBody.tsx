@@ -16,6 +16,8 @@ export type PrintableItem = {
   duration: string;
 };
 
+export type PrintableFeeItem = { name: string; price: number; note: string };
+
 export type PrintableQuotation = {
   quotationNo: string;
   title: string;
@@ -35,6 +37,14 @@ export type PrintableQuotation = {
   signatoryTitle: string;
   createdAt: Date;
   items: PrintableItem[];
+  // Category-based quotations only — "" / [] on a blank/custom quotation.
+  category: string;
+  scopeItemsText: string;
+  scopeFeeExclVat: number;
+  exclusionsText: string;
+  acceptanceNote: string;
+  mandatoryFees: PrintableFeeItem[];
+  optionalServices: PrintableFeeItem[];
 };
 
 function money(n: number) {

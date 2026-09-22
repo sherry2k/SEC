@@ -7,6 +7,7 @@ import {
   integer,
   numeric,
   boolean,
+  jsonb,
   timestamp,
   date,
   uuid,
@@ -217,6 +218,18 @@ export const quotations = pgTable("quotations", {
   // when explicitly turned on for that document.
   showStamp: boolean("show_stamp").notNull().default(false),
   signatoryTitle: text("signatory_title"),
+  // Category-based quotations (BOC/CBC/Permit/Work Permit) use a fixed
+  // template structure instead of the free-form Pricing Schedule — null
+  // means this is a blank/custom quotation, same as before this existed.
+  // The text/number fields below are copied from the category's template
+  // at creation time (same pattern as paymentTerms/commercialConditions
+  // already use), so editing the template later never changes quotations
+  // that already exist.
+  category: text("category"),
+  scopeItemsText: text("scope_items_text"),
+  scopeFeeExclVat: numeric("scope_fee_excl_vat", { precision: 12, scale: 2 }),
+  exclusionsText: text("exclusions_text"),
+  acceptanceNote: text("acceptance_note"),
   status: text("status").notNull().default("draft"),
   createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -239,6 +252,11 @@ export const quotationItems = pgTable("quotation_items", {
   scopeOfWork: text("scope_of_work"),
   duration: text("duration"),
   note: text("note"),
+  // Which section of a category-based quotation this line belongs to —
+  // null for the ordinary flat Pricing Schedule (blank/custom
+  // quotations), 'mandatory' or 'optional' for the corresponding section
+  // of a category-based one.
+  section: text("section"),
 });
 
 // ---------------------------------------------------------------------------
@@ -468,4 +486,27 @@ export const dailyWorkReportEntries = pgTable("daily_work_report_entries", {
   // Null = "General / office work" — time not tied to one project.
   projectId: uuid("project_id").references(() => projects.id, { onDelete: "set null" }),
   hours: numeric("hours", { precision: 5, scale: 2 }).notNull(),
+});
+
+// ---------------------------------------------------------------------------
+// Quotation category templates — the fixed content (BOC/CBC/Permit/Work
+// Permit) that a new category-based quotation gets pre-filled with. Once
+// copied onto a quotation at creation time, editing a template here never
+// changes quotations that already exist.
+// ---------------------------------------------------------------------------
+
+export const quotationCategoryTemplates = pgTable("quotation_category_templates", {
+  category: text("category").primaryKey(),
+  title: text("title").notNull(),
+  subtitle: text("subtitle"),
+  intro: text("intro"),
+  scopeItemsText: text("scope_items_text"),
+  defaultScopeFeeExclVat: numeric("default_scope_fee_excl_vat", { precision: 12, scale: 2 }),
+  // Each: { name: string, defaultPrice: number }
+  mandatoryFeeItems: jsonb("mandatory_fee_items").notNull().default([]),
+  exclusionsText: text("exclusions_text"),
+  optionalServiceItems: jsonb("optional_service_items").notNull().default([]),
+  commercialTermsText: text("commercial_terms_text"),
+  acceptanceNote: text("acceptance_note"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

@@ -59,15 +59,26 @@ export default async function QuotationsListPage() {
             </thead>
             <tbody>
               {rows.map((q) => {
-                const items = itemsByQuotation.get(q.id) ?? [];
-                const totals = calcGrandTotals(
-                  items.map((i) => ({
-                    description: i.description,
-                    classification: i.classification ?? "",
-                    feeExclVat: Number(i.feeExclVat),
-                  })),
-                  Number(q.vatRatePercent)
-                );
+                const items = (itemsByQuotation.get(q.id) ?? []).filter((i) => !i.section);
+                const vat = Number(q.vatRatePercent) / 100;
+                let grandTotal: number;
+                if (q.category) {
+                  const scopeFee = q.scopeFeeExclVat ? Number(q.scopeFeeExclVat) : 0;
+                  const mandatoryTotal = (itemsByQuotation.get(q.id) ?? [])
+                    .filter((i) => i.section === "mandatory")
+                    .reduce((sum, i) => sum + Number(i.feeExclVat), 0);
+                  grandTotal = (scopeFee + mandatoryTotal) * (1 + vat);
+                } else {
+                  const totals = calcGrandTotals(
+                    items.map((i) => ({
+                      description: i.description,
+                      classification: i.classification ?? "",
+                      feeExclVat: Number(i.feeExclVat),
+                    })),
+                    Number(q.vatRatePercent)
+                  );
+                  grandTotal = totals.grandTotal;
+                }
                 return (
                   <tr key={q.id} className="border-b border-[var(--sec-line)] last:border-0 hover:bg-slate-50">
                     <td className="px-4 py-3">
@@ -78,7 +89,7 @@ export default async function QuotationsListPage() {
                     <td className="px-4 py-3 font-medium text-[var(--sec-ink)]">{q.clientName}</td>
                     <td className="px-4 py-3 text-[var(--sec-muted)]">{q.projectDescription || "—"}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-[var(--sec-ink)]">
-                      AED {totals.grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      AED {grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </td>
                     <td className="px-4 py-3 text-[var(--sec-muted)] capitalize">{q.status}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-[var(--sec-muted)]">

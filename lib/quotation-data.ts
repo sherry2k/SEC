@@ -16,6 +16,10 @@ export async function getQuotationForPrint(id: string): Promise<PrintableQuotati
     .where(eq(quotationItems.quotationId, id))
     .orderBy(asc(quotationItems.sortOrder));
 
+  const flatItems = items.filter((i) => !i.section);
+  const mandatoryFees = items.filter((i) => i.section === "mandatory");
+  const optionalServices = items.filter((i) => i.section === "optional");
+
   return {
     quotationNo: quotation.quotationNo,
     title: quotation.title,
@@ -34,12 +38,19 @@ export async function getQuotationForPrint(id: string): Promise<PrintableQuotati
     showStamp: quotation.showStamp,
     signatoryTitle: quotation.signatoryTitle ?? "",
     createdAt: quotation.createdAt,
-    items: items.map((i) => ({
+    items: flatItems.map((i) => ({
       description: i.description,
       classification: i.classification ?? "",
       feeExclVat: Number(i.feeExclVat),
       scopeOfWork: i.scopeOfWork ?? "",
       duration: i.duration ?? "",
     })),
+    category: quotation.category ?? "",
+    scopeItemsText: quotation.scopeItemsText ?? "",
+    scopeFeeExclVat: quotation.scopeFeeExclVat ? Number(quotation.scopeFeeExclVat) : 0,
+    exclusionsText: quotation.exclusionsText ?? "",
+    acceptanceNote: quotation.acceptanceNote ?? "",
+    mandatoryFees: mandatoryFees.map((i) => ({ name: i.description, price: Number(i.feeExclVat), note: i.note ?? "" })),
+    optionalServices: optionalServices.map((i) => ({ name: i.description, price: Number(i.feeExclVat), note: i.note ?? "" })),
   };
 }

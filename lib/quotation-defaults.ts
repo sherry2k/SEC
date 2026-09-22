@@ -26,6 +26,12 @@ export function emptyItem(): QuotationItemDraft {
   };
 }
 
+export type FeeItemDraft = { key: string; name: string; price: string; note: string };
+
+function emptyFeeItem(): FeeItemDraft {
+  return { key: `fee-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`, name: "", price: "", note: "" };
+}
+
 export type QuotationFormValues = {
   title: string;
   subtitle: string;
@@ -44,6 +50,15 @@ export type QuotationFormValues = {
   showStamp: boolean;
   signatoryTitle: string;
   items: QuotationItemDraft[];
+  // Category-based quotations (BOC/CBC/Permit/Work Permit) only — "" on a
+  // blank/custom quotation, same as before this existed.
+  category: string;
+  scopeItemsText: string;
+  scopeFeeExclVat: string;
+  exclusionsText: string;
+  acceptanceNote: string;
+  mandatoryFees: FeeItemDraft[];
+  optionalServices: FeeItemDraft[];
 };
 
 const DEFAULT_INTRO =
@@ -86,5 +101,61 @@ export function defaultQuotationValues(): QuotationFormValues {
     showStamp: false,
     signatoryTitle: "",
     items: [emptyItem()],
+    category: "",
+    scopeItemsText: "",
+    scopeFeeExclVat: "",
+    exclusionsText: "",
+    acceptanceNote: "",
+    mandatoryFees: [],
+    optionalServices: [],
   };
 }
+
+// Builds the initial form values for a NEW category-based quotation from
+// its template — everything pre-filled and freely editable from there,
+// same as the blank/custom defaults above.
+export function categoryQuotationValues(template: {
+  category: string;
+  title: string;
+  subtitle: string;
+  intro: string;
+  scopeItemsText: string;
+  defaultScopeFeeExclVat: number;
+  mandatoryFeeItems: { name: string; defaultPrice: number; note: string }[];
+  exclusionsText: string;
+  optionalServiceItems: { name: string; defaultPrice: number; note: string }[];
+  commercialTermsText: string;
+  acceptanceNote: string;
+}): QuotationFormValues {
+  const toFeeItems = (items: { name: string; defaultPrice: number; note: string }[]): FeeItemDraft[] =>
+    items.map((i) => ({ key: `fee-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`, name: i.name, price: String(i.defaultPrice), note: i.note }));
+
+  return {
+    title: template.title,
+    subtitle: template.subtitle,
+    attention: "",
+    clientName: "",
+    projectDescription: "",
+    location: "Abu Dhabi - UAE",
+    buildingConfig: "",
+    projectId: "",
+    vatRatePercent: 5,
+    intro: template.intro,
+    paymentTerms: "",
+    commercialConditions: template.commercialTermsText,
+    notes: "",
+    signatoryName: "Eng. Mohammad Abu Eisa",
+    showStamp: false,
+    signatoryTitle: "",
+    items: [],
+    category: template.category,
+    scopeItemsText: template.scopeItemsText,
+    scopeFeeExclVat: String(template.defaultScopeFeeExclVat),
+    exclusionsText: template.exclusionsText,
+    acceptanceNote: template.acceptanceNote,
+    mandatoryFees: toFeeItems(template.mandatoryFeeItems),
+    optionalServices: toFeeItems(template.optionalServiceItems),
+  };
+}
+
+export { emptyFeeItem };

@@ -127,11 +127,21 @@ export default async function DashboardHome() {
       ? await db.select().from(quotationItems).where(inArray(quotationItems.quotationId, quotationIds))
       : [];
     const quotationTotal = monthQuotations.reduce((sum, q) => {
-      const items = qItems.filter((i) => i.quotationId === q.id).map((i) => ({
-        description: i.description,
-        classification: i.classification ?? "",
-        feeExclVat: Number(i.feeExclVat),
-      }));
+      const vat = Number(q.vatRatePercent) / 100;
+      if (q.category) {
+        const scopeFee = q.scopeFeeExclVat ? Number(q.scopeFeeExclVat) : 0;
+        const mandatoryTotal = qItems
+          .filter((i) => i.quotationId === q.id && i.section === "mandatory")
+          .reduce((s, i) => s + Number(i.feeExclVat), 0);
+        return sum + (scopeFee + mandatoryTotal) * (1 + vat);
+      }
+      const items = qItems
+        .filter((i) => i.quotationId === q.id && !i.section)
+        .map((i) => ({
+          description: i.description,
+          classification: i.classification ?? "",
+          feeExclVat: Number(i.feeExclVat),
+        }));
       return sum + calcGrandTotals(items, Number(q.vatRatePercent)).grandTotal;
     }, 0);
 

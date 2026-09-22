@@ -1,7 +1,8 @@
 import PrintDocumentShell from "@/components/PrintDocumentShell";
 import QuotationPrintBody, { type PrintableQuotation } from "@/components/QuotationPrintBody";
+import QuotationCategoryPrintBody from "@/components/QuotationCategoryPrintBody";
 
-export type { PrintableItem, PrintableQuotation } from "@/components/QuotationPrintBody";
+export type { PrintableItem, PrintableFeeItem, PrintableQuotation } from "@/components/QuotationPrintBody";
 
 export default function QuotationPrintView({ quotation }: { quotation: PrintableQuotation }) {
   return (
@@ -11,7 +12,7 @@ export default function QuotationPrintView({ quotation }: { quotation: Printable
       refLabel="Ref."
       refValue={quotation.quotationNo}
     >
-      <QuotationPrintBody quotation={quotation} />
+      {quotation.category ? <QuotationCategoryPrintBody quotation={quotation} /> : <QuotationPrintBody quotation={quotation} />}
     </PrintDocumentShell>
   );
 }

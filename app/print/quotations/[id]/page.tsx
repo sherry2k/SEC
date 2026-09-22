@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { requirePermission } from "@/lib/auth";
 import { getQuotationForPrint } from "@/lib/quotation-data";
 import QuotationPrintBody from "@/components/QuotationPrintBody";
+import QuotationCategoryPrintBody from "@/components/QuotationCategoryPrintBody";
 
 // Loaded only by the server-side PDF generator (Puppeteer), never linked
 // to directly — no letterhead/footer here, since those come from
@@ -17,7 +18,7 @@ export default async function QuotationPrintSourcePage({ params }: { params: Pro
 
   return (
     <div className="mx-auto max-w-[780px] bg-white px-2 text-[13px] leading-relaxed text-[var(--sec-ink)]">
-      <QuotationPrintBody quotation={quotation} />
+      {quotation.category ? <QuotationCategoryPrintBody quotation={quotation} /> : <QuotationPrintBody quotation={quotation} />}
     </div>
   );
 }
