@@ -21,27 +21,22 @@ const CERTS_URI = toDataUri("certifications.jpg", "image/jpeg");
 const FONT_STACK = "Arial, Helvetica, sans-serif";
 
 export function buildHeaderTemplate(opts: { dateLabel: string; dateValue: string; refLabel: string; refValue: string }): string {
+  // Deliberately minimal for now — plain text, one line, no images, no
+  // flex layout — to isolate whether the earlier overlap was caused by
+  // the design's complexity or by something more fundamental in how
+  // margins/templates are being applied. Once this plain version is
+  // confirmed working correctly, the fuller branded design goes back in.
   return `
-    <div style="width:100%; font-size:22px; padding:0 10mm; box-sizing:border-box; font-family:${FONT_STACK}; color:#101010;">
-      <div style="display:flex; align-items:center; gap:20px; padding-bottom:15px; border-bottom:2px solid #e2e2e2;">
-        <img src="${LOGO_URI}" style="height:65px; width:auto;" />
-        <img src="${WORDMARK_URI}" style="height:35px; width:auto;" />
-      </div>
-      <div style="text-align:right; margin-top:10px; font-size:20px; color:#555;">
-        <span><b>${opts.dateLabel}:</b> ${opts.dateValue}</span>&nbsp;&nbsp;&nbsp;
-        <span><b>${opts.refLabel}</b> ${opts.refValue}</span>
-      </div>
+    <div style="width:100%; font-size:14px; padding:0 10mm; box-sizing:border-box; font-family:${FONT_STACK}; color:#101010;">
+      SOLID Engineering Consultancy — <b>${opts.dateLabel}:</b> ${opts.dateValue} &nbsp; <b>${opts.refLabel}</b> ${opts.refValue}
     </div>
   `;
 }
 
 export function buildFooterTemplate(): string {
   return `
-    <div style="width:100%; font-size:15px; padding:6px 10mm 0; box-sizing:border-box; font-family:${FONT_STACK}; color:#555; text-align:center; border-top:2px solid #e2e2e2;">
-      <img src="${CERTS_URI}" style="height:35px; width:auto;" />
-      <div style="margin-top:6px;">
-        ${COMPANY.address}, Tel: ${COMPANY.tel}, Mobile: ${COMPANY.mobile}, Email: ${COMPANY.email}
-      </div>
+    <div style="width:100%; font-size:12px; padding:0 10mm; box-sizing:border-box; font-family:${FONT_STACK}; color:#555;">
+      ${COMPANY.address}, Tel: ${COMPANY.tel}, Mobile: ${COMPANY.mobile}, Email: ${COMPANY.email}
     </div>
   `;
 }

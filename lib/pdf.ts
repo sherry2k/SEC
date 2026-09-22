@@ -49,13 +49,10 @@ export async function generatePdf(opts: {
       displayHeaderFooter: true,
       headerTemplate: opts.headerTemplate,
       footerTemplate: opts.footerTemplate,
-      // The overlap wasn't actually a margin-size problem — it was a
-      // conflicting @page CSS rule on the source page fighting with this
-      // margin option (now fixed on that page). These values have
-      // headroom over the calculated header/footer height, but don't
-      // need to be as extreme as the earlier attempt that was
-      // compensating for the wrong problem.
-      margin: { top: "42mm", bottom: "28mm", left: "10mm", right: "10mm" },
+      // Deliberately small and standard while testing the minimal
+      // header/footer — once confirmed working, these go back up to
+      // accommodate the fuller branded design.
+      margin: { top: "20mm", bottom: "20mm", left: "10mm", right: "10mm" },
     });
 
     return Buffer.from(pdfBytes);
