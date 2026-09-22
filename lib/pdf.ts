@@ -50,11 +50,11 @@ export async function generatePdf(opts: {
       displayHeaderFooter: true,
       headerTemplate: opts.headerTemplate,
       footerTemplate: opts.footerTemplate,
-      // Deliberately large and unmistakable for this diagnostic pass —
-      // if even a 30mm margin doesn't visibly separate the colored
-      // header/footer boxes from the green-bordered content, the margin
-      // option itself isn't taking effect at all.
-      margin: { top: "30mm", bottom: "30mm", left: "25mm", right: "25mm" },
+      // Confirmed working with the @page conflict removed — these are
+      // standard A4 document margins (roughly matching a normal Word
+      // doc's ~2cm-2.5cm), sized to comfortably fit the branded
+      // header/footer above and below.
+      margin: { top: "32mm", bottom: "24mm", left: "18mm", right: "18mm" },
     });
 
     return Buffer.from(pdfBytes);

@@ -21,21 +21,27 @@ const CERTS_URI = toDataUri("certifications.jpg", "image/jpeg");
 const FONT_STACK = "Arial, Helvetica, sans-serif";
 
 export function buildHeaderTemplate(opts: { dateLabel: string; dateValue: string; refLabel: string; refValue: string }): string {
-  // TEMPORARY diagnostic version — loud colors and a visible border so
-  // the header's actual rendered box is unmistakable in the output. This
-  // is not the final design; it's here to see exactly what Puppeteer is
-  // doing with the margin/header box before guessing at CSS again.
   return `
-    <div style="width:100%; height:100%; font-size:14px; padding:4px 10mm; box-sizing:border-box; font-family:${FONT_STACK}; color:#000; background:#ffe600; border:3px solid #d00000;">
-      HEADER BOX — SOLID Engineering Consultancy — <b>${opts.dateLabel}:</b> ${opts.dateValue} &nbsp; <b>${opts.refLabel}</b> ${opts.refValue}
+    <div style="width:100%; font-size:16px; padding:0 10mm; box-sizing:border-box; font-family:${FONT_STACK}; color:#101010;">
+      <div style="display:flex; align-items:center; gap:14px; padding-bottom:10px; border-bottom:2px solid #e2e2e2;">
+        <img src="${LOGO_URI}" style="height:50px; width:auto;" />
+        <img src="${WORDMARK_URI}" style="height:26px; width:auto;" />
+      </div>
+      <div style="text-align:right; margin-top:8px; font-size:14px; color:#555;">
+        <span><b>${opts.dateLabel}:</b> ${opts.dateValue}</span>&nbsp;&nbsp;&nbsp;
+        <span><b>${opts.refLabel}</b> ${opts.refValue}</span>
+      </div>
     </div>
   `;
 }
 
 export function buildFooterTemplate(): string {
   return `
-    <div style="width:100%; height:100%; font-size:12px; padding:4px 10mm; box-sizing:border-box; font-family:${FONT_STACK}; color:#000; background:#00e6e6; border:3px solid #0000d0;">
-      FOOTER BOX — ${COMPANY.address}, Tel: ${COMPANY.tel}, Mobile: ${COMPANY.mobile}, Email: ${COMPANY.email}
+    <div style="width:100%; font-size:12px; padding:8px 10mm 0; box-sizing:border-box; font-family:${FONT_STACK}; color:#555; text-align:center; border-top:2px solid #e2e2e2;">
+      <img src="${CERTS_URI}" style="height:28px; width:auto;" />
+      <div style="margin-top:5px;">
+        ${COMPANY.address}, Tel: ${COMPANY.tel}, Mobile: ${COMPANY.mobile}, Email: ${COMPANY.email}
+      </div>
     </div>
   `;
 }
