@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { eq, asc } from "drizzle-orm";
-import { Pencil } from "lucide-react";
+import { eq } from "drizzle-orm";
+import { Pencil, Download } from "lucide-react";
 import { db } from "@/db";
-import { taxInvoices, taxInvoiceItems } from "@/db/schema";
+import { taxInvoices } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import { toFilenameSafe } from "@/lib/pdf-filename";
+import { getTaxInvoiceForPrint } from "@/lib/tax-invoice-data";
 import TaxInvoicePrintView from "@/components/TaxInvoicePrintView";
 import PrintButton from "@/components/PrintButton";
 import DeleteTaxInvoiceButton from "@/components/DeleteTaxInvoiceButton";
@@ -20,14 +21,8 @@ export default async function TaxInvoiceViewPage({ params }: { params: Promise<{
   await requirePermission("accounts.view");
 
   const { id } = await params;
-  const [invoice] = await db.select().from(taxInvoices).where(eq(taxInvoices.id, id)).limit(1);
+  const invoice = await getTaxInvoiceForPrint(id);
   if (!invoice) notFound();
-
-  const items = await db
-    .select()
-    .from(taxInvoiceItems)
-    .where(eq(taxInvoiceItems.invoiceId, id))
-    .orderBy(asc(taxInvoiceItems.sortOrder));
 
   return (
     <div>
@@ -37,34 +32,25 @@ export default async function TaxInvoiceViewPage({ params }: { params: Promise<{
         </Link>
         <div className="flex items-center gap-2">
           <Link
-            href={`/accounts/tax-invoices/${invoice.id}/edit`}
+            href={`/accounts/tax-invoices/${id}/edit`}
             className="flex items-center gap-1.5 rounded-md border border-[var(--sec-line)] px-3 py-1.5 text-xs font-medium text-[var(--sec-ink)] transition-colors hover:border-[var(--sec-blue)]"
           >
             <Pencil size={13} />
             Edit
           </Link>
-          <DeleteTaxInvoiceButton invoiceId={invoice.id} />
+          <DeleteTaxInvoiceButton invoiceId={id} />
+          <a
+            href={`/api/tax-invoices/${id}/pdf`}
+            className="flex items-center gap-1.5 rounded-md bg-[var(--sec-blue)] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[var(--sec-blue-deep)]"
+          >
+            <Download size={13} />
+            Download PDF
+          </a>
           <PrintButton />
         </div>
       </div>
 
-      <TaxInvoicePrintView
-        invoice={{
-          invoiceNo: invoice.invoiceNo,
-          issueDate: invoice.issueDate,
-          clientName: invoice.clientName ?? "",
-          clientAddress: invoice.clientAddress ?? "",
-          clientTrn: invoice.clientTrn ?? "",
-          vatRatePercent: Number(invoice.vatRatePercent),
-          signatoryName: invoice.signatoryName ?? "",
-          showStamp: invoice.showStamp,
-          items: items.map((i) => ({
-            itemDate: i.itemDate ?? "",
-            description: i.description,
-            amount: Number(i.amount),
-          })),
-        }}
-      />
+      <TaxInvoicePrintView invoice={invoice} />
     </div>
   );
 }

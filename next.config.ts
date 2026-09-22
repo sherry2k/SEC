@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["puppeteer-core", "@sparticuz/chromium"],
   outputFileTracingIncludes: {
     "/api/quotations/[id]/pdf": ["./node_modules/@sparticuz/chromium/**"],
+    "/api/tax-invoices/[id]/pdf": ["./node_modules/@sparticuz/chromium/**"],
+    "/api/performa-invoices/[id]/pdf": ["./node_modules/@sparticuz/chromium/**"],
+    "/api/receipt-vouchers/[id]/pdf": ["./node_modules/@sparticuz/chromium/**"],
+    "/api/invoices/[id]/pdf": ["./node_modules/@sparticuz/chromium/**"],
+    "/api/statement-of-account/[id]/pdf": ["./node_modules/@sparticuz/chromium/**"],
   },
 };
 

@@ -1,10 +1,11 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { eq } from "drizzle-orm";
+import { Download } from "lucide-react";
 import { db } from "@/db";
 import { projects } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
-import { getProjectFinancials } from "@/lib/project-finance";
+import { getStatementOfAccountData } from "@/lib/statement-data";
 import StatementOfAccountPrintView from "@/components/StatementOfAccountPrintView";
 import StatementStampToggle from "@/components/StatementStampToggle";
 import PrintButton from "@/components/PrintButton";
@@ -23,7 +24,8 @@ export default async function StatementOfAccountPage({ params }: { params: Promi
   const [project] = await db.select().from(projects).where(eq(projects.id, id)).limit(1);
   if (!project) notFound();
 
-  const financials = await getProjectFinancials(id);
+  const data = await getStatementOfAccountData(id);
+  if (!data) notFound();
 
   return (
     <div>
@@ -33,24 +35,18 @@ export default async function StatementOfAccountPage({ params }: { params: Promi
         </Link>
         <div className="flex items-center gap-3">
           <StatementStampToggle projectId={project.id} initialShowStamp={project.statementShowStamp} />
+          <a
+            href={`/api/statement-of-account/${id}/pdf`}
+            className="flex items-center gap-1.5 rounded-md bg-[var(--sec-blue)] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[var(--sec-blue-deep)]"
+          >
+            <Download size={13} />
+            Download PDF
+          </a>
           <PrintButton />
         </div>
       </div>
 
-      <StatementOfAccountPrintView
-        data={{
-          projectRef: project.municipalityNo || project.projectCode,
-          printedDate: new Date().toLocaleDateString("en-GB"),
-          clientName: project.clientName ?? "",
-          clientAddress: project.location ?? "",
-          totalAmount: financials.totalAmount,
-          invoicedTotal: financials.invoicedTotal,
-          paidTotal: financials.paidTotal,
-          balance: financials.balance,
-          ledger: financials.ledger,
-          showStamp: project.statementShowStamp,
-        }}
-      />
+      <StatementOfAccountPrintView data={data} />
     </div>
   );
 }

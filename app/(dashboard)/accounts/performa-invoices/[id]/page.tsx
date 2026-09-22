@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { eq, asc } from "drizzle-orm";
-import { Pencil } from "lucide-react";
+import { eq } from "drizzle-orm";
+import { Pencil, Download } from "lucide-react";
 import { db } from "@/db";
-import { performaInvoices, performaInvoiceItems } from "@/db/schema";
+import { performaInvoices } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import { toFilenameSafe } from "@/lib/pdf-filename";
+import { getPerformaInvoiceForPrint } from "@/lib/performa-invoice-data";
 import PerformaInvoicePrintView from "@/components/PerformaInvoicePrintView";
 import PrintButton from "@/components/PrintButton";
 import DeletePerformaInvoiceButton from "@/components/DeletePerformaInvoiceButton";
@@ -20,14 +21,8 @@ export default async function PerformaInvoiceViewPage({ params }: { params: Prom
   await requirePermission("accounts.view");
 
   const { id } = await params;
-  const [invoice] = await db.select().from(performaInvoices).where(eq(performaInvoices.id, id)).limit(1);
+  const invoice = await getPerformaInvoiceForPrint(id);
   if (!invoice) notFound();
-
-  const items = await db
-    .select()
-    .from(performaInvoiceItems)
-    .where(eq(performaInvoiceItems.invoiceId, id))
-    .orderBy(asc(performaInvoiceItems.sortOrder));
 
   return (
     <div>
@@ -37,34 +32,25 @@ export default async function PerformaInvoiceViewPage({ params }: { params: Prom
         </Link>
         <div className="flex items-center gap-2">
           <Link
-            href={`/accounts/performa-invoices/${invoice.id}/edit`}
+            href={`/accounts/performa-invoices/${id}/edit`}
             className="flex items-center gap-1.5 rounded-md border border-[var(--sec-line)] px-3 py-1.5 text-xs font-medium text-[var(--sec-ink)] transition-colors hover:border-[var(--sec-blue)]"
           >
             <Pencil size={13} />
             Edit
           </Link>
-          <DeletePerformaInvoiceButton invoiceId={invoice.id} />
+          <DeletePerformaInvoiceButton invoiceId={id} />
+          <a
+            href={`/api/performa-invoices/${id}/pdf`}
+            className="flex items-center gap-1.5 rounded-md bg-[var(--sec-blue)] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[var(--sec-blue-deep)]"
+          >
+            <Download size={13} />
+            Download PDF
+          </a>
           <PrintButton />
         </div>
       </div>
 
-      <PerformaInvoicePrintView
-        invoice={{
-          invoiceNo: invoice.invoiceNo,
-          issueDate: invoice.issueDate,
-          customerName: invoice.customerName ?? "",
-          project: invoice.project ?? "",
-          customerAddress: invoice.customerAddress ?? "",
-          vatRatePercent: Number(invoice.vatRatePercent),
-          signatoryName: invoice.signatoryName ?? "",
-          showStamp: invoice.showStamp,
-          items: items.map((i) => ({
-            itemDate: i.itemDate ?? "",
-            description: i.description,
-            amount: Number(i.amount),
-          })),
-        }}
-      />
+      <PerformaInvoicePrintView invoice={invoice} />
     </div>
   );
 }

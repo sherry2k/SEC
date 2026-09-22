@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { eq, asc } from "drizzle-orm";
-import { Pencil } from "lucide-react";
+import { eq } from "drizzle-orm";
+import { Pencil, Download } from "lucide-react";
 import { db } from "@/db";
-import { receiptVouchers, receiptVoucherItems } from "@/db/schema";
+import { receiptVouchers } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import { toFilenameSafe } from "@/lib/pdf-filename";
+import { getReceiptVoucherForPrint } from "@/lib/receipt-voucher-data";
 import ReceiptVoucherPrintView from "@/components/ReceiptVoucherPrintView";
 import PrintButton from "@/components/PrintButton";
 import DeleteReceiptVoucherButton from "@/components/DeleteReceiptVoucherButton";
@@ -20,14 +21,8 @@ export default async function ReceiptVoucherViewPage({ params }: { params: Promi
   await requirePermission("accounts.view");
 
   const { id } = await params;
-  const [voucher] = await db.select().from(receiptVouchers).where(eq(receiptVouchers.id, id)).limit(1);
+  const voucher = await getReceiptVoucherForPrint(id);
   if (!voucher) notFound();
-
-  const items = await db
-    .select()
-    .from(receiptVoucherItems)
-    .where(eq(receiptVoucherItems.voucherId, id))
-    .orderBy(asc(receiptVoucherItems.sortOrder));
 
   return (
     <div>
@@ -37,34 +32,25 @@ export default async function ReceiptVoucherViewPage({ params }: { params: Promi
         </Link>
         <div className="flex items-center gap-2">
           <Link
-            href={`/accounts/receipt-vouchers/${voucher.id}/edit`}
+            href={`/accounts/receipt-vouchers/${id}/edit`}
             className="flex items-center gap-1.5 rounded-md border border-[var(--sec-line)] px-3 py-1.5 text-xs font-medium text-[var(--sec-ink)] transition-colors hover:border-[var(--sec-blue)]"
           >
             <Pencil size={13} />
             Edit
           </Link>
-          <DeleteReceiptVoucherButton voucherId={voucher.id} />
+          <DeleteReceiptVoucherButton voucherId={id} />
+          <a
+            href={`/api/receipt-vouchers/${id}/pdf`}
+            className="flex items-center gap-1.5 rounded-md bg-[var(--sec-blue)] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[var(--sec-blue-deep)]"
+          >
+            <Download size={13} />
+            Download PDF
+          </a>
           <PrintButton />
         </div>
       </div>
 
-      <ReceiptVoucherPrintView
-        voucher={{
-          voucherNo: voucher.voucherNo,
-          issueDate: voucher.issueDate,
-          toName: voucher.toName ?? "",
-          project: voucher.project ?? "",
-          location: voucher.location ?? "",
-          vatRatePercent: Number(voucher.vatRatePercent),
-          signatoryName: voucher.signatoryName ?? "",
-          showStamp: voucher.showStamp,
-          items: items.map((i) => ({
-            itemDate: i.itemDate ?? "",
-            description: i.description,
-            amount: Number(i.amount),
-          })),
-        }}
-      />
+      <ReceiptVoucherPrintView voucher={voucher} />
     </div>
   );
 }
