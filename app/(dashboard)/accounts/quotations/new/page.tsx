@@ -63,6 +63,9 @@ export default async function NewQuotationPage({ searchParams }: { searchParams:
   if (category === "blank") {
     return (
       <div>
+        <Link href="/accounts/quotations/new" className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--sec-blue)] hover:underline">
+          ← Back to category picker
+        </Link>
         <h1 className="text-2xl font-bold text-[var(--sec-ink)]">New quotation</h1>
         <p className="mt-1 text-sm text-[var(--sec-muted)]">
           Numbered automatically once saved. Payment terms and commercial conditions are pre-filled — edit freely.
@@ -100,6 +103,9 @@ export default async function NewQuotationPage({ searchParams }: { searchParams:
 
   return (
     <div>
+      <Link href="/accounts/quotations/new" className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--sec-blue)] hover:underline">
+        ← Back to category picker
+      </Link>
       <p className="font-mono text-xs text-[var(--sec-muted)]">{QUOTATION_CATEGORY_LABELS[template.category]}</p>
       <h1 className="mt-1 text-2xl font-bold text-[var(--sec-ink)]">New quotation</h1>
       <p className="mt-1 text-sm text-[var(--sec-muted)]">Numbered automatically once saved.</p>
