@@ -17,7 +17,7 @@ export const EXPENSE_CATEGORY_SUGGESTIONS = [
   "Miscellaneous",
 ];
 
-export const INCOME_CATEGORY_SUGGESTIONS = ["Bank Interest", "Refund", "Other Income"];
+export const INCOME_CATEGORY_SUGGESTIONS = ["Other Income"];
 
 // Parses "DD/MM/YYYY" (how Receipt Voucher issue dates are stored) into a
 // sortable timestamp — same convention used in lib/project-finance.ts.
@@ -48,6 +48,13 @@ export type OfficeLedgerSummary = {
   expenseRows: LedgerRow[];
   expenseByCategory: { category: string; amount: number }[];
 };
+
+// monthKey is "YYYY-MM".
+export function shiftMonthKey(monthKey: string, delta: number): string {
+  const [y, m] = monthKey.split("-").map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
 
 // monthKey is "YYYY-MM".
 export async function getOfficeLedgerSummary(monthKey: string): Promise<OfficeLedgerSummary> {
@@ -126,6 +133,56 @@ export async function getOfficeLedgerSummary(monthKey: string): Promise<OfficeLe
     net: incomeTotal - expenseTotal,
     incomeRows,
     expenseRows,
+    expenseByCategory: [...byCategory.entries()].map(([category, amount]) => ({ category, amount })).sort((a, b) => b.amount - a.amount),
+  };
+}
+
+export type MonthSummary = { monthKey: string; monthLabel: string; incomeTotal: number; expenseTotal: number; net: number };
+
+export type OfficeLedgerRangeSummary = {
+  months: MonthSummary[];
+  totalIncome: number;
+  totalExpense: number;
+  totalNet: number;
+  expenseByCategory: { category: string; amount: number }[];
+};
+
+// A trend view across several trailing months, ending at endMonthKey — for
+// seeing "how much did rent cost over the last 6 months" at a glance,
+// which the single-month view can't show.
+export async function getOfficeLedgerRangeSummary(endMonthKey: string, numMonths: number): Promise<OfficeLedgerRangeSummary> {
+  const monthKeys: string[] = [];
+  let key = endMonthKey;
+  for (let i = 0; i < numMonths; i++) {
+    monthKeys.unshift(key);
+    key = shiftMonthKey(key, -1);
+  }
+
+  const summaries = await Promise.all(monthKeys.map((k) => getOfficeLedgerSummary(k)));
+
+  const months: MonthSummary[] = monthKeys.map((k, i) => ({
+    monthKey: k,
+    monthLabel: new Date(`${k}-01T00:00:00`).toLocaleDateString("en-GB", { month: "short", year: "numeric" }),
+    incomeTotal: summaries[i].incomeTotal,
+    expenseTotal: summaries[i].expenseTotal,
+    net: summaries[i].net,
+  }));
+
+  const totalIncome = months.reduce((sum, m) => sum + m.incomeTotal, 0);
+  const totalExpense = months.reduce((sum, m) => sum + m.expenseTotal, 0);
+
+  const byCategory = new Map<string, number>();
+  for (const s of summaries) {
+    for (const c of s.expenseByCategory) {
+      byCategory.set(c.category, (byCategory.get(c.category) ?? 0) + c.amount);
+    }
+  }
+
+  return {
+    months,
+    totalIncome,
+    totalExpense,
+    totalNet: totalIncome - totalExpense,
     expenseByCategory: [...byCategory.entries()].map(([category, amount]) => ({ category, amount })).sort((a, b) => b.amount - a.amount),
   };
 }
