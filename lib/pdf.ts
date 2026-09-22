@@ -49,11 +49,13 @@ export async function generatePdf(opts: {
       displayHeaderFooter: true,
       headerTemplate: opts.headerTemplate,
       footerTemplate: opts.footerTemplate,
-      // Generous on purpose: the first attempt at 30mm/22mm still
-      // overlapped the content, so this leaves real buffer above the
-      // calculated header/footer height rather than cutting it close
-      // again.
-      margin: { top: "50mm", bottom: "38mm", left: "10mm", right: "10mm" },
+      // The overlap wasn't actually a margin-size problem — it was a
+      // conflicting @page CSS rule on the source page fighting with this
+      // margin option (now fixed on that page). These values have
+      // headroom over the calculated header/footer height, but don't
+      // need to be as extreme as the earlier attempt that was
+      // compensating for the wrong problem.
+      margin: { top: "42mm", bottom: "28mm", left: "10mm", right: "10mm" },
     });
 
     return Buffer.from(pdfBytes);

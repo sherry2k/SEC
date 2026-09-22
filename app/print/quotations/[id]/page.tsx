@@ -17,6 +17,13 @@ export default async function QuotationPrintSourcePage({ params }: { params: Pro
 
   return (
     <div className="mx-auto max-w-[780px] bg-white px-2 text-[13px] leading-relaxed text-[var(--sec-ink)]">
+      {/* The app's own globals.css sets a @page margin meant for the
+          browser's native print flow — this page is loaded by the
+          server-side PDF generator instead, which sets its own margin
+          directly on page.pdf(). Without this override, both were
+          fighting over the page box, which is what caused the header to
+          overlap the content instead of just needing a bigger margin. */}
+      <style>{`@page { margin: 0; }`}</style>
       <QuotationPrintBody quotation={quotation} />
     </div>
   );

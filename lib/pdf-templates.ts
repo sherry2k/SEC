@@ -37,9 +37,9 @@ export function buildHeaderTemplate(opts: { dateLabel: string; dateValue: string
 
 export function buildFooterTemplate(): string {
   return `
-    <div style="width:100%; font-size:20px; padding:10px 10mm 0; box-sizing:border-box; font-family:${FONT_STACK}; color:#555; text-align:center; border-top:2px solid #e2e2e2;">
-      <img src="${CERTS_URI}" style="height:50px;" />
-      <div style="margin-top:8px;">
+    <div style="width:100%; font-size:15px; padding:6px 10mm 0; box-sizing:border-box; font-family:${FONT_STACK}; color:#555; text-align:center; border-top:2px solid #e2e2e2;">
+      <img src="${CERTS_URI}" style="height:35px; width:auto;" />
+      <div style="margin-top:6px;">
         ${COMPANY.address}, Tel: ${COMPANY.tel}, Mobile: ${COMPANY.mobile}, Email: ${COMPANY.email}
       </div>
     </div>
