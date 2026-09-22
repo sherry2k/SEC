@@ -1,7 +1,13 @@
 import { calcItemTotals, groupByClassification, calcGrandTotals } from "@/lib/quotation-calc";
 import { amountToWordsAED } from "@/lib/number-to-words";
-import { COMPANY } from "@/lib/company";
+import { BANK_DETAILS } from "@/lib/company";
 import PrintDocumentShell from "@/components/PrintDocumentShell";
+
+// A blank line for manual signing on the printed page — a border-bottom
+// span reads more cleanly on paper than a run of underscore characters.
+function Blank({ width = "w-48" }: { width?: string }) {
+  return <span className={`inline-block border-b border-[var(--sec-ink)] ${width}`}>&nbsp;</span>;
+}
 
 export type PrintableItem = {
   description: string;
@@ -229,11 +235,55 @@ export default function QuotationPrintView({ quotation }: { quotation: Printable
       )}
 
       <div className="mt-8 text-sm">
-        <p>For and on behalf of</p>
-        <p className="font-bold">{COMPANY.legalName}</p>
-        {quotation.signatoryName && <p className="mt-3 font-semibold">{quotation.signatoryName}</p>}
-        {quotation.signatoryTitle && <p>{quotation.signatoryTitle}</p>}
-        {quotation.showStamp && <img src="/images/stamp.png" alt="Company stamp" className="mt-2 h-28 object-contain" />}
+        <p className="font-bold underline">Bank Account Details:</p>
+        <p>Account Name: {BANK_DETAILS.accountName}</p>
+        <p>Bank Name: {BANK_DETAILS.bankName}</p>
+        <p>Account Number: {BANK_DETAILS.accountNumber}</p>
+        <p>IBAN: {BANK_DETAILS.iban}</p>
+        <p>Currency: {BANK_DETAILS.currency}</p>
+      </div>
+
+      <div className="mt-6 text-sm">
+        <p className="text-base font-bold">Client Confirmation</p>
+        <p className="mt-1">
+          We hereby confirm our acceptance of this quotation, including its scope, exclusions, commercial terms,
+          authority fees, optional services, and payment breakdown.
+        </p>
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-8 text-sm sm:grid-cols-2">
+        <div>
+          <p className="bg-slate-100 px-2 py-1.5 font-semibold">For SOLID Engineering Consultancy</p>
+          <div className="mt-4 space-y-4">
+            <p>
+              Authorized Signatory: <Blank />
+            </p>
+            <p>
+              Signature and Stamp: <Blank />
+              {quotation.showStamp && <img src="/images/stamp.png" alt="Company stamp" className="mt-2 h-20 object-contain" />}
+            </p>
+            <p>
+              Date: <Blank width="w-32" />
+            </p>
+          </div>
+        </div>
+        <div>
+          <p className="bg-slate-100 px-2 py-1.5 font-semibold">For {quotation.clientName || "Client"}</p>
+          <div className="mt-4 space-y-4">
+            <p>
+              Authorized Name: <Blank />
+            </p>
+            <p>
+              Designation: <Blank />
+            </p>
+            <p>
+              Signature and Stamp: <Blank />
+            </p>
+            <p>
+              Date: <Blank width="w-32" />
+            </p>
+          </div>
+        </div>
       </div>
     </PrintDocumentShell>
   );
