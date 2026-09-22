@@ -2,8 +2,7 @@ import "server-only";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import {
-  quotations,
-  quotationItems,
+  projects,
   taxInvoices,
   taxInvoiceItems,
   invoices,
@@ -11,7 +10,6 @@ import {
   receiptVouchers,
   receiptVoucherItems,
 } from "@/db/schema";
-import { calcGrandTotals } from "@/lib/quotation-calc";
 import { calcTaxInvoiceTotals } from "@/lib/tax-invoice-calc";
 import { calcInvoiceTotals } from "@/lib/invoice-calc";
 import { calcReceiptVoucherTotals } from "@/lib/receipt-voucher-calc";
@@ -38,27 +36,20 @@ function parseDMY(s: string): number {
 }
 
 export type ProjectFinancials = {
-  quotedTotal: number;
+  totalAmount: number;
   invoicedTotal: number;
   paidTotal: number;
-  balance: number; // quotedTotal - paidTotal
+  balance: number; // totalAmount - paidTotal
   ledger: LedgerEntry[];
 };
 
-// Aggregates every Quotation, Tax Invoice, Invoice, and Receipt Voucher
-// linked to a project into one financial picture — used by both the
-// project page's summary card and the Statement of Account.
+// Aggregates a project's manually-set total contract value together with
+// every linked Tax Invoice, Invoice, and Receipt Voucher into one
+// financial picture — used by both the project page's summary card and
+// the Statement of Account.
 export async function getProjectFinancials(projectId: string): Promise<ProjectFinancials> {
-  const linkedQuotations = await db.select().from(quotations).where(eq(quotations.projectId, projectId));
-  let quotedTotal = 0;
-  for (const q of linkedQuotations) {
-    const items = await db.select().from(quotationItems).where(eq(quotationItems.quotationId, q.id));
-    const totals = calcGrandTotals(
-      items.map((i) => ({ description: i.description, classification: i.classification ?? "", feeExclVat: Number(i.feeExclVat) })),
-      Number(q.vatRatePercent)
-    );
-    quotedTotal += totals.grandTotal;
-  }
+  const [project] = await db.select({ totalAmount: projects.totalAmount }).from(projects).where(eq(projects.id, projectId)).limit(1);
+  const totalAmount = project?.totalAmount ? Number(project.totalAmount) : 0;
 
   const ledger: LedgerEntry[] = [];
 
@@ -125,10 +116,10 @@ export async function getProjectFinancials(projectId: string): Promise<ProjectFi
   const paidTotal = ledger.filter((l) => l.kind === "payment").reduce((sum, l) => sum + l.amount, 0);
 
   return {
-    quotedTotal,
+    totalAmount,
     invoicedTotal,
     paidTotal,
-    balance: quotedTotal - paidTotal,
+    balance: totalAmount - paidTotal,
     ledger,
   };
 }

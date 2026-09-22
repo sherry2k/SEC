@@ -10,7 +10,7 @@ export type StatementOfAccountData = {
   printedDate: string;
   clientName: string;
   clientAddress: string;
-  quotedTotal: number;
+  totalAmount: number;
   invoicedTotal: number;
   paidTotal: number;
   balance: number;
@@ -46,7 +46,7 @@ export default function StatementOfAccountPrintView({ data }: { data: StatementO
           <tbody>
             <tr>
               <td className="border border-[var(--sec-line)] px-3 py-1.5 font-semibold">Total Amount</td>
-              <td className="border border-[var(--sec-line)] px-3 py-1.5 text-right">AED {money(data.quotedTotal)}</td>
+              <td className="border border-[var(--sec-line)] px-3 py-1.5 text-right">AED {money(data.totalAmount)}</td>
             </tr>
             <tr>
               <td className="border border-[var(--sec-line)] px-3 py-1.5 font-semibold">Invoice Amount</td>

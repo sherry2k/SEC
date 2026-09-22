@@ -7,7 +7,7 @@ import { emptyItem, type QuotationItemDraft } from "@/lib/quotation-defaults";
 
 export type { QuotationItemDraft };
 
-const CLASSIFICATION_SUGGESTIONS = ["Mandatory", "Optional", "If Required", "Optional If Required"];
+const CLASSIFICATIONS = ["Mandatory", "Optional"];
 
 export default function QuotationLineItemsEditor({
   items,
@@ -31,12 +31,6 @@ export default function QuotationLineItemsEditor({
 
   return (
     <div className="space-y-3">
-      <datalist id="classification-suggestions">
-        {CLASSIFICATION_SUGGESTIONS.map((c) => (
-          <option key={c} value={c} />
-        ))}
-      </datalist>
-
       <div className="overflow-x-auto rounded-lg border border-[var(--sec-line)] bg-white">
         <table className="w-full min-w-[720px] text-left text-sm">
           <thead>
@@ -76,12 +70,17 @@ export default function QuotationLineItemsEditor({
                       </button>
                     </td>
                     <td className="px-3 py-2">
-                      <input
-                        list="classification-suggestions"
+                      <select
                         value={item.classification}
                         onChange={(e) => update(item.key, { classification: e.target.value })}
                         className={inputClass}
-                      />
+                      >
+                        {CLASSIFICATIONS.map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                      </select>
                     </td>
                     <td className="px-3 py-2">
                       <input

@@ -89,6 +89,10 @@ export const projects = pgTable("projects", {
   // fresh each time rather than saved as its own row — there's nowhere
   // else for this toggle's state to live.
   statementShowStamp: boolean("statement_show_stamp").notNull().default(false),
+  // Manually set, not auto-summed from Quotations — the real agreed
+  // contract value for the project, which Financial Summary and the
+  // Statement of Account measure payments against.
+  totalAmount: numeric("total_amount", { precision: 12, scale: 2 }),
   createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedBy: integer("updated_by").references(() => users.id),

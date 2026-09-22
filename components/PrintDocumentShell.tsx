@@ -30,7 +30,7 @@ export default function PrintDocumentShell({
       <thead>
         <tr>
           <td>
-            <div className="p-8 pb-4 sm:p-12 sm:pb-4">
+            <div className="p-8 pb-4 sm:px-12 sm:pt-8 sm:pb-4">
               <PrintLetterhead dateLabel={dateLabel} dateValue={dateValue} refLabel={refLabel} refValue={refValue} />
             </div>
           </td>
@@ -39,14 +39,14 @@ export default function PrintDocumentShell({
       <tbody>
         <tr>
           <td>
-            <div className="px-8 sm:px-12">{children}</div>
+            <div className="print-doc-body-fill px-8 sm:px-12">{children}</div>
           </td>
         </tr>
       </tbody>
       <tfoot>
         <tr>
           <td>
-            <div className="px-8 pb-8 pt-4 sm:px-12 sm:pb-12">
+            <div className="px-8 pb-4 pt-4 sm:px-12 sm:pb-6">
               <PrintFooterStrip />
             </div>
           </td>

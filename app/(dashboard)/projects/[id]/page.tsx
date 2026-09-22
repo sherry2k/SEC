@@ -17,6 +17,7 @@ import PrintButton from "@/components/PrintButton";
 import ProjectPrintView from "@/components/ProjectPrintView";
 import { getProjectFinancials } from "@/lib/project-finance";
 import LinkExistingDocument from "@/components/LinkExistingDocument";
+import ProjectTotalAmountEditor from "@/components/ProjectTotalAmountEditor";
 import ProjectAttachments, { type Attachment } from "@/components/ProjectAttachments";
 import { toFilenameSafe } from "@/lib/pdf-filename";
 
@@ -254,12 +255,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           </div>
           {can(user.role, "accounts.edit") && <LinkExistingDocument projectId={project.id} />}
           <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-[var(--sec-muted)]">Quoted</p>
-              <p className="mt-0.5 text-lg font-bold text-[var(--sec-ink)]">
-                AED {financials.quotedTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-              </p>
-            </div>
+            <ProjectTotalAmountEditor projectId={project.id} initialAmount={financials.totalAmount} canEdit={can(user.role, "accounts.edit")} />
             <div>
               <p className="text-xs uppercase tracking-wide text-[var(--sec-muted)]">Invoiced</p>
               <p className="mt-0.5 text-lg font-bold text-[var(--sec-ink)]">
@@ -279,9 +275,9 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               </p>
             </div>
           </div>
-          {financials.quotedTotal === 0 && financials.ledger.length === 0 && (
+          {financials.totalAmount === 0 && financials.ledger.length === 0 && (
             <p className="mt-3 text-xs text-[var(--sec-muted)]">
-              No Quotation, Tax Invoice, Invoice, or Receipt Voucher is linked to this project yet.
+              No Total Amount set, and no Tax Invoice, Invoice, or Receipt Voucher is linked to this project yet.
             </p>
           )}
         </div>

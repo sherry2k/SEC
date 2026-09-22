@@ -6,6 +6,7 @@ import { authorizePermissionApi } from "@/lib/auth";
 import { getAssignableUsers } from "@/lib/assignable-users";
 import { logActivity } from "@/lib/activity";
 import { PROJECT_STATUSES, type ProjectStatus } from "@/lib/checklist";
+import { can } from "@/lib/permissions";
 
 const EDITABLE_TEXT_FIELDS = ["name", "clientName", "buildingName", "unitNo", "plotNo", "municipalityNo", "location", "notes"] as const;
 
@@ -52,11 +53,27 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     statementShowStamp = Boolean(body.statementShowStamp);
   }
 
+  // Real financial data — needs accounts.edit specifically, not just
+  // projects.edit (which Staff also has), even though both checks share
+  // this one route.
+  let totalAmount: string | undefined;
+  if ("totalAmount" in (body ?? {})) {
+    if (!can(auth.user.role, "accounts.edit")) {
+      return NextResponse.json({ error: "You don't have permission to set the project total amount." }, { status: 403 });
+    }
+    const value = Number(body.totalAmount);
+    if (!Number.isFinite(value) || value < 0) {
+      return NextResponse.json({ error: "Invalid total amount." }, { status: 400 });
+    }
+    totalAmount = String(value);
+  }
+
   if (
     Object.keys(update).length === 0 &&
     responsibleId === undefined &&
     status === undefined &&
-    statementShowStamp === undefined
+    statementShowStamp === undefined &&
+    totalAmount === undefined
   ) {
     return NextResponse.json({ error: "Nothing to update." }, { status: 400 });
   }
@@ -88,6 +105,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       ...(responsibleId !== undefined ? { responsibleId } : {}),
       ...(status !== undefined ? { status } : {}),
       ...(statementShowStamp !== undefined ? { statementShowStamp } : {}),
+      ...(totalAmount !== undefined ? { totalAmount } : {}),
       ...(completionUpdate ?? {}),
       updatedBy: auth.user.id,
       updatedAt: new Date(),
@@ -103,6 +121,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     ...Object.keys(update),
     ...(status !== undefined ? ["status"] : []),
     ...(statementShowStamp !== undefined ? ["statementShowStamp"] : []),
+    ...(totalAmount !== undefined ? ["totalAmount"] : []),
   ];
   await logActivity({
     userId: auth.user.id,
