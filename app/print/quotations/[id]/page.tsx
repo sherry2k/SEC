@@ -16,7 +16,7 @@ export default async function QuotationPrintSourcePage({ params }: { params: Pro
   if (!quotation) notFound();
 
   return (
-    <div className="mx-auto max-w-[780px] bg-white px-2 text-[13px] leading-relaxed text-[var(--sec-ink)]">
+    <div className="mx-auto max-w-[780px] border-[3px] border-green-600 bg-white px-2 text-[13px] leading-relaxed text-[var(--sec-ink)]">
       <QuotationPrintBody quotation={quotation} />
     </div>
   );

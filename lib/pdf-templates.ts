@@ -21,22 +21,21 @@ const CERTS_URI = toDataUri("certifications.jpg", "image/jpeg");
 const FONT_STACK = "Arial, Helvetica, sans-serif";
 
 export function buildHeaderTemplate(opts: { dateLabel: string; dateValue: string; refLabel: string; refValue: string }): string {
-  // Deliberately minimal for now — plain text, one line, no images, no
-  // flex layout — to isolate whether the earlier overlap was caused by
-  // the design's complexity or by something more fundamental in how
-  // margins/templates are being applied. Once this plain version is
-  // confirmed working correctly, the fuller branded design goes back in.
+  // TEMPORARY diagnostic version — loud colors and a visible border so
+  // the header's actual rendered box is unmistakable in the output. This
+  // is not the final design; it's here to see exactly what Puppeteer is
+  // doing with the margin/header box before guessing at CSS again.
   return `
-    <div style="width:100%; font-size:14px; padding:0 10mm; box-sizing:border-box; font-family:${FONT_STACK}; color:#101010;">
-      SOLID Engineering Consultancy — <b>${opts.dateLabel}:</b> ${opts.dateValue} &nbsp; <b>${opts.refLabel}</b> ${opts.refValue}
+    <div style="width:100%; height:100%; font-size:14px; padding:4px 10mm; box-sizing:border-box; font-family:${FONT_STACK}; color:#000; background:#ffe600; border:3px solid #d00000;">
+      HEADER BOX — SOLID Engineering Consultancy — <b>${opts.dateLabel}:</b> ${opts.dateValue} &nbsp; <b>${opts.refLabel}</b> ${opts.refValue}
     </div>
   `;
 }
 
 export function buildFooterTemplate(): string {
   return `
-    <div style="width:100%; font-size:12px; padding:0 10mm; box-sizing:border-box; font-family:${FONT_STACK}; color:#555;">
-      ${COMPANY.address}, Tel: ${COMPANY.tel}, Mobile: ${COMPANY.mobile}, Email: ${COMPANY.email}
+    <div style="width:100%; height:100%; font-size:12px; padding:4px 10mm; box-sizing:border-box; font-family:${FONT_STACK}; color:#000; background:#00e6e6; border:3px solid #0000d0;">
+      FOOTER BOX — ${COMPANY.address}, Tel: ${COMPANY.tel}, Mobile: ${COMPANY.mobile}, Email: ${COMPANY.email}
     </div>
   `;
 }

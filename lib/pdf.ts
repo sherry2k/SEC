@@ -42,6 +42,7 @@ export async function generatePdf(opts: {
     }
 
     await page.goto(opts.url, { waitUntil: "networkidle0" });
+    await page.emulateMediaType("print");
 
     const pdfBytes = await page.pdf({
       format: "A4",
@@ -49,10 +50,11 @@ export async function generatePdf(opts: {
       displayHeaderFooter: true,
       headerTemplate: opts.headerTemplate,
       footerTemplate: opts.footerTemplate,
-      // Deliberately small and standard while testing the minimal
-      // header/footer — once confirmed working, these go back up to
-      // accommodate the fuller branded design.
-      margin: { top: "20mm", bottom: "20mm", left: "10mm", right: "10mm" },
+      // Deliberately large and unmistakable for this diagnostic pass —
+      // if even a 30mm margin doesn't visibly separate the colored
+      // header/footer boxes from the green-bordered content, the margin
+      // option itself isn't taking effect at all.
+      margin: { top: "30mm", bottom: "30mm", left: "25mm", right: "25mm" },
     });
 
     return Buffer.from(pdfBytes);
