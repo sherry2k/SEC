@@ -11,6 +11,7 @@
 // approach.)
 import PrintLetterhead from "@/components/PrintLetterhead";
 import PrintFooterStrip from "@/components/PrintFooterStrip";
+import PrintWatermark from "@/components/PrintWatermark";
 
 export default function PrintDocumentShell({
   dateLabel,
@@ -26,7 +27,9 @@ export default function PrintDocumentShell({
   children: React.ReactNode;
 }) {
   return (
-    <table className="print-doc-table mx-auto w-full max-w-[850px] border-collapse bg-white text-[13px] leading-relaxed text-[var(--sec-ink)] shadow-sm print:shadow-none">
+    <>
+      <PrintWatermark />
+      <table className="print-doc-table mx-auto w-full max-w-[850px] border-collapse bg-white text-[13px] leading-relaxed text-[var(--sec-ink)] shadow-sm print:shadow-none">
       <thead>
         <tr>
           <td>
@@ -53,5 +56,6 @@ export default function PrintDocumentShell({
         </tr>
       </tfoot>
     </table>
+    </>
   );
 }
