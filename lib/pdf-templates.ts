@@ -23,10 +23,10 @@ const FONT_STACK = "Arial, Helvetica, sans-serif";
 export function buildHeaderTemplate(opts: { dateLabel: string; dateValue: string; refLabel: string; refValue: string }): string {
   return `
     <div style="width:100%; font-size:16px; padding:0 10mm; box-sizing:border-box; font-family:${FONT_STACK}; color:#101010;">
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; padding-bottom:10px; border-bottom:2px solid #e2e2e2;">
+      <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:16px; padding-bottom:10px; border-bottom:2px solid #e2e2e2;">
         <div style="display:flex; align-items:center; gap:16px;">
-          <img src="${LOGO_URI}" style="height:60px; width:auto;" />
-          <img src="${WORDMARK_URI}" style="height:32px; width:auto;" />
+          <img src="${LOGO_URI}" style="height:68px; width:auto;" />
+          <img src="${WORDMARK_URI}" style="height:42px; width:auto;" />
         </div>
         <div style="text-align:right; font-size:14px; color:#555; line-height:1.5;">
           <div><b>${opts.dateLabel}:</b> ${opts.dateValue}</div>

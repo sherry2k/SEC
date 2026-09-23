@@ -73,19 +73,23 @@ html, body {
   pointer-events: none;
 }
 
-/* Page-1-only companion to .print-watermark above — see
-   PrintWatermarkFirstPage.tsx for why this exists as a separate
-   mechanism instead of just relying on the fixed one. Needs a
-   position:relative ancestor to anchor against (the print-source page's
-   outer wrapper). */
-.print-watermark-page1 {
+/* Used only by the print-source pages Puppeteer loads (see
+   PrintWatermarkRepeated.tsx) — one absolutely-positioned copy per page,
+   computed from this app's exact PDF margins, rather than relying on
+   position:fixed at all. .print-watermark above is still used by the
+   regular in-app view/print path (PrintDocumentShell), which doesn't have
+   the same precise, known margins to compute page offsets from. */
+.print-watermark-anchor {
+  position: relative;
+  height: 0;
+}
+.print-watermark-copy {
   position: absolute;
-  top: 118.5mm;
   left: 50%;
-  transform: translate(-50%, -50%);
   width: 380px;
   height: auto;
   opacity: 0.13;
+  transform: translate(-50%, -50%);
   z-index: -1;
   pointer-events: none;
 }
