@@ -1,6 +1,7 @@
 import "server-only";
 import puppeteer from "puppeteer-core";
 import chromiumImport from "@sparticuz/chromium";
+import { addWatermarkToPdf } from "@/lib/pdf-watermark";
 
 // @sparticuz/chromium's export shape has varied across versions and can
 // come through differently depending on how the bundler resolves ESM vs
@@ -57,7 +58,7 @@ export async function generatePdf(opts: {
       margin: { top: "40mm", bottom: "24mm", left: "18mm", right: "18mm" },
     });
 
-    return Buffer.from(pdfBytes);
+    return await addWatermarkToPdf(Buffer.from(pdfBytes));
   } finally {
     await browser.close();
   }
