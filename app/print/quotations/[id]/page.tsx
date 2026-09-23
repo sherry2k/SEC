@@ -4,6 +4,7 @@ import { getQuotationForPrint } from "@/lib/quotation-data";
 import QuotationPrintBody from "@/components/QuotationPrintBody";
 import QuotationCategoryPrintBody from "@/components/QuotationCategoryPrintBody";
 import PrintWatermark from "@/components/PrintWatermark";
+import PrintWatermarkFirstPage from "@/components/PrintWatermarkFirstPage";
 
 // Loaded only by the server-side PDF generator (Puppeteer), never linked
 // to directly — no letterhead/footer here, since those come from
@@ -20,7 +21,8 @@ export default async function QuotationPrintSourcePage({ params }: { params: Pro
   return (
     <>
       <PrintWatermark />
-      <div className="mx-auto max-w-[780px] bg-white px-2 text-[13px] leading-relaxed text-[var(--sec-ink)]">
+      <div className="relative mx-auto max-w-[780px] bg-white px-2 text-[13px] leading-relaxed text-[var(--sec-ink)]">
+        <PrintWatermarkFirstPage />
       {quotation.category ? <QuotationCategoryPrintBody quotation={quotation} /> : <QuotationPrintBody quotation={quotation} />}
     </div>
     </>

@@ -3,6 +3,7 @@ import { requirePermission } from "@/lib/auth";
 import { getInvoiceForPrint } from "@/lib/invoice-data";
 import InvoicePrintBody from "@/components/InvoicePrintBody";
 import PrintWatermark from "@/components/PrintWatermark";
+import PrintWatermarkFirstPage from "@/components/PrintWatermarkFirstPage";
 
 export default async function InvoicePrintSourcePage({ params }: { params: Promise<{ id: string }> }) {
   await requirePermission("accounts.view");
@@ -13,7 +14,8 @@ export default async function InvoicePrintSourcePage({ params }: { params: Promi
   return (
     <>
       <PrintWatermark />
-      <div className="mx-auto max-w-[780px] bg-white px-2 text-[13px] leading-relaxed text-[var(--sec-ink)]">
+      <div className="relative mx-auto max-w-[780px] bg-white px-2 text-[13px] leading-relaxed text-[var(--sec-ink)]">
+        <PrintWatermarkFirstPage />
       <InvoicePrintBody invoice={invoice} />
     </div>
     </>

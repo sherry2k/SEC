@@ -66,7 +66,24 @@ html, body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 260px;
+  width: 320px;
+  height: auto;
+  opacity: 0.06;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Page-1-only companion to .print-watermark above — see
+   PrintWatermarkFirstPage.tsx for why this exists as a separate
+   mechanism instead of just relying on the fixed one. Needs a
+   position:relative ancestor to anchor against (the print-source page's
+   outer wrapper). */
+.print-watermark-page1 {
+  position: absolute;
+  top: 118.5mm;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 320px;
   height: auto;
   opacity: 0.06;
   z-index: -1;
