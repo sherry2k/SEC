@@ -29,7 +29,7 @@ export default function PrintDocumentShell({
   return (
     <>
       <PrintWatermark />
-      <table className="print-doc-table mx-auto w-full max-w-[850px] border-collapse bg-white text-[13px] leading-relaxed text-[var(--sec-ink)] shadow-sm print:shadow-none">
+      <table className="print-doc-table mx-auto w-full max-w-[850px] border-collapse bg-white text-[13px] leading-relaxed text-[var(--sec-ink)] shadow-sm print:bg-transparent print:shadow-none">
       <thead>
         <tr>
           <td>

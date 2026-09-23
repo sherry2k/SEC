@@ -14,7 +14,7 @@ export default async function PerformaInvoicePrintSourcePage({ params }: { param
   return (
     <>
       <PrintWatermark />
-      <div className="relative mx-auto max-w-[780px] bg-white px-2 text-[13px] leading-relaxed text-[var(--sec-ink)]">
+      <div className="relative mx-auto max-w-[780px] px-2 text-[13px] leading-relaxed text-[var(--sec-ink)]">
         <PrintWatermarkFirstPage />
       <PerformaInvoicePrintBody invoice={invoice} />
     </div>

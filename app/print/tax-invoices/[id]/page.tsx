@@ -14,7 +14,7 @@ export default async function TaxInvoicePrintSourcePage({ params }: { params: Pr
   return (
     <>
       <PrintWatermark />
-      <div className="relative mx-auto max-w-[780px] bg-white px-2 text-[13px] leading-relaxed text-[var(--sec-ink)]">
+      <div className="relative mx-auto max-w-[780px] px-2 text-[13px] leading-relaxed text-[var(--sec-ink)]">
         <PrintWatermarkFirstPage />
       <TaxInvoicePrintBody invoice={invoice} />
     </div>
