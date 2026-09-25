@@ -32,14 +32,14 @@ export default function TaxInvoicePrintBody({ invoice }: { invoice: PrintableTax
     <>
       <h1 className="mt-2 text-center text-lg font-bold uppercase underline">Tax Invoice</h1>
 
-      <div className="mt-2 text-sm">
+      <div className="mt-1 text-sm">
         <p className="font-bold">{COMPANY.legalName}</p>
         <p>Address: {COMPANY.address}</p>
         <p>TRN No: {COMPANY.trn}</p>
         <p>Tel: {COMPANY.tel}</p>
       </div>
 
-      <div className="mt-2 border-t border-dashed border-[var(--sec-line)] pt-2 text-sm">
+      <div className="mt-1 border-t border-dashed border-[var(--sec-line)] pt-1 text-sm">
         <p className="font-bold">Client Details</p>
         <p className="mt-1">{invoice.clientName}</p>
         {invoice.clientAddress && <p>Address: {invoice.clientAddress}</p>}
@@ -49,11 +49,11 @@ export default function TaxInvoicePrintBody({ invoice }: { invoice: PrintableTax
       <table className="mt-3 w-full border-collapse text-sm">
         <thead>
           <tr className="bg-[var(--sec-blue-deep)] text-white">
-            <th className="border border-[var(--sec-blue-deep)] px-2 py-1.5 text-left">No.</th>
-            <th className="border border-[var(--sec-blue-deep)] px-2 py-1.5 text-left">Description</th>
-            <th className="border border-[var(--sec-blue-deep)] px-2 py-1.5 text-right">Amount</th>
-            <th className="border border-[var(--sec-blue-deep)] px-2 py-1.5 text-right">VAT {invoice.vatRatePercent}%</th>
-            <th className="border border-[var(--sec-blue-deep)] px-2 py-1.5 text-right">Total Incl. VAT</th>
+            <th className="border border-[var(--sec-blue-deep)] px-2 py-1 text-left">No.</th>
+            <th className="border border-[var(--sec-blue-deep)] px-2 py-1 text-left">Description</th>
+            <th className="border border-[var(--sec-blue-deep)] px-2 py-1 text-right">Amount</th>
+            <th className="border border-[var(--sec-blue-deep)] px-2 py-1 text-right">VAT {invoice.vatRatePercent}%</th>
+            <th className="border border-[var(--sec-blue-deep)] px-2 py-1 text-right">Total Incl. VAT</th>
           </tr>
         </thead>
         <tbody>
@@ -61,11 +61,11 @@ export default function TaxInvoicePrintBody({ invoice }: { invoice: PrintableTax
             const { vatAmount, totalInclVat } = calcItemTotals(item.amount, invoice.vatRatePercent);
             return (
               <tr key={index}>
-                <td className="border border-[var(--sec-line)] px-2 py-1.5 align-top">{index + 1}</td>
-                <td className="border border-[var(--sec-line)] px-2 py-1.5 align-top">{item.description}</td>
-                <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right align-top">AED {money(item.amount)}</td>
-                <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right align-top">AED {money(vatAmount)}</td>
-                <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right align-top font-semibold">AED {money(totalInclVat)}</td>
+                <td className="border border-[var(--sec-line)] px-2 py-1 align-top">{index + 1}</td>
+                <td className="border border-[var(--sec-line)] px-2 py-1 align-top">{item.description}</td>
+                <td className="border border-[var(--sec-line)] px-2 py-1 text-right align-top">AED {money(item.amount)}</td>
+                <td className="border border-[var(--sec-line)] px-2 py-1 text-right align-top">AED {money(vatAmount)}</td>
+                <td className="border border-[var(--sec-line)] px-2 py-1 text-right align-top font-semibold">AED {money(totalInclVat)}</td>
               </tr>
             );
           })}
@@ -91,7 +91,7 @@ export default function TaxInvoicePrintBody({ invoice }: { invoice: PrintableTax
 
       <p className="mt-1 text-sm italic text-[var(--sec-muted)]">{amountToWordsAED(totals.total)}</p>
 
-      <div className="mt-3 text-sm">
+      <div className="mt-2 text-sm">
         <p className="font-bold underline">Bank Account Details:</p>
         <p>Account Name: {BANK_DETAILS.accountName}</p>
         <p>Bank Name: {BANK_DETAILS.bankName}</p>
@@ -100,11 +100,11 @@ export default function TaxInvoicePrintBody({ invoice }: { invoice: PrintableTax
         <p>Currency: {BANK_DETAILS.currency}</p>
       </div>
 
-      <div className="mt-3 text-sm">
+      <div className="mt-2 text-sm">
         <p>Thank you.</p>
-        <p className="mt-2">Signature</p>
-        {invoice.signatoryName && <p className="mt-1 font-semibold">{invoice.signatoryName}</p>}
-        {invoice.showStamp && <img src="/images/stamp.png" alt="Company stamp" className="mt-1 h-20 object-contain" />}
+        <p className="mt-1">Signature</p>
+        {invoice.signatoryName && <p className="mt-0.5 font-semibold">{invoice.signatoryName}</p>}
+        {invoice.showStamp && <img src="/images/stamp.png" alt="Company stamp" className="mt-0.5 h-16 object-contain" />}
       </div>
     </>
   );
