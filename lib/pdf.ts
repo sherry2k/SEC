@@ -51,11 +51,12 @@ export async function generatePdf(opts: {
       displayHeaderFooter: true,
       headerTemplate: opts.headerTemplate,
       footerTemplate: opts.footerTemplate,
-      // Confirmed working with the @page conflict removed — these are
-      // standard A4 document margins (roughly matching a normal Word
-      // doc's ~2cm-2.5cm), sized to comfortably fit the branded
-      // header/footer above and below.
-      margin: { top: "40mm", bottom: "24mm", left: "18mm", right: "18mm" },
+      // Trimmed to what the header/footer templates actually need,
+      // rather than the earlier, more generously-padded values — the
+      // header's real content (logo + wordmark row + date/ref) only
+      // needs about 28mm; 32mm leaves a small safety margin without the
+      // large empty gap the bigger figure was leaving on every document.
+      margin: { top: "32mm", bottom: "20mm", left: "18mm", right: "18mm" },
     });
 
     return await addWatermarkToPdf(Buffer.from(pdfBytes));
