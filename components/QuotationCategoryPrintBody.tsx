@@ -20,6 +20,7 @@ export default function QuotationCategoryPrintBody({ quotation }: { quotation: P
   const scopeFee = quotation.scopeFeeExclVat;
   const downPayment = Math.round((scopeFee / 2) * 100) / 100;
   const balance = scopeFee - downPayment;
+  const createdDateLabel = quotation.createdAt.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
 
   type SummaryRow = { label: string; type: "Required" | "Optional"; feeExclVat: number };
   const summaryRows: SummaryRow[] = [
@@ -194,16 +195,12 @@ export default function QuotationCategoryPrintBody({ quotation }: { quotation: P
         <div>
           <p className="bg-slate-100 px-2 py-1.5 font-semibold">For SOLID Engineering Consultancy</p>
           <div className="mt-4 space-y-4">
-            <p>
-              Authorized Signatory: <Blank />
-            </p>
+            <p>Authorized Signatory: {quotation.signatoryName || "Eng. Mohammad Abu Eisa"}</p>
             <p>
               Signature and Stamp: <Blank />
               {quotation.showStamp && <img src="/images/stamp.png" alt="Company stamp" className="mt-2 h-20 object-contain" />}
             </p>
-            <p>
-              Date: <Blank width="w-32" />
-            </p>
+            <p>Date: {createdDateLabel}</p>
           </div>
         </div>
         <div>
