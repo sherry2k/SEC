@@ -10,7 +10,7 @@ export default async function TaxInvoicePrintSourcePage({ params }: { params: Pr
   if (!invoice) notFound();
 
   return (
-    <div className="mx-auto max-w-[780px] px-2 text-[13px] leading-relaxed text-[var(--sec-ink)]">
+    <div className="mx-auto max-w-[780px] px-2 text-[13px] leading-normal text-[var(--sec-ink)]">
       <TaxInvoicePrintBody invoice={invoice} />
     </div>
   );
