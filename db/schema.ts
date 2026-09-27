@@ -273,6 +273,7 @@ export const performaInvoices = pgTable("performa_invoices", {
   customerName: text("customer_name"),
   project: text("project"),
   customerAddress: text("customer_address"),
+  notes: text("notes"),
   vatRatePercent: numeric("vat_rate_percent", { precision: 5, scale: 2 }).notNull().default("5"),
   signatoryName: text("signatory_name"),
   // Toggle, off by default — the stamp only appears on the printed page
