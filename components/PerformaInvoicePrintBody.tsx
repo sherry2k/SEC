@@ -13,6 +13,7 @@ export type PrintablePerformaInvoice = {
   vatRatePercent: number;
   signatoryName: string;
   showStamp: boolean;
+  notes: string;
   items: PrintablePIItem[];
 };
 
@@ -72,6 +73,21 @@ export default function PerformaInvoicePrintBody({ invoice }: { invoice: Printab
       <p className="mt-3 text-right text-sm font-bold text-[var(--sec-ink)]">
         Total Amount: AED {money(totals.total)} including {invoice.vatRatePercent}% VAT.
       </p>
+
+      {invoice.notes && (
+        <div className="mt-5">
+          <p className="text-sm font-bold">Notes</p>
+          <ul className="mt-1 list-disc space-y-0.5 pl-5 text-sm">
+            {invoice.notes
+              .split("\n")
+              .map((l) => l.trim())
+              .filter(Boolean)
+              .map((line, i) => (
+                <li key={i}>{line}</li>
+              ))}
+          </ul>
+        </div>
+      )}
 
       <div className="mt-6 text-sm">
         <p className="font-bold underline">Bank Account Details:</p>

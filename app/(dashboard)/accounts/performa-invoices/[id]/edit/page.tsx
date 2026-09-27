@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { performaInvoices, performaInvoiceItems } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import PerformaInvoiceForm from "@/components/PerformaInvoiceForm";
-import type { PerformaInvoiceFormValues, PerformaInvoiceItemDraft } from "@/lib/performa-invoice-defaults";
+import type { PerformaInvoiceFormValues } from "@/lib/performa-invoice-defaults";
 import { getProjectOptions } from "@/lib/project-options";
 
 export default async function EditPerformaInvoicePage({ params }: { params: Promise<{ id: string }> }) {
@@ -31,21 +31,20 @@ export default async function EditPerformaInvoicePage({ params }: { params: Prom
     vatRatePercent: Number(invoice.vatRatePercent),
     signatoryName: invoice.signatoryName ?? "",
     showStamp: invoice.showStamp,
-    items: items.map(
-      (i): PerformaInvoiceItemDraft => ({
-        key: i.id,
-        itemDate: i.itemDate ?? "",
-        description: i.description,
-        amount: i.amount,
-      })
-    ),
+    notes: invoice.notes ?? "",
+    items: items.map((i) => ({
+      key: i.id,
+      itemDate: i.itemDate ?? "",
+      description: i.description,
+      amount: i.amount,
+    })),
   };
 
   return (
     <div>
       <p className="font-mono text-xs text-[var(--sec-muted)]">{invoice.invoiceNo}</p>
       <h1 className="mt-1 text-2xl font-bold text-[var(--sec-ink)]">Edit performa invoice</h1>
-      <div className="mt-8 max-w-3xl">
+      <div className="mt-8 max-w-4xl">
         <PerformaInvoiceForm mode="edit" invoiceId={invoice.id} initial={initial} projectOptions={projectOptions} />
       </div>
     </div>

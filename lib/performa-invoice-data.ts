@@ -23,6 +23,7 @@ export async function getPerformaInvoiceForPrint(id: string): Promise<PrintableP
     vatRatePercent: Number(invoice.vatRatePercent),
     signatoryName: invoice.signatoryName ?? "",
     showStamp: invoice.showStamp,
+    notes: invoice.notes ?? "",
     items: items.map((i) => ({
       itemDate: i.itemDate ?? "",
       description: i.description,
