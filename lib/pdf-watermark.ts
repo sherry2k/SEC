@@ -36,7 +36,7 @@ export async function addWatermarkToPdf(pdfBytes: Buffer): Promise<Buffer> {
       y: (height - targetHeight) / 2,
       width: targetWidth,
       height: targetHeight,
-      opacity: 0.13,
+      opacity: 0.08,
     });
   }
 
