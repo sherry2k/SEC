@@ -40,7 +40,7 @@ export function buildHeaderTemplate(opts: { dateLabel: string; dateValue: string
 export function buildFooterTemplate(): string {
   return `
     <div style="width:100%; font-size:12px; padding:8px 10mm 0; box-sizing:border-box; font-family:${FONT_STACK}; color:#555; text-align:center; border-top:2px solid #e2e2e2;">
-      <img src="${CERTS_URI}" style="height:28px; width:auto;" />
+      <img src="${CERTS_URI}" style="height:40px; width:auto;" />
       <div style="margin-top:5px;">
         ${COMPANY.address}, Tel: ${COMPANY.tel}, Mobile: ${COMPANY.mobile}, Email: ${COMPANY.email}
       </div>
