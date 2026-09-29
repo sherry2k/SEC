@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     }
 
     const vatRatePercent = typeof body?.vatRatePercent === "number" ? body.vatRatePercent : 5;
-    const voucherNo = await nextDocumentCode("INV");
+    const voucherNo = await nextDocumentCode("RV");
 
     const [voucher] = await db
       .insert(receiptVouchers)
