@@ -268,7 +268,7 @@ export default function QuotationPrintBody({ quotation }: { quotation: Printable
             <p>Authorized Signatory: {quotation.signatoryName || "Eng. Mohammad Abu Eisa"}</p>
             <p>
               Signature and Stamp: <Blank />
-              {quotation.showStamp && <img src="/images/stamp.png" alt="Company stamp" className="mt-2 h-20 object-contain" />}
+              {quotation.showStamp && <img src="/images/stamp.png" alt="Company stamp" className="mt-2 h-[120px] object-contain" />}
             </p>
             <p>Date: {createdDateLabel}</p>
           </div>

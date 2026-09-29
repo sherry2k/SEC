@@ -1,7 +1,7 @@
 import "server-only";
 import { readFileSync } from "fs";
 import path from "path";
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, PDFArray, PDFRef } from "pdf-lib";
 
 const LOGO_PATH = path.join(process.cwd(), "public", "images", "logo.png");
 
@@ -22,7 +22,7 @@ export async function addWatermarkToPdf(pdfBytes: Buffer): Promise<Buffer> {
 
   // PDF points (72 per inch) — roughly matches the visual size the CSS
   // versions were aiming for.
-  const targetWidth = 280;
+  const targetWidth = 380;
   const aspectRatio = logoImage.height / logoImage.width;
   const targetHeight = targetWidth * aspectRatio;
 
@@ -35,6 +35,27 @@ export async function addWatermarkToPdf(pdfBytes: Buffer): Promise<Buffer> {
       height: targetHeight,
       opacity: 0.13,
     });
+
+    // pdf-lib's drawImage() APPENDS a new content stream to the page,
+    // which means it paints on top of everything already there —
+    // including colored table headers, which is exactly the visual
+    // clash this fixes. Moving that just-added content stream to the
+    // front of the page's /Contents array makes it paint first instead
+    // (i.e. behind the original content). This is a documented,
+    // community-verified pdf-lib technique — see
+    // https://github.com/Hopding/pdf-lib/pull/1059 and
+    // https://github.com/Hopding/pdf-lib/issues/251
+    const contentsObj = page.node.normalizedEntries().Contents;
+    // In practice this is always a PDFArray once a page has more than
+    // one content stream (which drawImage guarantees here) — the type
+    // guard keeps this safe if pdf-lib ever hands back a single
+    // reference instead.
+    if (contentsObj instanceof PDFArray) {
+      const lastIndex = contentsObj.size() - 1;
+      const watermarkStreamRef = contentsObj.get(lastIndex) as PDFRef;
+      contentsObj.remove(lastIndex);
+      contentsObj.insert(0, watermarkStreamRef);
+    }
   }
 
   const outBytes = await pdfDoc.save();
