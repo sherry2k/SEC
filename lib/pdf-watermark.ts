@@ -25,7 +25,7 @@ export async function addWatermarkToPdf(pdfBytes: Buffer): Promise<Buffer> {
 
   // PDF points (72 per inch) — roughly matches the visual size the CSS
   // versions were aiming for.
-  const targetWidth = 380;
+  const targetWidth = 320;
   const aspectRatio = logoImage.height / logoImage.width;
   const targetHeight = targetWidth * aspectRatio;
 
@@ -36,7 +36,7 @@ export async function addWatermarkToPdf(pdfBytes: Buffer): Promise<Buffer> {
       y: (height - targetHeight) / 2,
       width: targetWidth,
       height: targetHeight,
-      opacity: 0.08,
+      opacity: 0.06,
     });
   }
 
