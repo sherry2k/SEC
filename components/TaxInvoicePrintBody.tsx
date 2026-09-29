@@ -104,7 +104,7 @@ export default function TaxInvoicePrintBody({ invoice }: { invoice: PrintableTax
         <p>Thank you.</p>
         <p className="mt-1">Signature</p>
         {invoice.signatoryName && <p className="mt-0.5 font-semibold">{invoice.signatoryName}</p>}
-        {invoice.showStamp && <img src="/images/stamp.png" alt="Company stamp" className="mt-0.5 h-16 object-contain" />}
+        {invoice.showStamp && <img src="/images/stamp.png" alt="Company stamp" className="mt-0.5 h-20 object-contain" />}
       </div>
     </>
   );
