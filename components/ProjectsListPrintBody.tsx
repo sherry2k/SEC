@@ -1,9 +1,9 @@
 import type { PrintableProjectRow } from "@/lib/projects-print-data";
 
-export default function ProjectsListPrintBody({ rows }: { rows: PrintableProjectRow[] }) {
+export default function ProjectsListPrintBody({ rows, categoryLabel }: { rows: PrintableProjectRow[]; categoryLabel?: string | null }) {
   return (
     <>
-      <h1 className="mt-2 text-center text-lg font-bold uppercase underline">Projects List</h1>
+      <h1 className="mt-2 text-center text-lg font-bold uppercase underline">Projects List{categoryLabel ? ` — ${categoryLabel}` : ""}</h1>
       <p className="mt-1 text-center text-sm text-[var(--sec-muted)]">
         {rows.length} {rows.length === 1 ? "project" : "projects"}
       </p>

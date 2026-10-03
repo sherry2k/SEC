@@ -14,7 +14,7 @@ export type PrintableProjectRow = {
   categoryLabels: string;
 };
 
-export async function getProjectsForPrint(): Promise<PrintableProjectRow[]> {
+export async function getProjectsForPrint(categoryFilter?: ProjectCategory): Promise<PrintableProjectRow[]> {
   const responsibleUsers = users;
 
   const rows = await db
@@ -40,7 +40,9 @@ export async function getProjectsForPrint(): Promise<PrintableProjectRow[]> {
     categoriesByProject.set(link.projectId, list);
   }
 
-  return rows.map((p) => ({
+  const filteredRows = categoryFilter ? rows.filter((p) => (categoriesByProject.get(p.id) ?? []).includes(categoryFilter)) : rows;
+
+  return filteredRows.map((p) => ({
     projectCode: p.projectCode,
     municipalityNo: p.municipalityNo,
     name: p.name,

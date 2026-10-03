@@ -8,8 +8,10 @@ export const maxDuration = 60;
 export async function GET(request: NextRequest) {
   await requirePermission("projects.view");
 
+  const category = request.nextUrl.searchParams.get("category");
+
   const baseUrl = request.nextUrl.origin;
-  const printUrl = `${baseUrl}/print/projects`;
+  const printUrl = category ? `${baseUrl}/print/projects?category=${encodeURIComponent(category)}` : `${baseUrl}/print/projects`;
   const cookieHeader = request.headers.get("cookie") ?? "";
 
   const headerTemplate = buildHeaderTemplate({

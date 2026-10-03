@@ -8,6 +8,7 @@ import { PROJECT_CATEGORIES, CATEGORY_LABELS, CATEGORY_BADGE_STYLES, PROJECT_STA
 import type { Role } from "@/lib/roles";
 import MyTasksView, { type MyTask } from "@/components/MyTasksView";
 import { URGENCY_STYLES, formatDueLabel, type TaskUrgency } from "@/lib/task-urgency";
+import DownloadPdfButton from "@/components/DownloadPdfButton";
 
 export type { MyTask };
 
@@ -161,6 +162,11 @@ export default function ProjectsTable({
                 </option>
               ))}
           </select>
+
+          {/* Reflects whatever category is currently selected above, so the
+              PDF always matches what's actually on screen — "all" means no
+              filter, same as the table itself. */}
+          <DownloadPdfButton href={categoryFilter === "all" ? "/api/projects/pdf" : `/api/projects/pdf?category=${categoryFilter}`} />
         </div>
       </div>
 
