@@ -54,14 +54,16 @@ export default async function DashboardHome() {
   const onHoldCount = allProjects.filter((p) => p.status === "on_hold").length;
   const completedCount = allProjects.filter((p) => p.status === "completed").length;
 
-  const categoryCounts: Record<ProjectCategory, number> = {
-    boc: 0,
-    cbc: 0,
-    permit: 0,
-    work_permit: 0,
-    contractor: 0,
-    archives: 0,
-  };
+ const categoryCounts: Record<ProjectCategory, number> = {
+  boc: 0,
+  cbc: 0,
+  permit: 0,
+  ad_ports: 0,
+  work_permit: 0,
+  contractor: 0,
+  archives: 0,
+  pending_projects: 0,
+};
   for (const link of categoryLinks) categoryCounts[link.category] += 1;
   const maxCategoryCount = Math.max(1, ...Object.values(categoryCounts));
 
