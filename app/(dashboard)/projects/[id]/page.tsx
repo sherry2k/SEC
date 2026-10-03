@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Pencil, ArrowLeft } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { eq, asc } from "drizzle-orm";
 import { db } from "@/db";
 import { projects, projectCategories, projectChecklistItems, checklistTemplates, checklistItemComments, users, projectAttachments } from "@/db/schema";
@@ -20,6 +20,9 @@ import LinkExistingDocument from "@/components/LinkExistingDocument";
 import ProjectTotalAmountEditor from "@/components/ProjectTotalAmountEditor";
 import ProjectAttachments, { type Attachment } from "@/components/ProjectAttachments";
 import { toFilenameSafe } from "@/lib/pdf-filename";
+import BackButton from "@/components/BackButton";
+import ResponsibleControl from "@/components/ResponsibleControl";
+import { getAssignableUsers } from "@/lib/assignable-users";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -33,6 +36,8 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   const canEdit = can(user.role, "projects.edit", allowFinanceEdit);
   const canDelete = can(user.role, "projects.delete", allowFinanceEdit);
   const canViewFinance = can(user.role, "accounts.view");
+  const canReassignResponsible = can(user.role, "projects.reassign_responsible");
+  const assignableUsers = await getAssignableUsers();
 
   const { id } = await params;
 
@@ -155,25 +160,18 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
   const availableCategories: ProjectCategory[] = PROJECT_CATEGORIES.filter((c) => !linkedCategories.includes(c));
 
-  const details = [
+    const details = [
     ["Project No.", project.municipalityNo],
     ["Client", project.clientName],
     ["Building / mall", project.buildingName],
     ["Unit / shop", project.unitNo],
     ["Plot No.", project.plotNo],
     ["Location", project.location],
-    ["Responsible", responsibleUser?.name ?? null],
   ].filter(([, value]) => value) as [string, string][];
 
   return (
     <div>
-      <Link
-        href="/projects"
-        className="no-print mb-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--sec-blue)] hover:underline"
-      >
-        <ArrowLeft size={14} />
-        Back to projects
-      </Link>
+            <BackButton label="Back to projects" />
 
       {/* On-screen, interactive version — hidden entirely when printing.
           ProjectPrintView below is the print-specific rendering instead,
@@ -209,6 +207,19 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           ))}
         </dl>
       )}
+
+      <div className="mt-2 text-sm">
+        <dt className="text-xs uppercase tracking-wide text-[var(--sec-muted)]">Responsible</dt>
+        <dd className="text-[var(--sec-ink)]">
+          <ResponsibleControl
+            projectId={project.id}
+            currentResponsibleId={project.responsibleId}
+            currentResponsibleName={responsibleUser?.name ?? null}
+            assignableUsers={assignableUsers}
+            canReassign={canReassignResponsible}
+          />
+        </dd>
+      </div>
 
       {totalItems > 0 && (
         <div className="no-print mt-4">
