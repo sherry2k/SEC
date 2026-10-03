@@ -13,6 +13,7 @@ import {
 import { getAttendanceSummary, weekRangeFor, monthRangeFor } from "@/lib/attendance-report";
 import AttendanceDatePicker from "@/components/AttendanceDatePicker";
 import AttendanceEditForm from "@/components/AttendanceEditForm";
+import DownloadPdfButton from "@/components/DownloadPdfButton";
 
 const RANGE_OPTIONS = [
   { value: "day", label: "Day" },
@@ -185,20 +186,23 @@ async function SummaryView({
 
   return (
     <>
-      <div className="mt-4 flex items-center gap-2">
-        <Link
-          href={`/attendance?date=${toKey(prevDate)}&range=${range}`}
-          className="rounded-md border border-[var(--sec-line)] p-1.5 text-sm text-[var(--sec-muted)] hover:border-[var(--sec-blue)]"
-        >
-          ← Prev
-        </Link>
-        <p className="text-sm font-semibold text-[var(--sec-ink)]">{label}</p>
-        <Link
-          href={`/attendance?date=${toKey(nextDate)}&range=${range}`}
-          className="rounded-md border border-[var(--sec-line)] p-1.5 text-sm text-[var(--sec-muted)] hover:border-[var(--sec-blue)]"
-        >
-          Next →
-        </Link>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/attendance?date=${toKey(prevDate)}&range=${range}`}
+            className="rounded-md border border-[var(--sec-line)] p-1.5 text-sm text-[var(--sec-muted)] hover:border-[var(--sec-blue)]"
+          >
+            ← Prev
+          </Link>
+          <p className="text-sm font-semibold text-[var(--sec-ink)]">{label}</p>
+          <Link
+            href={`/attendance?date=${toKey(nextDate)}&range=${range}`}
+            className="rounded-md border border-[var(--sec-line)] p-1.5 text-sm text-[var(--sec-muted)] hover:border-[var(--sec-blue)]"
+          >
+            Next →
+          </Link>
+        </div>
+        <DownloadPdfButton href={`/api/attendance/pdf?date=${dateKey}&range=${range}`} />
       </div>
 
       <div className="mt-4 overflow-x-auto rounded-lg border border-[var(--sec-line)] bg-white">
