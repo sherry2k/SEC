@@ -2,7 +2,6 @@ import Link from "next/link";
 import { desc, eq, inArray } from "drizzle-orm";
 import { Plus, AlertTriangle } from "lucide-react";
 import { db } from "@/db";
-import DownloadPdfButton from "@/components/DownloadPdfButton";
 import {
   projects,
   projectCategories,
@@ -10,7 +9,6 @@ import {
   checklistTemplates,
   users,
   quotations,
-  quotationItems,
   performaInvoices,
   performaInvoiceItems,
 } from "@/db/schema";
@@ -18,7 +16,6 @@ import { requireRole } from "@/lib/auth";
 import { ROLE_LABELS } from "@/lib/roles";
 import { can } from "@/lib/permissions";
 import { financeCanEditProjects } from "@/lib/settings";
-import { calcGrandTotals } from "@/lib/quotation-calc";
 import { calcPerformaInvoiceTotals } from "@/lib/performa-invoice-calc";
 import {
   PROJECT_CATEGORIES,
@@ -55,16 +52,16 @@ export default async function DashboardHome() {
   const onHoldCount = allProjects.filter((p) => p.status === "on_hold").length;
   const completedCount = allProjects.filter((p) => p.status === "completed").length;
 
- const categoryCounts: Record<ProjectCategory, number> = {
-  boc: 0,
-  cbc: 0,
-  permit: 0,
-  ad_ports: 0,
-  work_permit: 0,
-  contractor: 0,
-  archives: 0,
-  pending_projects: 0,
-};
+  const categoryCounts: Record<ProjectCategory, number> = {
+    boc: 0,
+    cbc: 0,
+    permit: 0,
+    ad_ports: 0,
+    work_permit: 0,
+    contractor: 0,
+    archives: 0,
+    pending_projects: 0,
+  };
   for (const link of categoryLinks) categoryCounts[link.category] += 1;
   const maxCategoryCount = Math.max(1, ...Object.values(categoryCounts));
 
@@ -113,7 +110,7 @@ export default async function DashboardHome() {
   // Finance snapshot — Admin/Finance/Master admin only.
   let financeSnapshot: {
     quotationCount: number;
-    quotationTotal: number;
+    quotedValue: number;
     invoiceCount: number;
     invoiceTotal: number;
   } | null = null;
@@ -125,28 +122,14 @@ export default async function DashboardHome() {
 
     const allQuotations = await db.select().from(quotations);
     const monthQuotations = allQuotations.filter((q) => q.createdAt >= startOfMonth);
-    const quotationIds = monthQuotations.map((q) => q.id);
-    const qItems = quotationIds.length
-      ? await db.select().from(quotationItems).where(inArray(quotationItems.quotationId, quotationIds))
-      : [];
-    const quotationTotal = monthQuotations.reduce((sum, q) => {
-      const vat = Number(q.vatRatePercent) / 100;
-      if (q.category) {
-        const scopeFee = q.scopeFeeExclVat ? Number(q.scopeFeeExclVat) : 0;
-        const mandatoryTotal = qItems
-          .filter((i) => i.quotationId === q.id && i.section === "mandatory")
-          .reduce((s, i) => s + Number(i.feeExclVat), 0);
-        return sum + (scopeFee + mandatoryTotal) * (1 + vat);
-      }
-      const items = qItems
-        .filter((i) => i.quotationId === q.id && !i.section)
-        .map((i) => ({
-          description: i.description,
-          classification: i.classification ?? "",
-          feeExclVat: Number(i.feeExclVat),
-        }));
-      return sum + calcGrandTotals(items, Number(q.vatRatePercent)).grandTotal;
-    }, 0);
+
+    // Quoted Value now reflects each project's agreed Total Amount (set
+    // manually in its Financial Summary) rather than raw Quotation
+    // document totals — Total Amount is the real contracted figure, and
+    // unlike a Quotation it isn't tied to a creation date, so this is an
+    // all-time total across every project, not scoped to this month like
+    // the other three figures here.
+    const quotedValue = allProjects.reduce((sum, p) => sum + (p.totalAmount ? Number(p.totalAmount) : 0), 0);
 
     const allInvoices = await db.select().from(performaInvoices);
     const monthInvoices = allInvoices.filter((inv) => inv.createdAt >= startOfMonth);
@@ -163,7 +146,7 @@ export default async function DashboardHome() {
 
     financeSnapshot = {
       quotationCount: monthQuotations.length,
-      quotationTotal,
+      quotedValue,
       invoiceCount: monthInvoices.length,
       invoiceTotal,
     };
@@ -182,8 +165,7 @@ export default async function DashboardHome() {
             Welcome back, {user.name.split(" ")[0]}
           </h1>
         </div>
-               <div className="flex flex-wrap gap-2">
-          <DownloadPdfButton href="/api/dashboard/pdf" />
+        <div className="flex flex-wrap gap-2">
           {canCreateProject && (
             <Link
               href="/projects/new"
@@ -215,9 +197,9 @@ export default async function DashboardHome() {
             </div>
             <div>
               <p className="text-2xl font-bold text-[var(--sec-ink)]">
-                AED {financeSnapshot.quotationTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                AED {financeSnapshot.quotedValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </p>
-              <p className="text-xs text-[var(--sec-muted)]">Quoted value</p>
+              <p className="text-xs text-[var(--sec-muted)]">Quoted value (all projects)</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-[var(--sec-ink)]">{financeSnapshot.invoiceCount}</p>

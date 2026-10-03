@@ -34,9 +34,9 @@ export default function DashboardPrintBody({ data }: { data: DashboardPrintData 
               <tr>
                 <td className="border border-[var(--sec-line)] px-3 py-2 font-semibold">Quotations issued</td>
                 <td className="border border-[var(--sec-line)] px-3 py-2 text-right">{data.financeSnapshot.quotationCount}</td>
-                <td className="border border-[var(--sec-line)] px-3 py-2 font-semibold">Quoted value</td>
+                <td className="border border-[var(--sec-line)] px-3 py-2 font-semibold">Quoted value (all projects)</td>
                 <td className="border border-[var(--sec-line)] px-3 py-2 text-right">
-                  AED {data.financeSnapshot.quotationTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  AED {data.financeSnapshot.quotedValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                 </td>
               </tr>
               <tr>

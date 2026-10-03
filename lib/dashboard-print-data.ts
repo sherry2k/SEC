@@ -8,13 +8,11 @@ import {
   checklistTemplates,
   users,
   quotations,
-  quotationItems,
   performaInvoices,
   performaInvoiceItems,
 } from "@/db/schema";
 import { can } from "@/lib/permissions";
 import type { Role } from "@/lib/roles";
-import { calcGrandTotals } from "@/lib/quotation-calc";
 import { calcPerformaInvoiceTotals } from "@/lib/performa-invoice-calc";
 import { PROJECT_CATEGORIES, CATEGORY_LABELS, PROJECT_STATUS_LABELS, ITEM_STATUS_LABELS, type ProjectCategory } from "@/lib/checklist";
 
@@ -84,7 +82,7 @@ export async function getDashboardForPrint(viewerRole: Role) {
   }
   const workload = [...workloadCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
 
-  let financeSnapshot: { quotationCount: number; quotationTotal: number; invoiceCount: number; invoiceTotal: number } | null = null;
+  let financeSnapshot: { quotationCount: number; quotedValue: number; invoiceCount: number; invoiceTotal: number } | null = null;
 
   if (canViewFinance) {
     const startOfMonth = new Date();
@@ -93,24 +91,11 @@ export async function getDashboardForPrint(viewerRole: Role) {
 
     const allQuotations = await db.select().from(quotations);
     const monthQuotations = allQuotations.filter((q) => q.createdAt >= startOfMonth);
-    const quotationIds = monthQuotations.map((q) => q.id);
-    const qItems = quotationIds.length
-      ? await db.select().from(quotationItems).where(inArray(quotationItems.quotationId, quotationIds))
-      : [];
-    const quotationTotal = monthQuotations.reduce((sum, q) => {
-      const vat = Number(q.vatRatePercent) / 100;
-      if (q.category) {
-        const scopeFee = q.scopeFeeExclVat ? Number(q.scopeFeeExclVat) : 0;
-        const mandatoryTotal = qItems
-          .filter((i) => i.quotationId === q.id && i.section === "mandatory")
-          .reduce((s, i) => s + Number(i.feeExclVat), 0);
-        return sum + (scopeFee + mandatoryTotal) * (1 + vat);
-      }
-      const items = qItems
-        .filter((i) => i.quotationId === q.id && !i.section)
-        .map((i) => ({ description: i.description, classification: i.classification ?? "", feeExclVat: Number(i.feeExclVat) }));
-      return sum + calcGrandTotals(items, Number(q.vatRatePercent)).grandTotal;
-    }, 0);
+
+    // Same change as the live dashboard: Quoted Value reflects each
+    // project's agreed Total Amount, not raw Quotation document totals —
+    // an all-time figure across every project, not scoped to this month.
+    const quotedValue = allProjects.reduce((sum, p) => sum + (p.totalAmount ? Number(p.totalAmount) : 0), 0);
 
     const allInvoices = await db.select().from(performaInvoices);
     const monthInvoices = allInvoices.filter((inv) => inv.createdAt >= startOfMonth);
@@ -125,7 +110,7 @@ export async function getDashboardForPrint(viewerRole: Role) {
 
     financeSnapshot = {
       quotationCount: monthQuotations.length,
-      quotationTotal,
+      quotedValue,
       invoiceCount: monthInvoices.length,
       invoiceTotal,
     };
