@@ -144,6 +144,7 @@ export async function getDashboardForPrint(viewerRole: Role) {
     stuckItems: stuckItems.map((i) => ({
       name: i.customName ?? i.templateName ?? "Untitled item",
       projectName: i.project!.name,
+      status: i.status,
       statusLabel: ITEM_STATUS_LABELS[i.status],
     })),
     staleProjects: staleProjects.map((p) => ({

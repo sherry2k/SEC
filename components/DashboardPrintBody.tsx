@@ -1,3 +1,7 @@
+import { CATEGORY_BADGE_STYLES, type ProjectCategory } from "@/lib/checklist";
+
+import { ITEM_STATUS_STYLES, type ItemStatus } from "@/lib/checklist";
+
 type DashboardPrintData = Awaited<ReturnType<typeof import("@/lib/dashboard-print-data").getDashboardForPrint>>;
 
 export default function DashboardPrintBody({ data }: { data: DashboardPrintData }) {
@@ -49,16 +53,18 @@ export default function DashboardPrintBody({ data }: { data: DashboardPrintData 
       )}
 
       <h2 className="mt-5 text-sm font-bold text-[var(--sec-ink)]">Projects by category</h2>
-      <table className="mt-2 w-full max-w-xs border-collapse text-sm">
-        <tbody>
-          {data.categoryLabels.map((c) => (
-            <tr key={c.key}>
-              <td className="border border-[var(--sec-line)] px-3 py-1.5">{c.label}</td>
-              <td className="border border-[var(--sec-line)] px-3 py-1.5 text-right">{c.count}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="mt-2 space-y-1.5">
+        {data.categoryLabels.map((c) => (
+          <div key={c.key} className="flex items-center gap-3 text-sm">
+            <span
+              className={`w-28 shrink-0 rounded-full border px-2 py-0.5 text-center text-xs font-medium ${CATEGORY_BADGE_STYLES[c.key as ProjectCategory]}`}
+            >
+              {c.label}
+            </span>
+            <span className="text-[var(--sec-ink)]">{c.count}</span>
+          </div>
+        ))}
+      </div>
       <p className="mt-2 text-xs text-[var(--sec-muted)]">
         {data.approvedItems} approved items · {data.pendingItems} awaiting review
       </p>
@@ -80,18 +86,24 @@ export default function DashboardPrintBody({ data }: { data: DashboardPrintData 
       {data.stuckItems.length === 0 && data.staleProjects.length === 0 ? (
         <p className="mt-1 text-sm text-[var(--sec-muted)]">Nothing needs attention right now.</p>
       ) : (
-        <ul className="mt-1 list-disc space-y-0.5 pl-5 text-sm">
+        <div className="mt-1 space-y-1">
           {data.stuckItems.map((i, idx) => (
-            <li key={`stuck-${idx}`}>
-              {i.name} — {i.projectName} ({i.statusLabel})
-            </li>
+            <div key={`stuck-${idx}`} className="flex items-center justify-between gap-3 text-sm">
+              <span className="truncate">
+                {i.name} — {i.projectName}
+              </span>
+              <span className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium ${ITEM_STATUS_STYLES[i.status as ItemStatus]}`}>
+                {i.statusLabel}
+              </span>
+            </div>
           ))}
           {data.staleProjects.map((p, idx) => (
-            <li key={`stale-${idx}`}>
-              {p.name} — no update since {p.updatedAtLabel}
-            </li>
+            <div key={`stale-${idx}`} className="flex items-center justify-between gap-3 text-sm">
+              <span className="truncate">{p.name}</span>
+              <span className="shrink-0 text-xs text-[var(--sec-muted)]">No update since {p.updatedAtLabel}</span>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
 
       <h2 className="mt-5 text-sm font-bold text-[var(--sec-ink)]">Team workload</h2>
