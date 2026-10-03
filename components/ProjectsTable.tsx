@@ -203,7 +203,16 @@ export default function ProjectsTable({
                 return (
                   <tr
                     key={p.id}
-                    onClick={() => router.push(`/projects/${p.id}`)}
+                    onClick={() => {
+                      // A click that's the tail end of a text-selection
+                      // drag (selecting a project number to copy, say)
+                      // still fires onClick on mouseup — this skips
+                      // navigation in that case, so selecting text no
+                      // longer also opens the row.
+                      const selection = window.getSelection();
+                      if (selection && selection.toString().length > 0) return;
+                      router.push(`/projects/${p.id}`);
+                    }}
                     className="cursor-pointer border-b border-[var(--sec-line)] last:border-0 hover:bg-slate-50"
                   >
                     <td className="px-4 py-3 text-[var(--sec-muted)]">{index + 1}</td>
