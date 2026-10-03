@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { eq } from "drizzle-orm";
-import { Pencil, Download } from "lucide-react";
+import { Pencil, Download, FolderOpen } from "lucide-react";
 import { db } from "@/db";
-import { taxInvoices } from "@/db/schema";
+import { taxInvoices, projects } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import { toFilenameSafe } from "@/lib/pdf-filename";
 import { getTaxInvoiceForPrint } from "@/lib/tax-invoice-data";
@@ -24,6 +24,16 @@ export default async function TaxInvoiceViewPage({ params }: { params: Promise<{
   const invoice = await getTaxInvoiceForPrint(id);
   if (!invoice) notFound();
 
+  // A separate, light query rather than widening getTaxInvoiceForPrint()'s
+  // return shape — that function is shared with the Puppeteer PDF route,
+  // which has no use for the raw project link, only display-ready fields.
+  const [linkedProject] = await db
+    .select({ projectId: taxInvoices.projectId, projectName: projects.name })
+    .from(taxInvoices)
+    .leftJoin(projects, eq(taxInvoices.projectId, projects.id))
+    .where(eq(taxInvoices.id, id))
+    .limit(1);
+
   return (
     <div>
       <div className="no-print mb-6 flex items-center justify-between">
@@ -31,6 +41,15 @@ export default async function TaxInvoiceViewPage({ params }: { params: Promise<{
           ← All tax invoices
         </Link>
         <div className="flex items-center gap-2">
+          {linkedProject?.projectId && (
+            <Link
+              href={`/projects/${linkedProject.projectId}`}
+              className="flex items-center gap-1.5 rounded-md border border-[var(--sec-line)] px-3 py-1.5 text-xs font-medium text-[var(--sec-ink)] transition-colors hover:border-[var(--sec-blue)]"
+            >
+              <FolderOpen size={13} />
+              {linkedProject.projectName || "View Project"}
+            </Link>
+          )}
           <Link
             href={`/accounts/tax-invoices/${id}/edit`}
             className="flex items-center gap-1.5 rounded-md border border-[var(--sec-line)] px-3 py-1.5 text-xs font-medium text-[var(--sec-ink)] transition-colors hover:border-[var(--sec-blue)]"
