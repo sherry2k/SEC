@@ -14,6 +14,7 @@ import { classifyTask } from "@/lib/task-urgency";
 import type { TaskUrgency } from "@/lib/task-urgency";
 import type { ProjectCategory } from "@/lib/checklist";
 import ProjectsTable, { type MyTask } from "@/components/ProjectsTable";
+import DownloadPdfButton from "@/components/DownloadPdfButton";
 
 export default async function ProjectsPage() {
   const user = await requirePermission("projects.view");

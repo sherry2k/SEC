@@ -23,6 +23,7 @@ import { toFilenameSafe } from "@/lib/pdf-filename";
 import BackButton from "@/components/BackButton";
 import ResponsibleControl from "@/components/ResponsibleControl";
 import { getAssignableUsers } from "@/lib/assignable-users";
+import DownloadPdfButton from "@/components/DownloadPdfButton";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
