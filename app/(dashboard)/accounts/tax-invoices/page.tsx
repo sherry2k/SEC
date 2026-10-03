@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { desc } from "drizzle-orm";
-import { Plus } from "lucide-react";
+import { Plus, FolderOpen } from "lucide-react";
 import { db } from "@/db";
-import { taxInvoices, taxInvoiceItems } from "@/db/schema";
+import { taxInvoices, taxInvoiceItems, projects } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import { calcTaxInvoiceTotals } from "@/lib/tax-invoice-calc";
 
@@ -11,6 +11,11 @@ export default async function TaxInvoicesListPage() {
 
   const rows = await db.select().from(taxInvoices).orderBy(desc(taxInvoices.createdAt));
   const allItems = await db.select().from(taxInvoiceItems);
+
+  // Fetched once for the whole list rather than per row — a simple id→name
+  // lookup, same pattern as categoriesByProject elsewhere in this app.
+  const allProjects = await db.select({ id: projects.id, name: projects.name }).from(projects);
+  const projectNameById = new Map(allProjects.map((p) => [p.id, p.name]));
 
   const itemsByInvoice = new Map<string, typeof allItems>();
   for (const item of allItems) {
@@ -46,7 +51,7 @@ export default async function TaxInvoicesListPage() {
         </div>
       ) : (
         <div className="mt-6 overflow-x-auto rounded-lg border border-[var(--sec-line)] bg-white">
-          <table className="w-full min-w-[720px] text-left text-sm">
+          <table className="w-full min-w-[820px] text-left text-sm">
             <thead>
               <tr className="border-b border-[var(--sec-line)] text-xs uppercase tracking-wide text-[var(--sec-muted)]">
                 <th className="px-4 py-3 font-medium">No.</th>
@@ -55,6 +60,7 @@ export default async function TaxInvoicesListPage() {
                 <th className="px-4 py-3 font-medium">Invoice Amount</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Date</th>
+                <th className="px-4 py-3 font-medium">Project</th>
               </tr>
             </thead>
             <tbody>
@@ -64,6 +70,7 @@ export default async function TaxInvoicesListPage() {
                   items.map((i) => ({ description: i.description, amount: Number(i.amount) })),
                   Number(inv.vatRatePercent)
                 );
+                const projectName = inv.projectId ? projectNameById.get(inv.projectId) : null;
                 return (
                   <tr key={inv.id} className="border-b border-[var(--sec-line)] last:border-0 hover:bg-slate-50">
                     <td className="px-4 py-3">
@@ -78,6 +85,19 @@ export default async function TaxInvoicesListPage() {
                     </td>
                     <td className="px-4 py-3 text-[var(--sec-muted)] capitalize">{inv.status}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-[var(--sec-muted)]">{inv.issueDate}</td>
+                    <td className="px-4 py-3">
+                      {inv.projectId ? (
+                        <Link
+                          href={`/projects/${inv.projectId}`}
+                          className="inline-flex items-center gap-1 rounded-md border border-[var(--sec-line)] px-2.5 py-1 text-xs font-medium text-[var(--sec-ink)] hover:border-[var(--sec-blue)]"
+                        >
+                          <FolderOpen size={12} />
+                          {projectName || "View"}
+                        </Link>
+                      ) : (
+                        <span className="text-xs text-[var(--sec-muted)]">—</span>
+                      )}
+                    </td>
                   </tr>
                 );
               })}
