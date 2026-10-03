@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { desc } from "drizzle-orm";
-import { Plus } from "lucide-react";
+import { Plus, FolderOpen } from "lucide-react";
 import { db } from "@/db";
-import { receiptVouchers, receiptVoucherItems } from "@/db/schema";
+import { receiptVouchers, receiptVoucherItems, projects } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import { calcReceiptVoucherTotals } from "@/lib/receipt-voucher-calc";
 
@@ -11,6 +11,9 @@ export default async function ReceiptVouchersListPage() {
 
   const rows = await db.select().from(receiptVouchers).orderBy(desc(receiptVouchers.createdAt));
   const allItems = await db.select().from(receiptVoucherItems);
+
+  const allProjects = await db.select({ id: projects.id, name: projects.name }).from(projects);
+  const projectNameById = new Map(allProjects.map((p) => [p.id, p.name]));
 
   const itemsByVoucher = new Map<string, typeof allItems>();
   for (const item of allItems) {
@@ -46,14 +49,15 @@ export default async function ReceiptVouchersListPage() {
         </div>
       ) : (
         <div className="mt-6 overflow-x-auto rounded-lg border border-[var(--sec-line)] bg-white">
-          <table className="w-full min-w-[680px] text-left text-sm">
+          <table className="w-full min-w-[720px] text-left text-sm">
             <thead>
               <tr className="border-b border-[var(--sec-line)] text-xs uppercase tracking-wide text-[var(--sec-muted)]">
                 <th className="px-4 py-3 font-medium">No.</th>
                 <th className="px-4 py-3 font-medium">To</th>
-                <th className="px-4 py-3 font-medium">Project</th>
-                <th className="px-4 py-3 font-medium">Total Amount</th>
+                <th className="px-4 py-3 font-medium">Amount</th>
+                <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Date</th>
+                <th className="px-4 py-3 font-medium">Project</th>
               </tr>
             </thead>
             <tbody>
@@ -63,6 +67,7 @@ export default async function ReceiptVouchersListPage() {
                   items.map((i) => ({ description: i.description, amount: Number(i.amount) })),
                   Number(v.vatRatePercent)
                 );
+                const projectName = v.projectId ? projectNameById.get(v.projectId) : null;
                 return (
                   <tr key={v.id} className="border-b border-[var(--sec-line)] last:border-0 hover:bg-slate-50">
                     <td className="px-4 py-3">
@@ -71,11 +76,24 @@ export default async function ReceiptVouchersListPage() {
                       </Link>
                     </td>
                     <td className="px-4 py-3 font-medium text-[var(--sec-ink)]">{v.toName}</td>
-                    <td className="px-4 py-3 text-[var(--sec-muted)]">{v.project || "—"}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-[var(--sec-ink)]">
                       AED {totals.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </td>
+                    <td className="px-4 py-3 text-[var(--sec-muted)] capitalize">{v.status}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-[var(--sec-muted)]">{v.issueDate}</td>
+                    <td className="px-4 py-3">
+                      {v.projectId ? (
+                        <Link
+                          href={`/projects/${v.projectId}`}
+                          className="inline-flex items-center gap-1 rounded-md border border-[var(--sec-line)] px-2.5 py-1 text-xs font-medium text-[var(--sec-ink)] hover:border-[var(--sec-blue)]"
+                        >
+                          <FolderOpen size={12} />
+                          {projectName || "View"}
+                        </Link>
+                      ) : (
+                        <span className="text-xs text-[var(--sec-muted)]">—</span>
+                      )}
+                    </td>
                   </tr>
                 );
               })}
