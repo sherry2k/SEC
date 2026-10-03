@@ -33,7 +33,6 @@ export const ACTIVITY_LABELS: Record<ActivityAction, string> = {
   project_created: "created",
   project_updated: "updated",
   project_deleted: "deleted",
-  project_deleted: "deleted",
   project_responsible_changed: "reassigned responsible on",
   category_added: "linked a category to",
   category_removed: "removed a category from",
