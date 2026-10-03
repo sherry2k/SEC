@@ -10,6 +10,7 @@ import {
   INCOME_CATEGORY_SUGGESTIONS,
 } from "@/lib/office-ledger";
 import OfficeLedgerClient from "@/components/OfficeLedgerClient";
+import DownloadPdfButton from "@/components/DownloadPdfButton";
 
 function money(n: number) {
   return n.toLocaleString(undefined, { minimumFractionDigits: 2 });
@@ -71,6 +72,7 @@ export default async function OfficeLedgerPage({ searchParams }: { searchParams:
               <ChevronRight size={16} />
             </Link>
           </div>
+          <DownloadPdfButton href={`/api/office-ledger/pdf?month=${monthKey}${rangeQuery}`} />
         </div>
       </div>
 
