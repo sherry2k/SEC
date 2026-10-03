@@ -2,6 +2,7 @@ import Link from "next/link";
 import { desc, eq, inArray } from "drizzle-orm";
 import { Plus, AlertTriangle } from "lucide-react";
 import { db } from "@/db";
+import DownloadPdfButton from "@/components/DownloadPdfButton";
 import {
   projects,
   projectCategories,
@@ -181,7 +182,8 @@ export default async function DashboardHome() {
             Welcome back, {user.name.split(" ")[0]}
           </h1>
         </div>
-        <div className="flex flex-wrap gap-2">
+               <div className="flex flex-wrap gap-2">
+          <DownloadPdfButton href="/api/dashboard/pdf" />
           {canCreateProject && (
             <Link
               href="/projects/new"
