@@ -187,15 +187,18 @@ export default async function ProjectsPage() {
             {rows.length} {rows.length === 1 ? "project" : "projects"}
           </p>
         </div>
-        {canCreate && (
-          <Link
-            href="/projects/new"
-            className="flex items-center gap-2 rounded-md bg-[var(--sec-blue)] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[var(--sec-blue-deep)]"
-          >
-            <Plus size={16} />
-            Add project
-          </Link>
-        )}
+        <div className="flex items-center gap-2">
+          <DownloadPdfButton href="/api/projects/pdf" />
+          {canCreate && (
+            <Link
+              href="/projects/new"
+              className="flex items-center gap-2 rounded-md bg-[var(--sec-blue)] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[var(--sec-blue-deep)]"
+            >
+              <Plus size={16} />
+              Add project
+            </Link>
+          )}
+        </div>
       </div>
 
       {rows.length === 0 ? (
