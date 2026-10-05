@@ -366,7 +366,11 @@ export default function ChecklistItemRow({
         </div>
       )}
 
+      {/* "Inspection" is more of a section header for its own sub-items
+          than something to comment on directly — comments stay available
+          on every other item, including Inspection's children. */}
       {canEdit &&
+        item.name !== "Inspection" &&
         (addingComment ? (
           <div className="no-print mt-2 flex flex-wrap items-center gap-2">
             <input
