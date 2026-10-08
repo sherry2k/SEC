@@ -4,7 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { Search, FileText } from "lucide-react";
 
-type ProjectOption = { id: string; label: string; name: string; clientName: string | null };
+type ProjectOption = { id: string; label: string; name: string; clientName: string | null; totalAmount: number | null };
+
+function money(n: number) {
+  return n.toLocaleString(undefined, { minimumFractionDigits: 2 });
+}
 
 export default function StatementProjectPicker({ projects }: { projects: ProjectOption[] }) {
   const [query, setQuery] = useState("");
@@ -45,10 +49,15 @@ export default function StatementProjectPicker({ projects }: { projects: Project
                     {p.clientName ? ` · ${p.clientName}` : ""}
                   </p>
                 </div>
-                <span className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-[var(--sec-blue)]">
-                  <FileText size={13} />
-                  View statement
-                </span>
+                <div className="flex shrink-0 items-center gap-4">
+                  {p.totalAmount !== null && (
+                    <span className="text-sm font-medium text-[var(--sec-ink)]">AED {money(p.totalAmount)}</span>
+                  )}
+                  <span className="flex items-center gap-1.5 text-xs font-medium text-[var(--sec-blue)]">
+                    <FileText size={13} />
+                    View statement
+                  </span>
+                </div>
               </Link>
             ))}
           </div>

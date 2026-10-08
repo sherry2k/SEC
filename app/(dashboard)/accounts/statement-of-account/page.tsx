@@ -16,6 +16,7 @@ export default async function StatementOfAccountIndexPage() {
       municipalityNo: projects.municipalityNo,
       name: projects.name,
       clientName: projects.clientName,
+      totalAmount: projects.totalAmount,
     })
     .from(projects)
     .orderBy(desc(projects.createdAt));
@@ -36,6 +37,7 @@ export default async function StatementOfAccountIndexPage() {
             label: p.municipalityNo || p.projectCode,
             name: p.name,
             clientName: p.clientName,
+            totalAmount: p.totalAmount ? Number(p.totalAmount) : null,
           }))}
         />
       </div>
