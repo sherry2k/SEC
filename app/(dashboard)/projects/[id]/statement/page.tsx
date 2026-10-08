@@ -48,7 +48,7 @@ export default async function StatementOfAccountPage({ params }: { params: Promi
           printedDate: new Date().toLocaleDateString("en-GB"),
           clientName: project.clientName ?? "",
           clientAddress: project.location ?? "",
-          quotedTotal: financials.quotedTotal,
+          totalAmount: financials.quotedTotal,
           invoicedTotal: financials.invoicedTotal,
           paidTotal: financials.paidTotal,
           balance: financials.balance,
