@@ -14,9 +14,10 @@ const TABS = [
 export default function AccountsTabs() {
   const pathname = usePathname();
 
-  // The landing page itself isn't one of these tabs — showing the strip
-  // there would just be a row of links to pages you haven't chosen yet.
-  if (pathname === "/accounts") return null;
+  // The landing page isn't one of these tabs, and Income & Expenses is a
+  // separate section from the client-document tabs below — showing this
+  // strip on either page would just be a row of links to the wrong place.
+  if (pathname === "/accounts" || pathname?.startsWith("/accounts/office-ledger")) return null;
 
   return (
     <div className="no-print mb-6 flex gap-1 border-b border-[var(--sec-line)]">

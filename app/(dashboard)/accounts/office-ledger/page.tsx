@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { can } from "@/lib/permissions";
 import { requirePermission } from "@/lib/auth";
 import {
@@ -36,6 +36,11 @@ export default async function OfficeLedgerPage({ searchParams }: { searchParams:
 
   return (
     <div>
+      <Link href="/accounts" className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--sec-blue)] hover:underline">
+        <ArrowLeft size={14} />
+        Back to Accounts
+      </Link>
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-[var(--sec-ink)]">Income & Expenses</h1>
