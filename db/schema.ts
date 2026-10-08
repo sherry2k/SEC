@@ -12,6 +12,7 @@ import {
   uuid,
   primaryKey,
   unique,
+  jsonb,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { ROLES, USER_STATUSES } from "@/lib/roles";
@@ -209,6 +210,16 @@ export const quotations = pgTable("quotations", {
   // A free-form area for whatever's specific to one quotation — separate
   // from the standing commercial conditions above.
   notes: text("notes"),
+  // Category-template fields — set when a quotation is started from a
+  // quotationCategoryTemplates row (e.g. "permit") so its standing
+  // scope/exclusions/acceptance text is pre-filled and editable per
+  // document, same pattern as intro/paymentTerms/commercialConditions
+  // above, just for the authority-fee quotation format specifically.
+  category: text("category"),
+  scopeItemsText: text("scope_items_text"),
+  scopeFeeExclVat: numeric("scope_fee_excl_vat", { precision: 12, scale: 2 }),
+  exclusionsText: text("exclusions_text"),
+  acceptanceNote: text("acceptance_note"),
   signatoryName: text("signatory_name"),
   // Toggle, off by default — the stamp only appears on the printed page
   // when explicitly turned on for that document.
@@ -236,7 +247,30 @@ export const quotationItems = pgTable("quotation_items", {
   scopeOfWork: text("scope_of_work"),
   duration: text("duration"),
   note: text("note"),
-  section: text("section"),   // ← add this line
+  // A section heading this line item belongs under (e.g. "Mandatory
+  // Authority Fees", "Optional Services") — null for a plain flat line
+  // item outside the category-template format.
+  section: text("section"),
+});
+
+// One row per quotation category (e.g. "permit") holding the standing
+// text a new quotation of that category starts from — mirrors the
+// Quotation's own intro/paymentTerms/commercialConditions pattern, just
+// scoped per category instead of being one fixed default.
+export const quotationCategoryTemplates = pgTable("quotation_category_templates", {
+  category: text("category").primaryKey(),
+  title: text("title").notNull(),
+  subtitle: text("subtitle"),
+  intro: text("intro"),
+  scopeItemsText: text("scope_items_text"),
+  defaultScopeFeeExclVat: numeric("default_scope_fee_excl_vat", { precision: 12, scale: 2 }),
+  // Each item: { name, defaultPrice, note }
+  mandatoryFeeItems: jsonb("mandatory_fee_items").notNull().default([]),
+  exclusionsText: text("exclusions_text"),
+  optionalServiceItems: jsonb("optional_service_items").notNull().default([]),
+  commercialTermsText: text("commercial_terms_text"),
+  acceptanceNote: text("acceptance_note"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 // ---------------------------------------------------------------------------
@@ -253,9 +287,10 @@ export const performaInvoices = pgTable("performa_invoices", {
   customerName: text("customer_name"),
   project: text("project"),
   customerAddress: text("customer_address"),
-  notes: text("notes"),   // ← add this line
+  notes: text("notes"),
   vatRatePercent: numeric("vat_rate_percent", { precision: 5, scale: 2 }).notNull().default("5"),
-  signatoryName: text("signatory_name"),  // Toggle, off by default — the stamp only appears on the printed page
+  signatoryName: text("signatory_name"),
+  // Toggle, off by default — the stamp only appears on the printed page
   // when explicitly turned on for that document.
   showStamp: boolean("show_stamp").notNull().default(false),
   status: text("status").notNull().default("draft"),
@@ -499,6 +534,43 @@ export const leaveRequests = pgTable("leave_requests", {
   reviewedBy: integer("reviewed_by").references(() => users.id),
   reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
   reviewNote: text("review_note"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ---------------------------------------------------------------------------
+// Office ledger — Income & Expenses (accounts/office-ledger). One row per
+// entry, type "income" or "expense"; category is free text with suggested
+// values offered in the UI, not an enum, so a new category needs no schema
+// change.
+// ---------------------------------------------------------------------------
+
+export const officeLedgerEntries = pgTable("office_ledger_entries", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  type: text("type").notNull(), // "income" | "expense"
+  date: date("date", { mode: "date" }).notNull(),
+  category: text("category").notNull(),
+  description: text("description"),
+  amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ---------------------------------------------------------------------------
+// Document renewals — tracked expiries (trade license, ID cards, etc.),
+// separate from project checklist items since these aren't tied to one
+// project and recur on their own cycle.
+// ---------------------------------------------------------------------------
+
+export const documentRenewals = pgTable("document_renewals", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: integer("user_id").references(() => users.id),
+  documentType: text("document_type").notNull(),
+  documentNumber: text("document_number"),
+  issueDate: date("issue_date", { mode: "date" }),
+  expiryDate: date("expiry_date", { mode: "date" }).notNull(),
+  notes: text("notes"),
+  createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
