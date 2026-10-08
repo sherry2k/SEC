@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { desc } from "drizzle-orm";
-import { Plus, FolderOpen } from "lucide-react";
+import { Plus, FolderOpen, ArrowLeft } from "lucide-react";
 import { db } from "@/db";
 import { receiptVouchers, receiptVoucherItems, projects } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
@@ -24,6 +24,11 @@ export default async function ReceiptVouchersListPage() {
 
   return (
     <div>
+      <Link href="/accounts" className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--sec-blue)] hover:underline">
+        <ArrowLeft size={14} />
+        Back to Accounts
+      </Link>
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-[var(--sec-ink)]">Receipt Vouchers</h1>
