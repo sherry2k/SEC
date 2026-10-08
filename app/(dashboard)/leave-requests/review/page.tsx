@@ -24,6 +24,7 @@ export default async function ReviewLeaveRequestsPage() {
       status: leaveRequests.status,
       createdAt: leaveRequests.createdAt,
       staffName: users.name,
+      staffDesignation: users.designation,
     })
     .from(leaveRequests)
     .leftJoin(users, eq(leaveRequests.userId, users.id))
@@ -67,7 +68,10 @@ export default async function ReviewLeaveRequestsPage() {
                       {r.leaveNo}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 font-medium text-[var(--sec-ink)]">{r.staffName ?? "—"}</td>
+                  <td className="px-4 py-3">
+                    <span className="font-medium text-[var(--sec-ink)]">{r.staffName ?? "—"}</span>
+                    {r.staffDesignation && <span className="block text-xs text-[var(--sec-muted)]">{r.staffDesignation}</span>}
+                  </td>
                   <td className="px-4 py-3">
                     <span className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${LEAVE_TYPE_BADGE_STYLES[r.type]}`}>
                       {LEAVE_TYPE_LABELS[r.type]}

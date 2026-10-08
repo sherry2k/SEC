@@ -75,6 +75,7 @@ export default async function LeaveRequestDetailPage({ params }: { params: Promi
           <div>
             <p className="font-mono text-xs text-[var(--sec-muted)]">Ref: {row.leaveNo}</p>
             <h1 className="mt-1 text-2xl font-bold text-[var(--sec-ink)]">{row.staffName}</h1>
+            {row.staffDesignation && <p className="text-sm text-[var(--sec-muted)]">{row.staffDesignation}</p>}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <span className={`rounded-full border px-2.5 py-1 text-xs font-medium ${LEAVE_TYPE_BADGE_STYLES[row.type]}`}>
