@@ -236,6 +236,7 @@ export const quotationItems = pgTable("quotation_items", {
   scopeOfWork: text("scope_of_work"),
   duration: text("duration"),
   note: text("note"),
+  section: text("section"),   // ← add this line
 });
 
 // ---------------------------------------------------------------------------
