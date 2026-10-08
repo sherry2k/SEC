@@ -17,7 +17,6 @@ import { requireRole } from "@/lib/auth";
 import { ROLE_LABELS } from "@/lib/roles";
 import { can } from "@/lib/permissions";
 import { financeCanEditProjects } from "@/lib/settings";
-import { getExpiringAlerts } from "@/lib/document-renewals";
 import { calcPerformaInvoiceTotals } from "@/lib/performa-invoice-calc";
 import {
   PROJECT_CATEGORIES,
@@ -36,7 +35,6 @@ export default async function DashboardHome() {
   const allowFinanceEdit = await financeCanEditProjects();
   const canCreateProject = can(user.role, "projects.create", allowFinanceEdit);
   const canViewFinance = can(user.role, "accounts.view");
-  const expiryAlerts = can(user.role, "document_renewals.view") ? await getExpiringAlerts() : [];
 
   const allProjects = await db.select().from(projects).orderBy(desc(projects.createdAt));
   const categoryLinks = await db.select().from(projectCategories);
@@ -181,23 +179,6 @@ export default async function DashboardHome() {
           )}
         </div>
       </div>
-
-      {expiryAlerts.length > 0 && (
-        <Link
-          href="/document-renewals"
-          className="mt-4 flex items-center gap-2.5 rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-800 transition-colors hover:bg-amber-100"
-        >
-          <AlertTriangle size={16} className="shrink-0" />
-          <span>
-            {expiryAlerts.length} document{expiryAlerts.length > 1 ? "s" : ""} expired or expiring soon —{" "}
-            {expiryAlerts
-              .slice(0, 3)
-              .map((a) => `${a.label} (${a.status === "expired" ? `expired ${Math.abs(a.daysUntil)}d ago` : `${a.daysUntil}d left`})`)
-              .join(", ")}
-            {expiryAlerts.length > 3 && ` +${expiryAlerts.length - 3} more`}
-          </span>
-        </Link>
-      )}
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {statCards.map((card) => (
