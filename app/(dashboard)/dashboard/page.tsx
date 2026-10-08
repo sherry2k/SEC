@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { desc, eq, inArray } from "drizzle-orm";
 import { Plus, AlertTriangle } from "lucide-react";
-import DownloadPdfButton from "@/components/DownloadPdfButton";
 import { db } from "@/db";
 import {
   projects,
@@ -10,6 +9,7 @@ import {
   checklistTemplates,
   users,
   quotations,
+  quotationItems,
   performaInvoices,
   performaInvoiceItems,
 } from "@/db/schema";
@@ -17,6 +17,8 @@ import { requireRole } from "@/lib/auth";
 import { ROLE_LABELS } from "@/lib/roles";
 import { can } from "@/lib/permissions";
 import { financeCanEditProjects } from "@/lib/settings";
+import { getExpiringAlerts } from "@/lib/document-renewals";
+import { calcGrandTotals } from "@/lib/quotation-calc";
 import { calcPerformaInvoiceTotals } from "@/lib/performa-invoice-calc";
 import {
   PROJECT_CATEGORIES,
@@ -32,6 +34,7 @@ const STALE_DAYS = 14;
 
 export default async function DashboardHome() {
   const user = await requireRole();
+  const expiryAlerts = can(user.role, "document_renewals.view") ? await getExpiringAlerts() : [];
   const allowFinanceEdit = await financeCanEditProjects();
   const canCreateProject = can(user.role, "projects.create", allowFinanceEdit);
   const canViewFinance = can(user.role, "accounts.view");
@@ -57,11 +60,9 @@ export default async function DashboardHome() {
     boc: 0,
     cbc: 0,
     permit: 0,
-    ad_ports: 0,
     work_permit: 0,
     contractor: 0,
     archives: 0,
-    pending_projects: 0,
   };
   for (const link of categoryLinks) categoryCounts[link.category] += 1;
   const maxCategoryCount = Math.max(1, ...Object.values(categoryCounts));
@@ -111,7 +112,7 @@ export default async function DashboardHome() {
   // Finance snapshot — Admin/Finance/Master admin only.
   let financeSnapshot: {
     quotationCount: number;
-    quotedValue: number;
+    quotationTotal: number;
     invoiceCount: number;
     invoiceTotal: number;
   } | null = null;
@@ -123,14 +124,18 @@ export default async function DashboardHome() {
 
     const allQuotations = await db.select().from(quotations);
     const monthQuotations = allQuotations.filter((q) => q.createdAt >= startOfMonth);
-
-    // Quoted Value now reflects each project's agreed Total Amount (set
-    // manually in its Financial Summary) rather than raw Quotation
-    // document totals — Total Amount is the real contracted figure, and
-    // unlike a Quotation it isn't tied to a creation date, so this is an
-    // all-time total across every project, not scoped to this month like
-    // the other three figures here.
-    const quotedValue = allProjects.reduce((sum, p) => sum + (p.totalAmount ? Number(p.totalAmount) : 0), 0);
+    const quotationIds = monthQuotations.map((q) => q.id);
+    const qItems = quotationIds.length
+      ? await db.select().from(quotationItems).where(inArray(quotationItems.quotationId, quotationIds))
+      : [];
+    const quotationTotal = monthQuotations.reduce((sum, q) => {
+      const items = qItems.filter((i) => i.quotationId === q.id).map((i) => ({
+        description: i.description,
+        classification: i.classification ?? "",
+        feeExclVat: Number(i.feeExclVat),
+      }));
+      return sum + calcGrandTotals(items, Number(q.vatRatePercent)).grandTotal;
+    }, 0);
 
     const allInvoices = await db.select().from(performaInvoices);
     const monthInvoices = allInvoices.filter((inv) => inv.createdAt >= startOfMonth);
@@ -147,7 +152,7 @@ export default async function DashboardHome() {
 
     financeSnapshot = {
       quotationCount: monthQuotations.length,
-      quotedValue,
+      quotationTotal,
       invoiceCount: monthInvoices.length,
       invoiceTotal,
     };
@@ -167,7 +172,6 @@ export default async function DashboardHome() {
           </h1>
         </div>
         <div className="flex flex-wrap gap-2">
-          <DownloadPdfButton href="/api/dashboard/pdf" />
           {canCreateProject && (
             <Link
               href="/projects/new"
@@ -179,6 +183,23 @@ export default async function DashboardHome() {
           )}
         </div>
       </div>
+
+      {expiryAlerts.length > 0 && (
+        <Link
+          href="/document-renewals"
+          className="mt-4 flex items-center gap-2.5 rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-800 transition-colors hover:bg-amber-100"
+        >
+          <AlertTriangle size={16} className="shrink-0" />
+          <span>
+            {expiryAlerts.length} document{expiryAlerts.length > 1 ? "s" : ""} expired or expiring soon —{" "}
+            {expiryAlerts
+              .slice(0, 3)
+              .map((a) => `${a.label} (${a.status === "expired" ? `expired ${Math.abs(a.daysUntil)}d ago` : `${a.daysUntil}d left`})`)
+              .join(", ")}
+            {expiryAlerts.length > 3 && ` +${expiryAlerts.length - 3} more`}
+          </span>
+        </Link>
+      )}
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {statCards.map((card) => (
@@ -199,9 +220,9 @@ export default async function DashboardHome() {
             </div>
             <div>
               <p className="text-2xl font-bold text-[var(--sec-ink)]">
-                AED {financeSnapshot.quotedValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                AED {financeSnapshot.quotationTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </p>
-              <p className="text-xs text-[var(--sec-muted)]">Quoted value (all projects)</p>
+              <p className="text-xs text-[var(--sec-muted)]">Quoted value</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-[var(--sec-ink)]">{financeSnapshot.invoiceCount}</p>

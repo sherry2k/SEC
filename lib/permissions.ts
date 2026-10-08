@@ -22,6 +22,8 @@ const ALWAYS: Record<string, readonly Role[]> = {
   // restricted.
   "leave_requests.create": ["master_admin", "admin", "finance", "staff"],
   "leave_requests.review": ["master_admin", "admin"],
+  "document_renewals.view": ["master_admin", "admin"],
+  "document_renewals.edit": ["master_admin", "admin"],
 };
 
 export type Permission = keyof typeof ALWAYS;
