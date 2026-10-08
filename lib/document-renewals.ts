@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { documentRenewals, users } from "@/db/schema";
 
 export const COMPANY_DOCUMENT_SUGGESTIONS = ["Trade License", "Classification Certificate", "Company Insurance"];
-export const STAFF_DOCUMENT_SUGGESTIONS = ["Visa", "Labor Card", "Insurance", "Emirates ID", "Passport"];
+export const STAFF_DOCUMENT_SUGGESTIONS = ["Visa", "Medical Insurance", "Passport", "Labor Card"];
 
 export const EXPIRY_WARNING_DAYS = 30;
 
