@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { FileText, Wallet, ArrowRight } from "lucide-react";
 import { db } from "@/db";
-import { quotations, quotationItems, officeLedgerEntries } from "@/db/schema";
+import { quotations, quotationItems } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import { calcGrandTotals } from "@/lib/quotation-calc";
+import { getOfficeLedgerSummary } from "@/lib/office-ledger";
 import { inArray } from "drizzle-orm";
 
 function money(n: number): string {
@@ -36,16 +37,12 @@ export default async function AccountsIndexPage() {
     return sum + calcGrandTotals(items, Number(q.vatRatePercent)).grandTotal;
   }, 0);
 
-  // This month's income/expenses — straight from the ledger table, same
-  // "date within the calendar month" rule the Income & Expenses page uses.
-  const allLedgerEntries = await db.select().from(officeLedgerEntries);
-  const monthLedgerEntries = allLedgerEntries.filter((e) => {
-    const k = `${e.date.getFullYear()}-${String(e.date.getMonth() + 1).padStart(2, "0")}`;
-    return k === monthKey;
-  });
-  const incomeTotal = monthLedgerEntries.filter((e) => e.type === "income").reduce((sum, e) => sum + Number(e.amount), 0);
-  const expenseTotal = monthLedgerEntries.filter((e) => e.type === "expense").reduce((sum, e) => sum + Number(e.amount), 0);
-  const net = incomeTotal - expenseTotal;
+  // This month's income/expenses — reuses the same summary function the
+  // Income & Expenses page itself calls, so these figures can never drift
+  // from what's shown there (income here also includes Receipt Vouchers
+  // counted automatically, not just manually entered rows).
+  const ledgerSummary = await getOfficeLedgerSummary(monthKey);
+  const { incomeTotal, expenseTotal, net } = ledgerSummary;
 
   const stats = [
     { label: "Quotations this month", value: `${monthQuotations.length}`, sub: `AED ${money(quotationValue)}` },
