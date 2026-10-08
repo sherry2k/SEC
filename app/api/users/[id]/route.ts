@@ -71,3 +71,52 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   return NextResponse.json({ success: true });
 }
+
+// Permanent delete — unlike the status="disabled" path above, this removes
+// the row entirely. Only safe when the account has no history anywhere
+// else in the system (projects, documents, activity log, attendance,
+// checklist items, leave requests, etc. all reference users.id without
+// cascading). Rather than hand-maintain a list of every table to check —
+// which drifts every time a new feature adds its own users.id reference —
+// this just attempts the delete and relies on Postgres' own foreign-key
+// violation (23503) to say no when something still points at this user.
+export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await authorizeApi(USER_MANAGEMENT_ROLES);
+  if (!auth.ok) return auth.response;
+
+  const { id: idParam } = await params;
+  const targetId = Number(idParam);
+  if (!Number.isInteger(targetId)) {
+    return NextResponse.json({ error: "Invalid user id." }, { status: 400 });
+  }
+
+  if (targetId === auth.user.id) {
+    return NextResponse.json({ error: "You can't delete your own account." }, { status: 400 });
+  }
+
+  const [target] = await db.select({ role: users.role }).from(users).where(eq(users.id, targetId)).limit(1);
+  if (!target) {
+    return NextResponse.json({ error: "User not found." }, { status: 404 });
+  }
+  if (target.role === "master_admin") {
+    return NextResponse.json({ error: "This account can't be deleted." }, { status: 403 });
+  }
+
+  try {
+    await db.delete(users).where(eq(users.id, targetId));
+  } catch (error: unknown) {
+    const code = (error as { code?: string } | null)?.code;
+    if (code === "23503") {
+      return NextResponse.json(
+        {
+          error:
+            "This account can't be permanently deleted — it still has history attached (projects, documents, attendance, or similar). Disable it instead to block access while keeping that history intact.",
+        },
+        { status: 409 }
+      );
+    }
+    throw error;
+  }
+
+  return NextResponse.json({ success: true });
+}

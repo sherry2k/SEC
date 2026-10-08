@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Check, X, Ban, RotateCcw } from "lucide-react";
+import { Loader2, Check, X, Ban, RotateCcw, Trash2 } from "lucide-react";
 import { ASSIGNABLE_ROLES, ROLE_LABELS, type Role, type UserStatus } from "@/lib/roles";
 
 type UserRow = {
@@ -33,6 +33,7 @@ export default function UsersTable({ users, currentUserId }: { users: UserRow[];
   const [isPending, startTransition] = useTransition();
   const [busyId, setBusyId] = useState<number | null>(null);
   const [error, setError] = useState("");
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState<number | null>(null);
   const [designationDrafts, setDesignationDrafts] = useState<Record<number, string>>(
     Object.fromEntries(users.map((u) => [u.id, u.designation ?? ""]))
   );
@@ -56,6 +57,25 @@ export default function UsersTable({ users, currentUserId }: { users: UserRow[];
       setError("Couldn't reach the server. Check your connection and try again.");
     } finally {
       setBusyId(null);
+    }
+  };
+
+  const deleteUser = async (id: number) => {
+    setError("");
+    setBusyId(id);
+    try {
+      const res = await fetch(`/api/users/${id}`, { method: "DELETE" });
+      const data: { error?: string } = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || "Couldn't delete that user.");
+        return;
+      }
+      startTransition(() => router.refresh());
+    } catch {
+      setError("Couldn't reach the server. Check your connection and try again.");
+    } finally {
+      setBusyId(null);
+      setConfirmingDeleteId(null);
     }
   };
 
@@ -141,6 +161,22 @@ export default function UsersTable({ users, currentUserId }: { users: UserRow[];
                       <span className="text-xs text-[var(--sec-muted)]">—</span>
                     ) : rowBusy ? (
                       <Loader2 size={16} className="animate-spin text-[var(--sec-muted)]" />
+                    ) : confirmingDeleteId === u.id ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-red-600">Delete permanently?</span>
+                        <button
+                          onClick={() => deleteUser(u.id)}
+                          className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-100"
+                        >
+                          <Check size={14} /> Yes, delete
+                        </button>
+                        <button
+                          onClick={() => setConfirmingDeleteId(null)}
+                          className="inline-flex items-center gap-1 rounded-md border border-[var(--sec-line)] px-2.5 py-1 text-xs font-medium text-[var(--sec-muted)] hover:bg-slate-50"
+                        >
+                          <X size={14} /> Cancel
+                        </button>
+                      </div>
                     ) : u.status === "pending" ? (
                       <div className="flex gap-2">
                         <button
@@ -156,20 +192,30 @@ export default function UsersTable({ users, currentUserId }: { users: UserRow[];
                           <X size={14} /> Reject
                         </button>
                       </div>
-                    ) : u.status === "disabled" || u.status === "rejected" ? (
-                      <button
-                        onClick={() => patchUser(u.id, { status: "approved" })}
-                        className="inline-flex items-center gap-1 rounded-md border border-[var(--sec-line)] px-2.5 py-1 text-xs font-medium text-[var(--sec-ink)] hover:bg-slate-50"
-                      >
-                        <RotateCcw size={14} /> Re-enable
-                      </button>
                     ) : (
-                      <button
-                        onClick={() => patchUser(u.id, { status: "disabled" })}
-                        className="inline-flex items-center gap-1 rounded-md border border-[var(--sec-line)] px-2.5 py-1 text-xs font-medium text-[var(--sec-muted)] hover:bg-red-50 hover:text-red-600"
-                      >
-                        <Ban size={14} /> Disable
-                      </button>
+                      <div className="flex items-center gap-2">
+                        {u.status === "disabled" || u.status === "rejected" ? (
+                          <button
+                            onClick={() => patchUser(u.id, { status: "approved" })}
+                            className="inline-flex items-center gap-1 rounded-md border border-[var(--sec-line)] px-2.5 py-1 text-xs font-medium text-[var(--sec-ink)] hover:bg-slate-50"
+                          >
+                            <RotateCcw size={14} /> Re-enable
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => patchUser(u.id, { status: "disabled" })}
+                            className="inline-flex items-center gap-1 rounded-md border border-[var(--sec-line)] px-2.5 py-1 text-xs font-medium text-[var(--sec-muted)] hover:bg-red-50 hover:text-red-600"
+                          >
+                            <Ban size={14} /> Disable
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setConfirmingDeleteId(u.id)}
+                          className="inline-flex items-center gap-1 rounded-md border border-[var(--sec-line)] px-2.5 py-1 text-xs font-medium text-[var(--sec-muted)] hover:bg-red-50 hover:text-red-600"
+                        >
+                          <Trash2 size={14} /> Delete
+                        </button>
+                      </div>
                     )}
                   </td>
                 </tr>
