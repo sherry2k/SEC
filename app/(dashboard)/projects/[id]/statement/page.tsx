@@ -8,6 +8,7 @@ import { getProjectFinancials } from "@/lib/project-finance";
 import StatementOfAccountPrintView from "@/components/StatementOfAccountPrintView";
 import StatementStampToggle from "@/components/StatementStampToggle";
 import PrintButton from "@/components/PrintButton";
+import DownloadPdfButton from "@/components/DownloadPdfButton";
 import { toFilenameSafe } from "@/lib/pdf-filename";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -38,6 +39,7 @@ export default async function StatementOfAccountPage({ params }: { params: Promi
         </div>
         <div className="flex items-center gap-3">
           <StatementStampToggle projectId={project.id} initialShowStamp={project.statementShowStamp} />
+          <DownloadPdfButton href={`/api/projects/${project.id}/statement/pdf`} />
           <PrintButton />
         </div>
       </div>
