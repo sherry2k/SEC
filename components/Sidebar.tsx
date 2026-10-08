@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, FolderKanban, Wallet, Users, Settings, CalendarCheck, ClipboardList } from "lucide-react";
+import { LayoutGrid, FolderKanban, Wallet, Users, Settings, CalendarCheck, ClipboardList, CalendarOff } from "lucide-react";
 import type { CurrentUser } from "@/lib/auth";
 import { can } from "@/lib/permissions";
 import { ROLE_LABELS } from "@/lib/roles";
@@ -17,9 +17,11 @@ import AttendanceWidget from "@/components/AttendanceWidget";
 export default function Sidebar({
   user,
   todayAttendance,
+  pendingLeaveCount = 0,
 }: {
   user: CurrentUser;
   todayAttendance: { checkInAt: string | null; checkOutAt: string | null } | null;
+  pendingLeaveCount?: number;
 }) {
   const pathname = usePathname();
 
@@ -28,6 +30,7 @@ export default function Sidebar({
     { href: "/projects", label: "Projects", icon: FolderKanban, show: can(user.role, "projects.view") },
     { href: "/accounts", label: "Accounts", icon: Wallet, show: can(user.role, "accounts.view") },
     { href: "/attendance", label: "Attendance", icon: CalendarCheck, show: can(user.role, "attendance.view") },
+    { href: "/leave-requests", label: "Leave Requests", icon: CalendarOff, show: true, badge: pendingLeaveCount },
     { href: "/daily-report", label: "Daily Report", icon: ClipboardList, show: can(user.role, "daily_report.submit") },
     { href: "/daily-reports", label: "Daily Reports", icon: ClipboardList, show: can(user.role, "daily_report.view_all") },
     { href: "/users", label: "User Management", icon: Users, show: can(user.role, "users.manage") },
@@ -76,7 +79,12 @@ export default function Sidebar({
                 }`}
               >
                 <Icon size={17} className={active ? "text-white" : "text-white/50"} />
-                {item.label}
+                <span className="flex-1">{item.label}</span>
+                {"badge" in item && item.badge! > 0 && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1 text-[11px] font-semibold text-white">
+                    {item.badge}
+                  </span>
+                )}
               </Link>
             );
           })}

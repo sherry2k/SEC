@@ -6,7 +6,6 @@ export type ActivityAction =
   | "project_created"
   | "project_updated"
   | "project_deleted"
-  | "project_responsible_changed"
   | "category_added"
   | "category_removed"
   | "checklist_status_changed"
@@ -27,13 +26,16 @@ export type ActivityAction =
   | "invoice_updated"
   | "invoice_deleted"
   | "attachment_added"
-  | "attachment_removed";
+  | "attachment_removed"
+  | "leave_request_created"
+  | "leave_request_approved"
+  | "leave_request_rejected"
+  | "leave_request_cancelled";
 
 export const ACTIVITY_LABELS: Record<ActivityAction, string> = {
   project_created: "created",
   project_updated: "updated",
   project_deleted: "deleted",
-  project_responsible_changed: "reassigned responsible on",
   category_added: "linked a category to",
   category_removed: "removed a category from",
   checklist_status_changed: "updated a checklist item on",
@@ -55,4 +57,8 @@ export const ACTIVITY_LABELS: Record<ActivityAction, string> = {
   invoice_deleted: "deleted invoice",
   attachment_added: "added an attachment to",
   attachment_removed: "removed an attachment from",
+  leave_request_created: "submitted a leave request",
+  leave_request_approved: "approved a leave request",
+  leave_request_rejected: "rejected a leave request",
+  leave_request_cancelled: "cancelled a leave request",
 };

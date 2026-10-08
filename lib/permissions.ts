@@ -7,7 +7,6 @@ const ALWAYS: Record<string, readonly Role[]> = {
   "projects.create": ["master_admin", "admin", "staff"],
   "projects.edit": ["master_admin", "admin", "staff"],
   "projects.delete": ["master_admin", "admin", "staff"],
-  "projects.reassign_responsible": ["master_admin", "admin"],
   "accounts.view": ["master_admin", "admin", "finance"],
   "accounts.edit": ["master_admin", "admin", "finance"],
   "users.manage": USER_MANAGEMENT_ROLES,
@@ -17,6 +16,11 @@ const ALWAYS: Record<string, readonly Role[]> = {
   "attendance.checkin": ["staff"],
   "daily_report.submit": ["staff"],
   "daily_report.view_all": ["master_admin", "admin"],
+  // Everyone can submit a leave request for themselves, including
+  // Admin/Master admin — only reviewing other people's requests is
+  // restricted.
+  "leave_requests.create": ["master_admin", "admin", "finance", "staff"],
+  "leave_requests.review": ["master_admin", "admin"],
 };
 
 export type Permission = keyof typeof ALWAYS;

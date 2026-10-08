@@ -1,4 +1,8 @@
+import { eq } from "drizzle-orm";
+import { db } from "@/db";
+import { leaveRequests } from "@/db/schema";
 import { requireRole } from "@/lib/auth";
+import { can } from "@/lib/permissions";
 import Sidebar from "@/components/Sidebar";
 import MobileShell from "@/components/MobileShell";
 import DashboardTopbar from "@/components/DashboardTopbar";
@@ -10,10 +14,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const user = await requireRole();
   const todayAttendance = user.role === "staff" ? await getTodayAttendance(user.id) : null;
 
+  // Only Admin/Master admin review leave requests, so only they need the
+  // pending-count badge — everyone else never queries this table here.
+  let pendingLeaveCount = 0;
+  if (can(user.role, "leave_requests.review")) {
+    const pending = await db.select({ id: leaveRequests.id }).from(leaveRequests).where(eq(leaveRequests.status, "pending"));
+    pendingLeaveCount = pending.length;
+  }
+
   return (
     <div className="dashboard-shell flex h-screen flex-col overflow-hidden bg-[var(--sec-bg)] lg:flex-row">
       <MobileShell>
-        <Sidebar user={user} todayAttendance={todayAttendance} />
+        <Sidebar user={user} todayAttendance={todayAttendance} pendingLeaveCount={pendingLeaveCount} />
       </MobileShell>
       <main className="flex-1 overflow-y-auto">
         <DashboardTopbar user={user} />

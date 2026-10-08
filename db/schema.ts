@@ -7,7 +7,6 @@ import {
   integer,
   numeric,
   boolean,
-  jsonb,
   timestamp,
   date,
   uuid,
@@ -17,6 +16,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { ROLES, USER_STATUSES } from "@/lib/roles";
 import { PROJECT_CATEGORIES, ITEM_STATUSES, PROJECT_STATUSES } from "@/lib/checklist";
+import { LEAVE_TYPES, LEAVE_REQUEST_STATUSES } from "@/lib/leave";
 
 export const userRoleEnum = pgEnum("user_role", ROLES);
 export const userStatusEnum = pgEnum("user_status", USER_STATUSES);
@@ -90,10 +90,6 @@ export const projects = pgTable("projects", {
   // fresh each time rather than saved as its own row — there's nowhere
   // else for this toggle's state to live.
   statementShowStamp: boolean("statement_show_stamp").notNull().default(false),
-  // Manually set, not auto-summed from Quotations — the real agreed
-  // contract value for the project, which Financial Summary and the
-  // Statement of Account measure payments against.
-  totalAmount: numeric("total_amount", { precision: 12, scale: 2 }),
   createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedBy: integer("updated_by").references(() => users.id),
@@ -218,18 +214,6 @@ export const quotations = pgTable("quotations", {
   // when explicitly turned on for that document.
   showStamp: boolean("show_stamp").notNull().default(false),
   signatoryTitle: text("signatory_title"),
-  // Category-based quotations (BOC/CBC/Permit/Work Permit) use a fixed
-  // template structure instead of the free-form Pricing Schedule — null
-  // means this is a blank/custom quotation, same as before this existed.
-  // The text/number fields below are copied from the category's template
-  // at creation time (same pattern as paymentTerms/commercialConditions
-  // already use), so editing the template later never changes quotations
-  // that already exist.
-  category: text("category"),
-  scopeItemsText: text("scope_items_text"),
-  scopeFeeExclVat: numeric("scope_fee_excl_vat", { precision: 12, scale: 2 }),
-  exclusionsText: text("exclusions_text"),
-  acceptanceNote: text("acceptance_note"),
   status: text("status").notNull().default("draft"),
   createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -252,11 +236,6 @@ export const quotationItems = pgTable("quotation_items", {
   scopeOfWork: text("scope_of_work"),
   duration: text("duration"),
   note: text("note"),
-  // Which section of a category-based quotation this line belongs to —
-  // null for the ordinary flat Pricing Schedule (blank/custom
-  // quotations), 'mandatory' or 'optional' for the corresponding section
-  // of a category-based one.
-  section: text("section"),
 });
 
 // ---------------------------------------------------------------------------
@@ -273,7 +252,6 @@ export const performaInvoices = pgTable("performa_invoices", {
   customerName: text("customer_name"),
   project: text("project"),
   customerAddress: text("customer_address"),
-  notes: text("notes"),
   vatRatePercent: numeric("vat_rate_percent", { precision: 5, scale: 2 }).notNull().default("5"),
   signatoryName: text("signatory_name"),
   // Toggle, off by default — the stamp only appears on the printed page
@@ -490,43 +468,36 @@ export const dailyWorkReportEntries = pgTable("daily_work_report_entries", {
 });
 
 // ---------------------------------------------------------------------------
-// Quotation category templates — the fixed content (BOC/CBC/Permit/Work
-// Permit) that a new category-based quotation gets pre-filled with. Once
-// copied onto a quotation at creation time, editing a template here never
-// changes quotations that already exist.
+// Leave requests — staff self-service (Annual / Sick / Emergency / Unpaid),
+// reviewed by Admin/Master admin. One shared reference sequence ("LV") with
+// the other document families. totalDays is computed and frozen at submit
+// time (working days Mon–Sat within the range), not recalculated later, so
+// an approved letter's day count can't drift if the working-day rule ever
+// changes down the line.
 // ---------------------------------------------------------------------------
 
-export const quotationCategoryTemplates = pgTable("quotation_category_templates", {
-  category: text("category").primaryKey(),
-  title: text("title").notNull(),
-  subtitle: text("subtitle"),
-  intro: text("intro"),
-  scopeItemsText: text("scope_items_text"),
-  defaultScopeFeeExclVat: numeric("default_scope_fee_excl_vat", { precision: 12, scale: 2 }),
-  // Each: { name: string, defaultPrice: number }
-  mandatoryFeeItems: jsonb("mandatory_fee_items").notNull().default([]),
-  exclusionsText: text("exclusions_text"),
-  optionalServiceItems: jsonb("optional_service_items").notNull().default([]),
-  commercialTermsText: text("commercial_terms_text"),
-  acceptanceNote: text("acceptance_note"),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const leaveTypeEnum = pgEnum("leave_type", LEAVE_TYPES);
+export const leaveRequestStatusEnum = pgEnum("leave_request_status", LEAVE_REQUEST_STATUSES);
 
-// ---------------------------------------------------------------------------
-// Office ledger — internal income and expense entries (rent, utilities,
-// office supplies, etc.), separate from the client-facing finance
-// documents above. Receipt Vouchers count as income too, but aren't
-// duplicated here — they're pulled in live when a monthly summary is
-// computed (see lib/office-ledger.ts), so there's one source of truth.
-// ---------------------------------------------------------------------------
-
-export const officeLedgerEntries = pgTable("office_ledger_entries", {
+export const leaveRequests = pgTable("leave_requests", {
   id: uuid("id").primaryKey().defaultRandom(),
-  type: text("type").notNull(), // 'income' | 'expense'
-  date: date("date", { mode: "date" }).notNull(),
-  category: text("category").notNull(),
-  description: text("description"),
-  amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
-  createdBy: integer("created_by").references(() => users.id),
+  leaveNo: text("leave_no").notNull().unique(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id),
+  type: leaveTypeEnum("type").notNull(),
+  startDate: date("start_date", { mode: "date" }).notNull(),
+  endDate: date("end_date", { mode: "date" }).notNull(),
+  totalDays: integer("total_days").notNull(),
+  reason: text("reason"),
+  // Optional supporting document (e.g. a medical certificate for sick
+  // leave) — same private-Blob pattern as project attachments.
+  attachmentUrl: text("attachment_url"),
+  attachmentFileName: text("attachment_file_name"),
+  status: leaveRequestStatusEnum("status").notNull().default("pending"),
+  reviewedBy: integer("reviewed_by").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+  reviewNote: text("review_note"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
