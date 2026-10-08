@@ -13,11 +13,21 @@ export default async function DocumentRenewalsPage() {
 
   const { company, staff } = await getDocumentRenewals();
 
+  // Groups by real account (userId) when present, otherwise by the typed
+  // extra-staff name — the two are mutually exclusive on every row, so
+  // this key always resolves to exactly one group per person.
   const staffGroups = Object.values(
-    staff.reduce<Record<number, { userId: number; userName: string; rows: typeof staff }>>((acc, row) => {
-      if (row.userId === null) return acc;
-      if (!acc[row.userId]) acc[row.userId] = { userId: row.userId, userName: row.userName ?? "Unknown", rows: [] };
-      acc[row.userId].rows.push(row);
+    staff.reduce<Record<string, { key: string; userId: number | null; userName: string; rows: typeof staff }>>((acc, row) => {
+      const key = row.userId !== null ? `user-${row.userId}` : `extra-${row.extraStaffName}`;
+      if (!acc[key]) {
+        acc[key] = {
+          key,
+          userId: row.userId,
+          userName: row.userId !== null ? row.userName ?? "Unknown" : row.extraStaffName ?? "Unknown",
+          rows: [],
+        };
+      }
+      acc[key].rows.push(row);
       return acc;
     }, {})
   );

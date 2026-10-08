@@ -26,6 +26,9 @@ export type DocumentRenewalRow = {
   id: string;
   userId: number | null;
   userName: string | null;
+  // Set instead of userName when this document belongs to staff with no
+  // system account — mutually exclusive with userId/userName.
+  extraStaffName: string | null;
   documentType: string;
   documentNumber: string | null;
   issueDate: string | null;
@@ -41,6 +44,7 @@ export async function getDocumentRenewals(): Promise<{ company: DocumentRenewalR
       id: documentRenewals.id,
       userId: documentRenewals.userId,
       userName: users.name,
+      extraStaffName: documentRenewals.extraStaffName,
       documentType: documentRenewals.documentType,
       documentNumber: documentRenewals.documentNumber,
       issueDate: documentRenewals.issueDate,
@@ -56,6 +60,7 @@ export async function getDocumentRenewals(): Promise<{ company: DocumentRenewalR
       id: r.id,
       userId: r.userId,
       userName: r.userName,
+      extraStaffName: r.extraStaffName,
       documentType: r.documentType,
       documentNumber: r.documentNumber,
       issueDate: r.issueDate ? r.issueDate.toLocaleDateString("en-GB") : null,
@@ -68,9 +73,11 @@ export async function getDocumentRenewals(): Promise<{ company: DocumentRenewalR
 
   const sortByExpiry = (a: DocumentRenewalRow, b: DocumentRenewalRow) => a.daysUntil - b.daysUntil;
 
+  // A row counts as "staff" if it's tied to either a real account or a
+  // typed extra-staff name; only a row with neither is a company document.
   return {
-    company: mapped.filter((r) => r.userId === null).sort(sortByExpiry),
-    staff: mapped.filter((r) => r.userId !== null).sort(sortByExpiry),
+    company: mapped.filter((r) => r.userId === null && !r.extraStaffName).sort(sortByExpiry),
+    staff: mapped.filter((r) => r.userId !== null || !!r.extraStaffName).sort(sortByExpiry),
   };
 }
 
@@ -85,7 +92,7 @@ export async function getExpiringAlerts(): Promise<ExpiryAlert[]> {
     .filter((r) => r.status === "expired" || r.status === "expiring")
     .map((r) => ({
       id: r.id,
-      label: r.userName ? `${r.userName}'s ${r.documentType}` : r.documentType,
+      label: r.userName || r.extraStaffName ? `${r.userName ?? r.extraStaffName}'s ${r.documentType}` : r.documentType,
       daysUntil: r.daysUntil,
       status: r.status,
     }))

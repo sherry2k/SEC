@@ -22,25 +22,37 @@ function toInputDate(ddmmyyyy: string | null): string {
   return `${y}-${m}-${d}`;
 }
 
-type FormState = { userId: string; documentType: string; documentNumber: string; issueDate: string; expiryDate: string; notes: string };
+type FormState = {
+  userId: string;
+  extraStaffName: string;
+  documentType: string;
+  documentNumber: string;
+  issueDate: string;
+  expiryDate: string;
+  notes: string;
+};
 
-function emptyForm(userId: string): FormState {
-  return { userId, documentType: "", documentNumber: "", issueDate: "", expiryDate: "", notes: "" };
+function emptyForm(userId: string, extraStaffName = ""): FormState {
+  return { userId, extraStaffName, documentType: "", documentNumber: "", issueDate: "", expiryDate: "", notes: "" };
 }
 
 function EntryForm({
   initial,
   typeSuggestions,
   fixedUserId,
+  fixedExtraStaffName,
   staffOptions,
+  extraStaffMode,
   onSaved,
   onCancel,
   entryId,
 }: {
   initial: FormState;
   typeSuggestions: string[];
-  fixedUserId?: string; // if set, userId isn't editable (adding under a specific person)
-  staffOptions?: { id: number; name: string }[]; // provided when the user needs to be picked (new staff document)
+  fixedUserId?: string; // if set, userId isn't editable (adding under a specific account)
+  fixedExtraStaffName?: string; // if set, adding under a specific extra-staff person (no account)
+  staffOptions?: { id: number; name: string }[]; // provided when picking an existing account (new staff document)
+  extraStaffMode?: boolean; // provided when typing a new extra-staff person's name (no account)
   onSaved: () => void;
   onCancel: () => void;
   entryId?: string; // set when editing an existing entry
@@ -52,11 +64,15 @@ function EntryForm({
 
   const inputClass =
     "w-full rounded-md border border-[var(--sec-line)] bg-white px-2.5 py-1.5 text-sm text-[var(--sec-ink)] outline-none focus:border-[var(--sec-blue)]";
-  const listId = `doc-type-suggestions-${fixedUserId ?? "company"}${entryId ?? ""}`;
+  const listId = `doc-type-suggestions-${fixedUserId ?? fixedExtraStaffName ?? "company"}${entryId ?? ""}`;
 
   const submit = async () => {
     if (staffOptions && !form.userId) {
       setError("Choose a staff member first.");
+      return;
+    }
+    if (extraStaffMode && !form.extraStaffName.trim()) {
+      setError("Enter a name first.");
       return;
     }
     if (!form.documentType.trim()) {
@@ -73,11 +89,17 @@ function EntryForm({
       const url = entryId ? `/api/document-renewals/${entryId}` : "/api/document-renewals";
       const method = entryId ? "PATCH" : "POST";
       const resolvedUserId = fixedUserId ? Number(fixedUserId) : staffOptions ? Number(form.userId) : null;
+      const resolvedExtraStaffName = fixedExtraStaffName
+        ? fixedExtraStaffName
+        : extraStaffMode
+        ? form.extraStaffName.trim()
+        : null;
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: resolvedUserId,
+          extraStaffName: resolvedExtraStaffName,
           documentType: form.documentType,
           documentNumber: form.documentNumber,
           issueDate: form.issueDate,
@@ -111,6 +133,14 @@ function EntryForm({
               </option>
             ))}
           </select>
+        )}
+        {extraStaffMode && (
+          <input
+            value={form.extraStaffName}
+            onChange={(e) => setForm((f) => ({ ...f, extraStaffName: e.target.value }))}
+            placeholder="Staff name (no system account)"
+            className={`${inputClass} col-span-2`}
+          />
         )}
         <div>
           <input
@@ -189,8 +219,10 @@ function EntryRow({ row, typeSuggestions, canEdit }: { row: DocumentRenewalRow; 
         <EntryForm
           entryId={row.id}
           fixedUserId={row.userId ? String(row.userId) : undefined}
+          fixedExtraStaffName={row.userId === null && row.extraStaffName ? row.extraStaffName : undefined}
           initial={{
             userId: row.userId ? String(row.userId) : "",
+            extraStaffName: row.extraStaffName ?? "",
             documentType: row.documentType,
             documentNumber: row.documentNumber ?? "",
             issueDate: toInputDate(row.issueDate),
@@ -247,12 +279,16 @@ function AddButton({
   label,
   typeSuggestions,
   fixedUserId,
+  fixedExtraStaffName,
   staffOptions,
+  extraStaffMode,
 }: {
   label: string;
   typeSuggestions: string[];
   fixedUserId?: string;
+  fixedExtraStaffName?: string;
   staffOptions?: { id: number; name: string }[];
+  extraStaffMode?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   if (!open) {
@@ -268,7 +304,9 @@ function AddButton({
       initial={emptyForm(fixedUserId ?? "")}
       typeSuggestions={typeSuggestions}
       fixedUserId={fixedUserId}
+      fixedExtraStaffName={fixedExtraStaffName}
       staffOptions={staffOptions}
+      extraStaffMode={extraStaffMode}
       onSaved={() => setOpen(false)}
       onCancel={() => setOpen(false)}
     />
@@ -284,7 +322,7 @@ export default function DocumentRenewalsClient({
   staffTypeSuggestions,
 }: {
   company: DocumentRenewalRow[];
-  staffGroups: { userId: number; userName: string; rows: DocumentRenewalRow[] }[];
+  staffGroups: { key: string; userId: number | null; userName: string; rows: DocumentRenewalRow[] }[];
   allStaff: { id: number; name: string }[];
   canEdit: boolean;
   companyTypeSuggestions: string[];
@@ -313,21 +351,38 @@ export default function DocumentRenewalsClient({
       <div>
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold uppercase tracking-wide text-[var(--sec-muted)]">Staff documents</h2>
-          {canEdit && <AddButton label="Add for a new person" typeSuggestions={staffTypeSuggestions} staffOptions={allStaff} />}
+          {canEdit && (
+            <div className="flex items-center gap-3">
+              <AddButton label="Add for a new person" typeSuggestions={staffTypeSuggestions} staffOptions={allStaff} />
+              <AddButton label="Add for extra staff" typeSuggestions={staffTypeSuggestions} extraStaffMode />
+            </div>
+          )}
         </div>
         <div className="mt-3 overflow-hidden rounded-lg border border-[var(--sec-line)] bg-white">
           {staffGroups.length === 0 ? (
             <p className="px-3 py-6 text-center text-sm text-[var(--sec-muted)]">No staff documents added yet.</p>
           ) : (
             staffGroups.map((group) => (
-              <div key={group.userId} className="border-b border-[var(--sec-line)] last:border-0">
-                <div className="bg-slate-50 px-3 py-2 text-sm font-semibold text-[var(--sec-ink)]">{group.userName}</div>
+              <div key={group.key} className="border-b border-[var(--sec-line)] last:border-0">
+                <div className="flex items-center gap-2 bg-slate-50 px-3 py-2 text-sm font-semibold text-[var(--sec-ink)]">
+                  {group.userName}
+                  {group.userId === null && (
+                    <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-600">
+                      No account
+                    </span>
+                  )}
+                </div>
                 {group.rows.map((row) => (
                   <EntryRow key={row.id} row={row} typeSuggestions={staffTypeSuggestions} canEdit={canEdit} />
                 ))}
                 {canEdit && (
                   <div className="px-3 py-2">
-                    <AddButton label={`Add document for ${group.userName}`} typeSuggestions={staffTypeSuggestions} fixedUserId={String(group.userId)} />
+                    <AddButton
+                      label={`Add document for ${group.userName}`}
+                      typeSuggestions={staffTypeSuggestions}
+                      fixedUserId={group.userId !== null ? String(group.userId) : undefined}
+                      fixedExtraStaffName={group.userId === null ? group.userName : undefined}
+                    />
                   </div>
                 )}
               </div>

@@ -15,6 +15,9 @@ export async function POST(request: NextRequest) {
   const documentType = str(body?.documentType);
   const expiryDateStr = str(body?.expiryDate);
   const userId = typeof body?.userId === "number" ? body.userId : null;
+  // extraStaffName only applies when there's no real account — mutually
+  // exclusive with userId.
+  const extraStaffName = userId === null ? str(body?.extraStaffName) || null : null;
 
   if (!documentType) {
     return NextResponse.json({ error: "Document type is required." }, { status: 400 });
@@ -29,6 +32,7 @@ export async function POST(request: NextRequest) {
     .insert(documentRenewals)
     .values({
       userId,
+      extraStaffName,
       documentType,
       documentNumber: str(body?.documentNumber) || null,
       issueDate: issueDateStr && !Number.isNaN(new Date(issueDateStr).getTime()) ? new Date(issueDateStr) : null,

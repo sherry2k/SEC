@@ -569,6 +569,11 @@ export const officeLedgerEntries = pgTable("office_ledger_entries", {
 export const documentRenewals = pgTable("document_renewals", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: integer("user_id").references(() => users.id),
+  // Set instead of userId for staff who don't have a system account (e.g.
+  // people working outside who never log into the dashboard). Mutually
+  // exclusive with userId — a row is either tied to a real account or a
+  // typed name, never both.
+  extraStaffName: text("extra_staff_name"),
   documentType: text("document_type").notNull(),
   documentNumber: text("document_number"),
   issueDate: date("issue_date", { mode: "date" }),
