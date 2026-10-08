@@ -9,12 +9,14 @@ const TABS = [
   { href: "/accounts/invoices", label: "Invoices" },
   { href: "/accounts/performa-invoices", label: "Performa Invoices" },
   { href: "/accounts/receipt-vouchers", label: "Receipt Vouchers" },
-  { href: "/accounts/statement-of-account", label: "Statement of Account" },
-  { href: "/accounts/office-ledger", label: "Income & Expenses" },
 ];
 
 export default function AccountsTabs() {
   const pathname = usePathname();
+
+  // The landing page itself isn't one of these tabs — showing the strip
+  // there would just be a row of links to pages you haven't chosen yet.
+  if (pathname === "/accounts") return null;
 
   return (
     <div className="no-print mb-6 flex gap-1 border-b border-[var(--sec-line)]">
