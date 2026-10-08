@@ -194,6 +194,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
             </Link>
           )}
           {canDelete && <DeleteProjectButton projectId={project.id} />}
+          <DownloadPdfButton href={`/api/projects/${project.id}/pdf`} />
           <PrintButton />
         </div>
       </div>
