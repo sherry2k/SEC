@@ -6,6 +6,7 @@ export type ActivityAction =
   | "project_created"
   | "project_updated"
   | "project_deleted"
+  | "project_responsible_changed"
   | "category_added"
   | "category_removed"
   | "checklist_status_changed"
@@ -36,6 +37,7 @@ export const ACTIVITY_LABELS: Record<ActivityAction, string> = {
   project_created: "created",
   project_updated: "updated",
   project_deleted: "deleted",
+  project_responsible_changed: "reassigned the responsible person on",
   category_added: "linked a category to",
   category_removed: "removed a category from",
   checklist_status_changed: "updated a checklist item on",

@@ -7,6 +7,7 @@ const ALWAYS: Record<string, readonly Role[]> = {
   "projects.create": ["master_admin", "admin", "staff"],
   "projects.edit": ["master_admin", "admin", "staff"],
   "projects.delete": ["master_admin", "admin", "staff"],
+  "projects.reassign_responsible": ["master_admin", "admin"],
   "accounts.view": ["master_admin", "admin", "finance"],
   "accounts.edit": ["master_admin", "admin", "finance"],
   "users.manage": USER_MANAGEMENT_ROLES,
