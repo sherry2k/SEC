@@ -112,7 +112,7 @@ export default async function LeaveRequestDetailPage({ params }: { params: Promi
               <dt className="text-xs uppercase tracking-wide text-[var(--sec-muted)]">Attachment</dt>
               <dd>
                 <a
-                  href={row.attachmentUrl}
+                  href={`/api/leave-requests/${row.id}/attachment/download`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-sm font-medium text-[var(--sec-blue)] hover:underline"
