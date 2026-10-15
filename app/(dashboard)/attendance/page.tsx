@@ -212,7 +212,8 @@ async function SummaryView({
               <th className="px-4 py-3 font-medium">Name</th>
               <th className="px-4 py-3 font-medium">Days Present</th>
               <th className="px-4 py-3 font-medium">Days Absent</th>
-              <th className="px-4 py-3 font-medium">Total Hours</th>
+              <th className="px-4 py-3 font-medium">Expected Hrs</th>
+              <th className="px-4 py-3 font-medium">Actual Hrs</th>
             </tr>
           </thead>
           <tbody>
@@ -221,6 +222,7 @@ async function SummaryView({
                 <td className="px-4 py-3 font-medium text-[var(--sec-ink)]">{row.name}</td>
                 <td className="px-4 py-3 text-emerald-700">{row.daysPresent}</td>
                 <td className={`px-4 py-3 ${row.daysAbsent > 0 ? "text-red-600" : "text-[var(--sec-muted)]"}`}>{row.daysAbsent}</td>
+                <td className="px-4 py-3 text-[var(--sec-muted)]">{row.expectedHoursLabel}</td>
                 <td className="px-4 py-3 text-[var(--sec-ink)]">{row.totalHoursLabel}</td>
               </tr>
             ))}

@@ -2,13 +2,18 @@ import "server-only";
 import { and, gte, lte, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { attendanceRecords } from "@/db/schema";
-import { WORKING_WEEKDAYS, isWorkingDay, formatDuration } from "@/lib/attendance";
+import { WORKING_WEEKDAYS, STANDARD_HOURS_PER_WORKING_DAY, isWorkingDay, formatDuration } from "@/lib/attendance";
 
 export type StaffSummaryRow = {
   userId: number;
   name: string;
   daysPresent: number;
   daysAbsent: number;
+  // Working days in the range × the standard hours-per-day — the same for
+  // every row in a given report, since it isn't affected by who actually
+  // showed up. totalHoursLabel (renamed "Actual Hrs" in the UI) is the real
+  // sum of each day's check-in → check-out, unchanged from before.
+  expectedHoursLabel: string;
   totalHoursLabel: string;
 };
 
@@ -67,6 +72,7 @@ export async function getAttendanceSummary(
     : [];
 
   const expectedWorkingDays = countWorkingDaysInRange(start, end);
+  const expectedHoursLabel = formatDuration(0, expectedWorkingDays * STANDARD_HOURS_PER_WORKING_DAY * 60 * 60 * 1000);
 
   const recordsByUser = new Map<number, typeof records>();
   for (const r of records) {
@@ -87,7 +93,7 @@ export async function getAttendanceSummary(
       }
       const totalHoursLabel = totalMs > 0 ? formatDuration(0, totalMs) : "0h 0m";
 
-      return { userId: person.id, name: person.name, daysPresent, daysAbsent, totalHoursLabel };
+      return { userId: person.id, name: person.name, daysPresent, daysAbsent, expectedHoursLabel, totalHoursLabel };
     })
     .sort((a, b) => a.name.localeCompare(b.name));
 }

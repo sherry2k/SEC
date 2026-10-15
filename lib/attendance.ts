@@ -8,6 +8,10 @@ export const OFFICE_START_HOUR = 8;
 export const OFFICE_START_MINUTE = 0;
 export const UAE_UTC_OFFSET_HOURS = 4;
 
+// What counts as one full expected working day, for the weekly/monthly
+// report's "Expected working hrs" column (expected = working days × this).
+export const STANDARD_HOURS_PER_WORKING_DAY = 9;
+
 // Working days: Monday–Saturday. JS getDay(): 0=Sun ... 6=Sat.
 export const WORKING_WEEKDAYS = [1, 2, 3, 4, 5, 6];
 
