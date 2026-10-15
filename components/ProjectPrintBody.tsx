@@ -49,6 +49,34 @@ function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
 
+// Mirrors ProjectChecklist's renderTree (components/ProjectChecklist.tsx):
+// the on-screen checklist groups each item's children directly underneath
+// it, regardless of where the children's own sortOrder happens to fall.
+// This file used to just iterate the flat, globally-sorted item list —
+// which only looked right by coincidence, when a child's sortOrder
+// happened to land right after its parent's. Walking the tree the same
+// way the screen does guarantees the PDF always matches it.
+function orderItems(items: PrintableChecklistItem[]): PrintableChecklistItem[] {
+  const topLevel = items.filter((i) => i.parentItemId === null);
+  const childrenByParent = new Map<string, PrintableChecklistItem[]>();
+  for (const i of items) {
+    if (i.parentItemId) {
+      const list = childrenByParent.get(i.parentItemId) ?? [];
+      list.push(i);
+      childrenByParent.set(i.parentItemId, list);
+    }
+  }
+
+  const ordered: PrintableChecklistItem[] = [];
+  for (const item of topLevel) {
+    ordered.push(item);
+    for (const child of childrenByParent.get(item.id) ?? []) {
+      ordered.push(child);
+    }
+  }
+  return ordered;
+}
+
 // Just the document content — no letterhead, no footer. Used two ways:
 // wrapped in PrintDocumentShell by ProjectPrintView for the normal in-app
 // view/print (browser print dialog), and standalone on the dedicated
@@ -114,7 +142,7 @@ export default function ProjectPrintBody({ project }: { project: PrintableProjec
                 )}
               </div>
               <div className="px-3 py-1">
-                {section.items.map((item) => {
+                {orderItems(section.items).map((item) => {
                   let creditLine: string | null = null;
                   if (item.status === "approved" && item.approvedAt) {
                     creditLine = item.submittedByName
