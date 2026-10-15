@@ -75,10 +75,16 @@ export default function ProjectsTable({
       ? (categoryFromUrl as ProjectCategory)
       : "all";
 
+  // Same idea for the responsible-person filter ("all" | "me" | a user id)
+  // — mirrored into ?responsible= so it survives the same back-navigation
+  // round trip as the category filter.
+  const responsibleFromUrl = searchParams.get("responsible");
+  const initialResponsible: string = responsibleFromUrl ?? (defaultToMine ? "me" : "all");
+
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<ProjectCategory | "all">(initialCategory);
   // "all" | "me" | a user id (as string)
-  const [responsibleFilter, setResponsibleFilter] = useState<string>(defaultToMine ? "me" : "all");
+  const [responsibleFilter, setResponsibleFilter] = useState<string>(initialResponsible);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -108,6 +114,17 @@ export default function ProjectsTable({
     router.replace(params.toString() ? `/projects?${params.toString()}` : "/projects", { scroll: false });
   };
 
+  const handleResponsibleChange = (value: string) => {
+    setResponsibleFilter(value);
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === "all") {
+      params.delete("responsible");
+    } else {
+      params.set("responsible", value);
+    }
+    router.replace(params.toString() ? `/projects?${params.toString()}` : "/projects", { scroll: false });
+  };
+
   const mineCount = useMemo(() => rows.filter((r) => r.responsibleId === currentUserId).length, [rows, currentUserId]);
 
   const filtered = useMemo(() => {
@@ -133,7 +150,7 @@ export default function ProjectsTable({
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="inline-flex w-fit rounded-md border border-[var(--sec-line)] bg-white p-0.5">
           <button
-            onClick={() => setResponsibleFilter("all")}
+            onClick={() => handleResponsibleChange("all")}
             className={`rounded px-3 py-1.5 text-sm font-medium transition-colors ${
               responsibleFilter === "all" ? "bg-[var(--sec-blue)] text-white" : "text-[var(--sec-muted)] hover:text-[var(--sec-ink)]"
             }`}
@@ -141,7 +158,7 @@ export default function ProjectsTable({
             All projects
           </button>
           <button
-            onClick={() => setResponsibleFilter("me")}
+            onClick={() => handleResponsibleChange("me")}
             className={`rounded px-3 py-1.5 text-sm font-medium transition-colors ${
               responsibleFilter === "me" ? "bg-[var(--sec-blue)] text-white" : "text-[var(--sec-muted)] hover:text-[var(--sec-ink)]"
             }`}
@@ -176,7 +193,7 @@ export default function ProjectsTable({
 
           <select
             value={["all", "me"].includes(responsibleFilter) ? "" : responsibleFilter}
-            onChange={(e) => setResponsibleFilter(e.target.value || "all")}
+            onChange={(e) => handleResponsibleChange(e.target.value || "all")}
             className="rounded-md border border-[var(--sec-line)] bg-white px-3 py-2 text-sm text-[var(--sec-ink)] outline-none focus:border-[var(--sec-blue)]"
           >
             <option value="">Check a team member…</option>
