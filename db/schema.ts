@@ -135,6 +135,11 @@ export const projectCategories = pgTable(
       .notNull()
       .references(() => projects.id, { onDelete: "cascade" }),
     category: projectCategoryEnum("category").notNull(),
+    // Free-text note tied to this specific category link — e.g. the
+    // assigned contractor's name under Contractor, or the archive
+    // submission's own project number under Archives. Generic column;
+    // which categories show a field for it is a UI-level decision.
+    note: text("note"),
     addedAt: timestamp("added_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [primaryKey({ columns: [t.projectId, t.category] })]

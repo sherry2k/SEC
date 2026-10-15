@@ -90,6 +90,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
   const links = await db.select().from(projectCategories).where(eq(projectCategories.projectId, id));
   const linkedCategories = links.map((l) => l.category);
+  const noteByCategory = new Map(links.map((l) => [l.category, l.note]));
 
   const items = await db
     .select({
@@ -135,6 +136,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
   const sections = linkedCategories.map((category) => ({
     category,
+    note: noteByCategory.get(category) ?? null,
     items: items
       .filter((i) => i.category === category)
       .sort((a, b) => a.sortOrder - b.sortOrder)

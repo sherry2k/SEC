@@ -4,8 +4,9 @@ import { CATEGORY_LABELS, CATEGORY_ACCENT_BORDER, type ProjectCategory } from "@
 import ChecklistItemRow, { type ChecklistItem } from "@/components/ChecklistItemRow";
 import AddChecklistItemButton from "@/components/AddChecklistItemButton";
 import DeleteCategoryButton from "@/components/DeleteCategoryButton";
+import CategoryNoteField from "@/components/CategoryNoteField";
 
-type CategorySection = { category: ProjectCategory; items: ChecklistItem[] };
+type CategorySection = { category: ProjectCategory; note: string | null; items: ChecklistItem[] };
 
 // Renders each linked category as its own card, with items indented one
 // level under their parent (only Contractor → Inspection currently nests).
@@ -47,12 +48,13 @@ export default function ProjectChecklist({
 
   return (
     <div className="space-y-6">
-      {sections.map(({ category, items }) => (
+      {sections.map(({ category, note, items }) => (
         <div key={category} className={`rounded-lg border border-l-4 border-[var(--sec-line)] bg-white ${CATEGORY_ACCENT_BORDER[category]}`}>
           <div className="flex items-center justify-between border-b border-[var(--sec-line)] px-4 py-3">
             <h3 className="font-bold text-base text-[var(--sec-ink)]">{CATEGORY_LABELS[category]}</h3>
             {canEdit && <DeleteCategoryButton projectId={projectId} category={category} />}
           </div>
+          <CategoryNoteField projectId={projectId} category={category} initialNote={note} canEdit={canEdit} />
           <div className="px-4 py-1">{renderTree(items, projectId, canEdit, currentUserName)}</div>
           {canEdit && (
             <div className="no-print border-t border-[var(--sec-line)]">
