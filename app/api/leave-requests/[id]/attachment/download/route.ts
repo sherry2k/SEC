@@ -48,7 +48,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   return new NextResponse(result.stream as unknown as ReadableStream, {
     headers: {
       "Content-Type": result.blob.contentType || "application/octet-stream",
-      "Content-Disposition": `inline; filename="${row.attachmentFileName || "attachment"}"`,
+      "Content-Disposition": `attachment; filename="${row.attachmentFileName || "attachment"}"`,
     },
   });
 }

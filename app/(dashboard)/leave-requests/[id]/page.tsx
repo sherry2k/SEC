@@ -113,8 +113,6 @@ export default async function LeaveRequestDetailPage({ params }: { params: Promi
               <dd>
                 <a
                   href={`/api/leave-requests/${row.id}/attachment/download`}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-sm font-medium text-[var(--sec-blue)] hover:underline"
                 >
                   <Paperclip size={13} />
