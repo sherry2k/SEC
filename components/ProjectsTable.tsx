@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Search, Pencil, Trash2, Loader2, Check } from "lucide-react";
 import { PROJECT_CATEGORIES, CATEGORY_LABELS, CATEGORY_BADGE_STYLES, PROJECT_STATUS_LABELS, type ProjectCategory, type ProjectStatus } from "@/lib/checklist";
 import type { Role } from "@/lib/roles";
@@ -62,8 +62,21 @@ export default function ProjectsTable({
   completedThisWeekCount: number;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // The category filter is mirrored into the URL (?category=...) so that
+  // "Back to projects" — which uses real browser history (BackButton) —
+  // lands back on the exact filtered view the person left, instead of a
+  // fresh, unfiltered list. Read the initial value from the URL once;
+  // after that, selecting a category keeps it in sync via router.replace.
+  const categoryFromUrl = searchParams.get("category");
+  const initialCategory: ProjectCategory | "all" =
+    categoryFromUrl && (PROJECT_CATEGORIES as readonly string[]).includes(categoryFromUrl)
+      ? (categoryFromUrl as ProjectCategory)
+      : "all";
+
   const [query, setQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<ProjectCategory | "all">("all");
+  const [categoryFilter, setCategoryFilter] = useState<ProjectCategory | "all">(initialCategory);
   // "all" | "me" | a user id (as string)
   const [responsibleFilter, setResponsibleFilter] = useState<string>(defaultToMine ? "me" : "all");
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
@@ -80,6 +93,19 @@ export default function ProjectsTable({
       setDeletingId(null);
       setConfirmingId(null);
     }
+  };
+
+  const handleCategoryChange = (value: ProjectCategory | "all") => {
+    setCategoryFilter(value);
+    // router.replace (not push) — swapping the filter shouldn't add a new
+    // back-button stop; it should just update what "here" means.
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === "all") {
+      params.delete("category");
+    } else {
+      params.set("category", value);
+    }
+    router.replace(params.toString() ? `/projects?${params.toString()}` : "/projects", { scroll: false });
   };
 
   const mineCount = useMemo(() => rows.filter((r) => r.responsibleId === currentUserId).length, [rows, currentUserId]);
@@ -137,7 +163,7 @@ export default function ProjectsTable({
 
           <select
             value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value as ProjectCategory | "all")}
+            onChange={(e) => handleCategoryChange(e.target.value as ProjectCategory | "all")}
             className="rounded-md border border-[var(--sec-line)] bg-white px-3 py-2 text-sm text-[var(--sec-ink)] outline-none focus:border-[var(--sec-blue)]"
           >
             <option value="all">All categories</option>
