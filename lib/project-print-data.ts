@@ -30,6 +30,7 @@ export async function getProjectForPrint(id: string, viewerRole: Role) {
 
   const links = await db.select().from(projectCategories).where(eq(projectCategories.projectId, id));
   const linkedCategories = links.map((l) => l.category);
+  const noteByCategory = new Map(links.map((l) => [l.category, l.note]));
 
   const items = await db
     .select({
@@ -75,6 +76,7 @@ export async function getProjectForPrint(id: string, viewerRole: Role) {
 
   const sections = linkedCategories.map((category) => ({
     category,
+    note: noteByCategory.get(category) ?? null,
     items: items
       .filter((i) => i.category === category)
       .sort((a, b) => a.sortOrder - b.sortOrder)

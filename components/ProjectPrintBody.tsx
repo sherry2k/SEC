@@ -1,4 +1,13 @@
-import { CATEGORY_LABELS, ITEM_STATUS_LABELS, PROJECT_STATUS_LABELS, type ProjectCategory, type ItemStatus, type ProjectStatus } from "@/lib/checklist";
+import {
+  CATEGORY_LABELS,
+  CATEGORY_ACCENT_BORDER,
+  ITEM_STATUS_LABELS,
+  ITEM_STATUS_STYLES,
+  PROJECT_STATUS_LABELS,
+  type ProjectCategory,
+  type ItemStatus,
+  type ProjectStatus,
+} from "@/lib/checklist";
 
 export type PrintableChecklistItem = {
   id: string;
@@ -12,7 +21,7 @@ export type PrintableChecklistItem = {
   comments: { id: string; comment: string; authorName: string | null; createdAt: string }[];
 };
 
-export type PrintableSection = { category: ProjectCategory; items: PrintableChecklistItem[] };
+export type PrintableSection = { category: ProjectCategory; note: string | null; items: PrintableChecklistItem[] };
 
 export type PrintableProject = {
   projectCode: string;
@@ -27,6 +36,15 @@ export type PrintableProject = {
   sections: PrintableSection[];
 };
 
+// Mirrors CategoryNoteField's own label config (components/CategoryNoteField.tsx)
+// — kept separate since that component is a client component built around
+// an editable input, while this is a plain read-only line on the printed
+// page. Add a category here when CategoryNoteField gains one too.
+const CATEGORY_NOTE_LABELS: Partial<Record<ProjectCategory, string>> = {
+  contractor: "Assigned Contractor",
+  archives: "Archive Project No.",
+};
+
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
@@ -39,6 +57,11 @@ function formatDate(iso: string): string {
 // document type (Quotation, Invoice, etc.) already uses, and for the same
 // reason — rendering both the shell and Puppeteer's own header/footer at
 // once would double up the letterhead.
+//
+// Deliberately styled to match the on-screen Project page (category cards
+// with their colored left border, real colored status pills) rather than a
+// generic plain document — same classes as ProjectChecklist/ChecklistItemRow
+// use, just the read-only shape since nothing here is interactive.
 export default function ProjectPrintBody({ project }: { project: PrintableProject }) {
   return (
     <>
@@ -73,45 +96,66 @@ export default function ProjectPrintBody({ project }: { project: PrintableProjec
 
       <h2 className="mt-6 text-base font-bold">Checklist</h2>
 
-      {project.sections.map((section) => (
-        <div key={section.category} className="mt-4">
-          <p className="border-b border-[var(--sec-line)] pb-1 text-sm font-bold">{CATEGORY_LABELS[section.category]}</p>
-          <div className="mt-1">
-            {section.items.map((item) => {
-              let creditLine: string | null = null;
-              if (item.status === "approved" && item.approvedAt) {
-                creditLine = item.submittedByName
-                  ? `Submitted by ${item.submittedByName}${item.submittedAt ? ` - ${formatDate(item.submittedAt)}` : ""} - Approved ${formatDate(item.approvedAt)}`
-                  : `Approved ${formatDate(item.approvedAt)}`;
-              } else if (item.submittedByName && item.submittedAt) {
-                creditLine = `Submitted by ${item.submittedByName} - ${formatDate(item.submittedAt)}`;
-              }
+      <div className="mt-3 space-y-4">
+        {project.sections.map((section) => {
+          const noteLabel = CATEGORY_NOTE_LABELS[section.category];
+          return (
+            <div
+              key={section.category}
+              className={`rounded-lg border border-l-4 border-[var(--sec-line)] ${CATEGORY_ACCENT_BORDER[section.category]}`}
+              style={{ breakInside: "avoid" }}
+            >
+              <div className="border-b border-[var(--sec-line)] px-3 py-2">
+                <p className="text-sm font-bold">{CATEGORY_LABELS[section.category]}</p>
+                {section.note && noteLabel && (
+                  <p className="mt-0.5 text-xs text-[var(--sec-muted)]">
+                    {noteLabel}: <span className="text-[var(--sec-ink)]">{section.note}</span>
+                  </p>
+                )}
+              </div>
+              <div className="px-3 py-1">
+                {section.items.map((item) => {
+                  let creditLine: string | null = null;
+                  if (item.status === "approved" && item.approvedAt) {
+                    creditLine = item.submittedByName
+                      ? `Submitted by ${item.submittedByName}${item.submittedAt ? ` - ${formatDate(item.submittedAt)}` : ""} - Approved ${formatDate(item.approvedAt)}`
+                      : `Approved ${formatDate(item.approvedAt)}`;
+                  } else if (item.submittedByName && item.submittedAt) {
+                    creditLine = `Submitted by ${item.submittedByName} - ${formatDate(item.submittedAt)}`;
+                  }
 
-              return (
-                <div
-                  key={item.id}
-                  className="flex flex-wrap items-start justify-between gap-2 border-b border-[var(--sec-line)] py-1.5 text-sm last:border-0"
-                  style={{ paddingLeft: item.parentItemId ? 16 : 0 }}
-                >
-                  <div>
-                    <span>{item.name}</span>
-                    {creditLine && <span className="block text-xs text-emerald-700">{creditLine}</span>}
-                    {item.comments.map((c) => (
-                      <span key={c.id} className="mt-0.5 block text-xs text-[var(--sec-muted)]">
-                        "{c.comment}" - {c.authorName ?? "Someone"}, {formatDate(c.createdAt)}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="shrink-0 text-right text-xs">
-                    {item.dueDate && <span className="mr-2 text-[var(--sec-muted)]">Due {item.dueDate}</span>}
-                    <span className="rounded-full border px-2 py-0.5 font-medium">{ITEM_STATUS_LABELS[item.status]}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      ))}
+                  return (
+                    <div
+                      key={item.id}
+                      className="flex flex-wrap items-start justify-between gap-2 border-b border-[var(--sec-line)] py-1.5 text-sm last:border-0"
+                      style={{ paddingLeft: item.parentItemId ? 16 : 0 }}
+                    >
+                      <div>
+                        <span>
+                          {item.parentItemId && <span className="mr-1 text-[var(--sec-line)]">└</span>}
+                          {item.name}
+                        </span>
+                        {creditLine && <span className="block text-xs text-emerald-700">{creditLine}</span>}
+                        {item.comments.map((c) => (
+                          <span key={c.id} className="mt-0.5 block text-xs text-[var(--sec-muted)]">
+                            "{c.comment}" - {c.authorName ?? "Someone"}, {formatDate(c.createdAt)}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="shrink-0 text-right text-xs">
+                        {item.dueDate && <span className="mr-2 text-[var(--sec-muted)]">Due {item.dueDate}</span>}
+                        <span className={`rounded-full border px-2.5 py-0.5 font-medium ${ITEM_STATUS_STYLES[item.status]}`}>
+                          {ITEM_STATUS_LABELS[item.status]}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </>
   );
 }

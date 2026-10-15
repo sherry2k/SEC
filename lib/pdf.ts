@@ -43,6 +43,11 @@ export async function generatePdf(opts: {
     }
 
     await page.goto(opts.url, { waitUntil: "networkidle0" });
+    // networkidle0 only guarantees requests finished, not that a @font-face
+    // (like the self-hosted Arabic font) has actually finished parsing and
+    // is ready to paint — without this, Arabic text can render as boxes on
+    // a cold start even though the font file loaded in time.
+    await page.evaluate(() => document.fonts.ready);
     await page.emulateMediaType("print");
 
     const pdfBytes = await page.pdf({
