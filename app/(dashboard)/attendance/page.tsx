@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { users, attendanceRecords } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
@@ -32,10 +32,12 @@ export default async function AttendancePage({
   const dateKey = dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : uaeDateKey(new Date());
   const range = rangeParam === "week" || rangeParam === "month" ? rangeParam : "day";
 
+  // Staff and Finance both self check-in — Finance (Yousef) now shows up
+  // in the day/week/month attendance views alongside Staff.
   const staff = await db
     .select({ id: users.id, name: users.name })
     .from(users)
-    .where(and(eq(users.role, "staff"), eq(users.status, "approved")));
+    .where(and(inArray(users.role, ["staff", "finance"]), eq(users.status, "approved")));
 
   return (
     <div>

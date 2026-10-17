@@ -114,7 +114,7 @@ export default function Sidebar({
         )}
       </nav>
 
-      {user.role === "staff" && todayAttendance && (
+      {(user.role === "staff" || user.role === "finance") && todayAttendance && (
         <div className="relative border-t border-white/10 px-3 py-3">
           <AttendanceWidget initialCheckInAt={todayAttendance.checkInAt} initialCheckOutAt={todayAttendance.checkOutAt} />
         </div>

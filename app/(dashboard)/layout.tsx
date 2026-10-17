@@ -12,7 +12,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
   // No role list passed: any approved user reaches the shell.
   // Each page/section inside applies its own requireRole for finer limits.
   const user = await requireRole();
-  const todayAttendance = user.role === "staff" ? await getTodayAttendance(user.id) : null;
+  const todayAttendance =
+    user.role === "staff" || user.role === "finance" ? await getTodayAttendance(user.id) : null;
 
   // Only Admin/Master admin review leave requests, so only they need the
   // pending-count badge — everyone else never queries this table here.
