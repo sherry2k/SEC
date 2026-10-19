@@ -588,3 +588,44 @@ export const documentRenewals = pgTable("document_renewals", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// ---------------------------------------------------------------------------
+// Messages — direct messages between any two approved users. One row in
+// conversations per unordered pair, canonicalized as userAId < userBId (see
+// orderedPair()/getOrCreateConversation() in lib/messages.ts) so there's
+// exactly one thread between any two people regardless of who messages
+// first. No role gating — every approved user can message any other.
+// ---------------------------------------------------------------------------
+
+export const conversations = pgTable(
+  "conversations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userAId: integer("user_a_id")
+      .notNull()
+      .references(() => users.id),
+    userBId: integer("user_b_id")
+      .notNull()
+      .references(() => users.id),
+    lastMessageAt: timestamp("last_message_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.userAId, t.userBId)]
+);
+
+export const messages = pgTable("messages", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  conversationId: uuid("conversation_id")
+    .notNull()
+    .references(() => conversations.id, { onDelete: "cascade" }),
+  senderId: integer("sender_id")
+    .notNull()
+    .references(() => users.id),
+  body: text("body").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  // Null until the recipient's client has fetched this message — see
+  // markSeen() in lib/messages.ts. Meaningless on the sender's own messages.
+  seenAt: timestamp("seen_at", { withTimezone: true }),
+});
+
+

@@ -26,6 +26,11 @@ const ALWAYS: Record<string, readonly Role[]> = {
   "leave_requests.review": ["master_admin", "admin"],
   "document_renewals.view": ["master_admin", "admin"],
   "document_renewals.edit": ["master_admin", "admin"],
+  // Direct messages — every approved user can message any other, no role
+  // restriction at all. Kept as a named permission (rather than skipping
+  // the check) so the Messages page/API follow the same
+  // requirePermission()/authorizePermissionApi() pattern as everything else.
+  "messages.use": ["master_admin", "admin", "finance", "staff"],
 };
 
 export type Permission = keyof typeof ALWAYS;

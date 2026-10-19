@@ -1,8 +1,10 @@
+// Save as: app/(dashboard)/layout.tsx
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { leaveRequests } from "@/db/schema";
 import { requireRole } from "@/lib/auth";
 import { can } from "@/lib/permissions";
+import { getTotalUnreadCount } from "@/lib/messages";
 import Sidebar from "@/components/Sidebar";
 import MobileShell from "@/components/MobileShell";
 import DashboardTopbar from "@/components/DashboardTopbar";
@@ -23,10 +25,20 @@ export default async function DashboardLayout({ children }: { children: React.Re
     pendingLeaveCount = pending.length;
   }
 
+  // Everyone can use Messages, so every approved user needs their own
+  // unread count for the Sidebar badge (unlike pendingLeaveCount above,
+  // which only Admin/Master admin need).
+  const unreadMessageCount = await getTotalUnreadCount(user.id);
+
   return (
     <div className="dashboard-shell flex h-screen flex-col overflow-hidden bg-[var(--sec-bg)] lg:flex-row">
       <MobileShell>
-        <Sidebar user={user} todayAttendance={todayAttendance} pendingLeaveCount={pendingLeaveCount} />
+        <Sidebar
+          user={user}
+          todayAttendance={todayAttendance}
+          pendingLeaveCount={pendingLeaveCount}
+          unreadMessageCount={unreadMessageCount}
+        />
       </MobileShell>
       <main className="flex-1 overflow-y-auto">
         <DashboardTopbar user={user} />
