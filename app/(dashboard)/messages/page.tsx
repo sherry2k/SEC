@@ -5,7 +5,7 @@ import MessagesClient from "@/components/MessagesClient";
 
 export default async function MessagesPage() {
   const user = await requirePermission("messages.use");
-  const directory = await getDirectory(user.id);
+  const directory = await getDirectory(user.id, user.role);
 
   return <MessagesClient currentUser={{ id: user.id, name: user.name }} initialDirectory={directory} />;
 }

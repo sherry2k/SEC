@@ -7,6 +7,6 @@ export async function GET() {
   const auth = await authorizePermissionApi("messages.use");
   if (!auth.ok) return auth.response;
 
-  const people = await getDirectory(auth.user.id);
+  const people = await getDirectory(auth.user.id, auth.user.role);
   return NextResponse.json({ people });
 }

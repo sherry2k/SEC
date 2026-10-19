@@ -37,6 +37,17 @@ export async function getOrCreateConversation(userId: number, otherUserId: numbe
   }
 }
 
+// Master admin is invisible to everyone else in Messages — not listed in
+// their conversation list and not reachable by user id either (enforced
+// here, not just hidden in the UI). Master admin itself can message anyone.
+// Sheraz's explicit call: everyone else can see and message each other
+// freely, master admin opts out of being seen.
+export async function canViewerMessage(viewerRole: string, otherUserId: number): Promise<boolean> {
+  if (viewerRole === "master_admin") return true;
+  const [other] = await db.select({ role: users.role }).from(users).where(eq(users.id, otherUserId)).limit(1);
+  return other?.role !== "master_admin";
+}
+
 async function countUnread(conversationId: string, viewerId: number) {
   const rows = await db
     .select({ id: messages.id })
@@ -62,11 +73,15 @@ export type DirectoryEntry = {
 // current user if one exists yet — this is what drives the conversation
 // list, merging "people you can message" and "people you have messaged"
 // into one view rather than requiring a conversation to exist first.
-export async function getDirectory(currentUserId: number): Promise<DirectoryEntry[]> {
-  const people = await db
-    .select({ id: users.id, name: users.name, role: users.role })
-    .from(users)
-    .where(and(eq(users.status, "approved"), ne(users.id, currentUserId)));
+// Master admin is excluded from this list for every viewer except master
+// admin itself (see canViewerMessage above).
+export async function getDirectory(currentUserId: number, currentUserRole: string): Promise<DirectoryEntry[]> {
+  const peopleFilter =
+    currentUserRole === "master_admin"
+      ? and(eq(users.status, "approved"), ne(users.id, currentUserId))
+      : and(eq(users.status, "approved"), ne(users.id, currentUserId), ne(users.role, "master_admin"));
+
+  const people = await db.select({ id: users.id, name: users.name, role: users.role }).from(users).where(peopleFilter);
 
   const convRows = await db
     .select()
@@ -124,7 +139,9 @@ export async function getDirectory(currentUserId: number): Promise<DirectoryEntr
 }
 
 // Total unseen messages across every conversation the user is part of — for
-// the Sidebar's badge, same pattern as pendingLeaveCount.
+// the Sidebar's badge, same pattern as pendingLeaveCount. A conversation
+// with master admin can't exist for anyone but master admin (blocked at
+// send/create time), so this needs no extra filtering.
 export async function getTotalUnreadCount(userId: number): Promise<number> {
   const convRows = await db
     .select({ id: conversations.id })

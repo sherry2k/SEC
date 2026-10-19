@@ -2,7 +2,7 @@
 // :userId is the OTHER person in the conversation, not the viewer's own id.
 import { NextResponse } from "next/server";
 import { authorizePermissionApi } from "@/lib/auth";
-import { getOrCreateConversation, listMessages, markSeen, sendMessage } from "@/lib/messages";
+import { canViewerMessage, getOrCreateConversation, listMessages, markSeen, sendMessage } from "@/lib/messages";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ userId: string }> }) {
   const auth = await authorizePermissionApi("messages.use");
@@ -12,6 +12,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ userId:
   const otherUserId = Number(userId);
   if (!Number.isInteger(otherUserId) || otherUserId === auth.user.id) {
     return NextResponse.json({ error: "Invalid conversation." }, { status: 400 });
+  }
+  if (!(await canViewerMessage(auth.user.role, otherUserId))) {
+    return NextResponse.json({ error: "You don't have access to this." }, { status: 403 });
   }
 
   const conversation = await getOrCreateConversation(auth.user.id, otherUserId);
@@ -39,6 +42,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ userId:
   const otherUserId = Number(userId);
   if (!Number.isInteger(otherUserId) || otherUserId === auth.user.id) {
     return NextResponse.json({ error: "Invalid conversation." }, { status: 400 });
+  }
+  if (!(await canViewerMessage(auth.user.role, otherUserId))) {
+    return NextResponse.json({ error: "You don't have access to this." }, { status: 403 });
   }
 
   const { body } = (await req.json()) as { body?: string };
