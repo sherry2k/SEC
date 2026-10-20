@@ -1,3 +1,4 @@
+// Save as: app/(dashboard)/leave-requests/[id]/page.tsx
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { eq } from "drizzle-orm";
@@ -11,6 +12,9 @@ import {
   LEAVE_TYPE_BADGE_STYLES,
   LEAVE_STATUS_LABELS,
   LEAVE_STATUS_STYLES,
+  minutesBetween,
+  formatHoursLabel,
+  formatTimeLabel,
 } from "@/lib/leave";
 import LeaveReviewControl from "@/components/LeaveReviewControl";
 import DeleteLeaveRequestButton from "@/components/DeleteLeaveRequestButton";
@@ -34,6 +38,8 @@ export default async function LeaveRequestDetailPage({ params }: { params: Promi
       startDate: leaveRequests.startDate,
       endDate: leaveRequests.endDate,
       totalDays: leaveRequests.totalDays,
+      startTime: leaveRequests.startTime,
+      endTime: leaveRequests.endTime,
       reason: leaveRequests.reason,
       attachmentUrl: leaveRequests.attachmentUrl,
       attachmentFileName: leaveRequests.attachmentFileName,
@@ -62,6 +68,9 @@ export default async function LeaveRequestDetailPage({ params }: { params: Promi
 
   const canCancel = isOwner && row.status === "pending";
   const canDelete = canReview;
+  const isTemporary = row.type === "temporary";
+  const durationLabel =
+    isTemporary && row.startTime && row.endTime ? formatHoursLabel(minutesBetween(row.startTime, row.endTime)) : null;
 
   return (
     <div>
@@ -88,51 +97,101 @@ export default async function LeaveRequestDetailPage({ params }: { params: Promi
           </div>
         </div>
 
-        <dl className="mt-4 grid grid-cols-2 gap-x-8 gap-y-2 text-sm sm:grid-cols-3">
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-[var(--sec-muted)]">From</dt>
-            <dd className="text-[var(--sec-ink)]">{formatDate(row.startDate)}</dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-[var(--sec-muted)]">To</dt>
-            <dd className="text-[var(--sec-ink)]">{formatDate(row.endDate)}</dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-[var(--sec-muted)]">Total days</dt>
-            <dd className="text-[var(--sec-ink)]">{row.totalDays}</dd>
-          </div>
-          {row.reason && (
-            <div className="col-span-2 sm:col-span-3">
-              <dt className="text-xs uppercase tracking-wide text-[var(--sec-muted)]">Reason</dt>
-              <dd className="text-[var(--sec-ink)]">{row.reason}</dd>
+        {isTemporary ? (
+          <dl className="mt-4 grid grid-cols-2 gap-x-8 gap-y-2 text-sm sm:grid-cols-3">
+            <div>
+              <dt className="text-xs uppercase tracking-wide text-[var(--sec-muted)]">Date</dt>
+              <dd className="text-[var(--sec-ink)]">{formatDate(row.startDate)}</dd>
             </div>
-          )}
-          {row.attachmentUrl && (
-            <div className="col-span-2 sm:col-span-3">
-              <dt className="text-xs uppercase tracking-wide text-[var(--sec-muted)]">Attachment</dt>
-              <dd>
-                <a
-                  href={`/api/leave-requests/${row.id}/attachment/download`}
-                  className="inline-flex items-center gap-1 text-sm font-medium text-[var(--sec-blue)] hover:underline"
-                >
-                  <Paperclip size={13} />
-                  {row.attachmentFileName || "View file"}
-                </a>
-              </dd>
-            </div>
-          )}
-          {row.reviewedAt && (
-            <div className="col-span-2 sm:col-span-3">
-              <dt className="text-xs uppercase tracking-wide text-[var(--sec-muted)]">
-                {row.status === "approved" ? "Approved" : "Reviewed"}
-              </dt>
+            <div>
+              <dt className="text-xs uppercase tracking-wide text-[var(--sec-muted)]">Time</dt>
               <dd className="text-[var(--sec-ink)]">
-                {reviewer?.name ?? "—"} on {formatDate(row.reviewedAt)}
-                {row.reviewNote && <span className="block text-xs text-[var(--sec-muted)]">{row.reviewNote}</span>}
+                {row.startTime && row.endTime ? `${formatTimeLabel(row.startTime)} – ${formatTimeLabel(row.endTime)}` : "—"}
               </dd>
             </div>
-          )}
-        </dl>
+            <div>
+              <dt className="text-xs uppercase tracking-wide text-[var(--sec-muted)]">Duration</dt>
+              <dd className="text-[var(--sec-ink)]">{durationLabel ?? "—"}</dd>
+            </div>
+            {row.reason && (
+              <div className="col-span-2 sm:col-span-3">
+                <dt className="text-xs uppercase tracking-wide text-[var(--sec-muted)]">Reason</dt>
+                <dd className="text-[var(--sec-ink)]">{row.reason}</dd>
+              </div>
+            )}
+            {row.attachmentUrl && (
+              <div className="col-span-2 sm:col-span-3">
+                <dt className="text-xs uppercase tracking-wide text-[var(--sec-muted)]">Attachment</dt>
+                <dd>
+                  <a
+                    href={`/api/leave-requests/${row.id}/attachment/download`}
+                    className="inline-flex items-center gap-1 text-sm font-medium text-[var(--sec-blue)] hover:underline"
+                  >
+                    <Paperclip size={13} />
+                    {row.attachmentFileName || "View file"}
+                  </a>
+                </dd>
+              </div>
+            )}
+            {row.reviewedAt && (
+              <div className="col-span-2 sm:col-span-3">
+                <dt className="text-xs uppercase tracking-wide text-[var(--sec-muted)]">
+                  {row.status === "approved" ? "Approved" : "Reviewed"}
+                </dt>
+                <dd className="text-[var(--sec-ink)]">
+                  {reviewer?.name ?? "—"} on {formatDate(row.reviewedAt)}
+                  {row.reviewNote && <span className="block text-xs text-[var(--sec-muted)]">{row.reviewNote}</span>}
+                </dd>
+              </div>
+            )}
+          </dl>
+        ) : (
+          <dl className="mt-4 grid grid-cols-2 gap-x-8 gap-y-2 text-sm sm:grid-cols-3">
+            <div>
+              <dt className="text-xs uppercase tracking-wide text-[var(--sec-muted)]">From</dt>
+              <dd className="text-[var(--sec-ink)]">{formatDate(row.startDate)}</dd>
+            </div>
+            <div>
+              <dt className="text-xs uppercase tracking-wide text-[var(--sec-muted)]">To</dt>
+              <dd className="text-[var(--sec-ink)]">{formatDate(row.endDate)}</dd>
+            </div>
+            <div>
+              <dt className="text-xs uppercase tracking-wide text-[var(--sec-muted)]">Total days</dt>
+              <dd className="text-[var(--sec-ink)]">{row.totalDays}</dd>
+            </div>
+            {row.reason && (
+              <div className="col-span-2 sm:col-span-3">
+                <dt className="text-xs uppercase tracking-wide text-[var(--sec-muted)]">Reason</dt>
+                <dd className="text-[var(--sec-ink)]">{row.reason}</dd>
+              </div>
+            )}
+            {row.attachmentUrl && (
+              <div className="col-span-2 sm:col-span-3">
+                <dt className="text-xs uppercase tracking-wide text-[var(--sec-muted)]">Attachment</dt>
+                <dd>
+                  <a
+                    href={`/api/leave-requests/${row.id}/attachment/download`}
+                    className="inline-flex items-center gap-1 text-sm font-medium text-[var(--sec-blue)] hover:underline"
+                  >
+                    <Paperclip size={13} />
+                    {row.attachmentFileName || "View file"}
+                  </a>
+                </dd>
+              </div>
+            )}
+            {row.reviewedAt && (
+              <div className="col-span-2 sm:col-span-3">
+                <dt className="text-xs uppercase tracking-wide text-[var(--sec-muted)]">
+                  {row.status === "approved" ? "Approved" : "Reviewed"}
+                </dt>
+                <dd className="text-[var(--sec-ink)]">
+                  {reviewer?.name ?? "—"} on {formatDate(row.reviewedAt)}
+                  {row.reviewNote && <span className="block text-xs text-[var(--sec-muted)]">{row.reviewNote}</span>}
+                </dd>
+              </div>
+            )}
+          </dl>
+        )}
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
           {row.status === "pending" && canReview && <LeaveReviewControl requestId={row.id} />}
@@ -153,6 +212,9 @@ export default async function LeaveRequestDetailPage({ params }: { params: Promi
               startDateLabel: formatDate(row.startDate),
               endDateLabel: formatDate(row.endDate),
               totalDays: row.totalDays,
+              startTimeLabel: row.startTime ? formatTimeLabel(row.startTime) : undefined,
+              endTimeLabel: row.endTime ? formatTimeLabel(row.endTime) : undefined,
+              durationLabel: durationLabel ?? undefined,
               reason: row.reason,
               hasAttachment: Boolean(row.attachmentUrl),
               approvedByName: reviewer?.name ?? "—",

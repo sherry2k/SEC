@@ -1,3 +1,4 @@
+// Save as: components/LeaveLetterPrintView.tsx
 import PrintDocumentShell from "@/components/PrintDocumentShell";
 import { LEAVE_TYPE_LABELS, LEAVE_TYPE_LETTER_TITLES, type LeaveType } from "@/lib/leave";
 
@@ -9,6 +10,10 @@ export type PrintableLeaveRequest = {
   startDateLabel: string;
   endDateLabel: string;
   totalDays: number;
+  // Only set for Temporary Leave.
+  startTimeLabel?: string;
+  endTimeLabel?: string;
+  durationLabel?: string;
   reason: string | null;
   hasAttachment: boolean;
   approvedByName: string;
@@ -16,6 +21,8 @@ export type PrintableLeaveRequest = {
 };
 
 export default function LeaveLetterPrintView({ request }: { request: PrintableLeaveRequest }) {
+  const isTemporary = request.type === "temporary";
+
   return (
     <PrintDocumentShell
       dateLabel="Date"
@@ -33,27 +40,54 @@ export default function LeaveLetterPrintView({ request }: { request: PrintableLe
         This is to confirm that <span className="font-semibold">{request.staffName}</span>
         {request.staffDesignation && <>, holding the position of <span className="font-semibold">{request.staffDesignation}</span></>}{" "}
         at Solid Engineering Consultancy, has been granted <span className="font-semibold">{LEAVE_TYPE_LABELS[request.type]}</span> for
-        the period below{request.type === "sick" && ", in accordance with UAE Labour Law"}.
+        the {isTemporary ? "period" : "period below"}{request.type === "sick" && ", in accordance with UAE Labour Law"}.
       </p>
 
       <table className="mt-5 w-full text-sm">
         <tbody>
-          <tr className="border-b border-[var(--sec-line)]">
-            <td className="w-40 py-1.5 text-[var(--sec-muted)]">From</td>
-            <td className="py-1.5 font-semibold">{request.startDateLabel}</td>
-          </tr>
-          <tr className="border-b border-[var(--sec-line)]">
-            <td className="py-1.5 text-[var(--sec-muted)]">To</td>
-            <td className="py-1.5 font-semibold">{request.endDateLabel}</td>
-          </tr>
-          <tr className="border-b border-[var(--sec-line)]">
-            <td className="py-1.5 text-[var(--sec-muted)]">Total Days</td>
-            <td className="py-1.5 font-semibold">{request.totalDays} {request.totalDays === 1 ? "day" : "days"}</td>
-          </tr>
-          <tr className="border-b border-[var(--sec-line)]">
-            <td className="py-1.5 text-[var(--sec-muted)]">Leave Type</td>
-            <td className="py-1.5 font-semibold">{LEAVE_TYPE_LABELS[request.type]}</td>
-          </tr>
+          {isTemporary ? (
+            <>
+              <tr className="border-b border-[var(--sec-line)]">
+                <td className="w-40 py-1.5 text-[var(--sec-muted)]">Date</td>
+                <td className="py-1.5 font-semibold">{request.startDateLabel}</td>
+              </tr>
+              <tr className="border-b border-[var(--sec-line)]">
+                <td className="py-1.5 text-[var(--sec-muted)]">Time</td>
+                <td className="py-1.5 font-semibold">
+                  {request.startTimeLabel && request.endTimeLabel
+                    ? `${request.startTimeLabel} – ${request.endTimeLabel}`
+                    : "—"}
+                </td>
+              </tr>
+              <tr className="border-b border-[var(--sec-line)]">
+                <td className="py-1.5 text-[var(--sec-muted)]">Duration</td>
+                <td className="py-1.5 font-semibold">{request.durationLabel ?? "—"}</td>
+              </tr>
+              <tr className="border-b border-[var(--sec-line)]">
+                <td className="py-1.5 text-[var(--sec-muted)]">Leave Type</td>
+                <td className="py-1.5 font-semibold">{LEAVE_TYPE_LABELS[request.type]}</td>
+              </tr>
+            </>
+          ) : (
+            <>
+              <tr className="border-b border-[var(--sec-line)]">
+                <td className="w-40 py-1.5 text-[var(--sec-muted)]">From</td>
+                <td className="py-1.5 font-semibold">{request.startDateLabel}</td>
+              </tr>
+              <tr className="border-b border-[var(--sec-line)]">
+                <td className="py-1.5 text-[var(--sec-muted)]">To</td>
+                <td className="py-1.5 font-semibold">{request.endDateLabel}</td>
+              </tr>
+              <tr className="border-b border-[var(--sec-line)]">
+                <td className="py-1.5 text-[var(--sec-muted)]">Total Days</td>
+                <td className="py-1.5 font-semibold">{request.totalDays} {request.totalDays === 1 ? "day" : "days"}</td>
+              </tr>
+              <tr className="border-b border-[var(--sec-line)]">
+                <td className="py-1.5 text-[var(--sec-muted)]">Leave Type</td>
+                <td className="py-1.5 font-semibold">{LEAVE_TYPE_LABELS[request.type]}</td>
+              </tr>
+            </>
+          )}
         </tbody>
       </table>
 

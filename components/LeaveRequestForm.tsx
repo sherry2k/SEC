@@ -1,44 +1,79 @@
+// Save as: components/LeaveRequestForm.tsx
 "use client";
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
-import { LEAVE_TYPES, LEAVE_TYPE_LABELS, countWorkingDays, type LeaveType } from "@/lib/leave";
+import { LEAVE_TYPES, LEAVE_TYPE_LABELS, countWorkingDays, minutesBetween, formatHoursLabel, type LeaveType } from "@/lib/leave";
 
 export default function LeaveRequestForm() {
   const router = useRouter();
   const [type, setType] = useState<LeaveType>("annual");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  // Temporary Leave uses a single date + a start/end time instead of a
+  // date range — kept in their own fields rather than reusing
+  // startDate/endDate so switching the type dropdown doesn't carry stale
+  // values across.
+  const [tempDate, setTempDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
   const [reason, setReason] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  const isTemporary = type === "temporary";
+
   const previewDays = useMemo(() => {
-    if (!startDate || !endDate || endDate < startDate) return null;
+    if (isTemporary || !startDate || !endDate || endDate < startDate) return null;
     return countWorkingDays(startDate, endDate);
-  }, [startDate, endDate]);
+  }, [isTemporary, startDate, endDate]);
+
+  const previewHours = useMemo(() => {
+    if (!isTemporary || !startTime || !endTime) return null;
+    const minutes = minutesBetween(startTime, endTime);
+    return minutes > 0 ? formatHoursLabel(minutes) : null;
+  }, [isTemporary, startTime, endTime]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    if (!startDate || !endDate) {
-      setError("Pick a start and end date.");
-      return;
-    }
-    if (endDate < startDate) {
-      setError("End date can't be before the start date.");
-      return;
+    if (isTemporary) {
+      if (!tempDate) {
+        setError("Pick a date.");
+        return;
+      }
+      if (!startTime || !endTime) {
+        setError("Pick a start and end time.");
+        return;
+      }
+      if (minutesBetween(startTime, endTime) <= 0) {
+        setError("End time must be after the start time.");
+        return;
+      }
+    } else {
+      if (!startDate || !endDate) {
+        setError("Pick a start and end date.");
+        return;
+      }
+      if (endDate < startDate) {
+        setError("End date can't be before the start date.");
+        return;
+      }
     }
 
     setSaving(true);
     try {
+      const payload = isTemporary
+        ? { type, startDate: tempDate, endDate: tempDate, startTime, endTime, reason }
+        : { type, startDate, endDate, reason };
+
       const res = await fetch("/api/leave-requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type, startDate, endDate, reason }),
+        body: JSON.stringify(payload),
       });
       const data: { error?: string; request?: { id: string } } = await res.json().catch(() => ({}));
       if (!res.ok || !data.request) {
@@ -87,33 +122,72 @@ export default function LeaveRequestForm() {
         </select>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-4">
-        <div>
-          <label className="text-xs font-medium uppercase tracking-wide text-[var(--sec-muted)]">From</label>
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            required
-            className="mt-1 w-full rounded-md border border-[var(--sec-line)] px-3 py-2 text-sm outline-none focus:border-[var(--sec-blue)]"
-          />
-        </div>
-        <div>
-          <label className="text-xs font-medium uppercase tracking-wide text-[var(--sec-muted)]">To</label>
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            required
-            className="mt-1 w-full rounded-md border border-[var(--sec-line)] px-3 py-2 text-sm outline-none focus:border-[var(--sec-blue)]"
-          />
-        </div>
-      </div>
-
-      {previewDays !== null && (
-        <p className="mt-2 text-xs text-[var(--sec-muted)]">
-          {previewDays} working {previewDays === 1 ? "day" : "days"} (Mon–Sat).
-        </p>
+      {isTemporary ? (
+        <>
+          <div className="mt-4">
+            <label className="text-xs font-medium uppercase tracking-wide text-[var(--sec-muted)]">Date</label>
+            <input
+              type="date"
+              value={tempDate}
+              onChange={(e) => setTempDate(e.target.value)}
+              required
+              className="mt-1 w-full rounded-md border border-[var(--sec-line)] px-3 py-2 text-sm outline-none focus:border-[var(--sec-blue)]"
+            />
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-medium uppercase tracking-wide text-[var(--sec-muted)]">From</label>
+              <input
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                required
+                className="mt-1 w-full rounded-md border border-[var(--sec-line)] px-3 py-2 text-sm outline-none focus:border-[var(--sec-blue)]"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium uppercase tracking-wide text-[var(--sec-muted)]">To</label>
+              <input
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                required
+                className="mt-1 w-full rounded-md border border-[var(--sec-line)] px-3 py-2 text-sm outline-none focus:border-[var(--sec-blue)]"
+              />
+            </div>
+          </div>
+          {previewHours && <p className="mt-2 text-xs text-[var(--sec-muted)]">{previewHours} on {tempDate || "the selected date"}.</p>}
+        </>
+      ) : (
+        <>
+          <div className="mt-4 grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-medium uppercase tracking-wide text-[var(--sec-muted)]">From</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                required
+                className="mt-1 w-full rounded-md border border-[var(--sec-line)] px-3 py-2 text-sm outline-none focus:border-[var(--sec-blue)]"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium uppercase tracking-wide text-[var(--sec-muted)]">To</label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                required
+                className="mt-1 w-full rounded-md border border-[var(--sec-line)] px-3 py-2 text-sm outline-none focus:border-[var(--sec-blue)]"
+              />
+            </div>
+          </div>
+          {previewDays !== null && (
+            <p className="mt-2 text-xs text-[var(--sec-muted)]">
+              {previewDays} working {previewDays === 1 ? "day" : "days"} (Mon–Sat).
+            </p>
+          )}
+        </>
       )}
 
       <div className="mt-4">
@@ -122,7 +196,7 @@ export default function LeaveRequestForm() {
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           rows={3}
-          placeholder="e.g. family travel, medical appointment"
+          placeholder={isTemporary ? "e.g. personal errand, appointment" : "e.g. family travel, medical appointment"}
           className="mt-1 w-full rounded-md border border-[var(--sec-line)] px-3 py-2 text-sm outline-none focus:border-[var(--sec-blue)]"
         />
       </div>

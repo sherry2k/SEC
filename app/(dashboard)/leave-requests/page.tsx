@@ -1,10 +1,19 @@
+// Save as: app/(dashboard)/leave-requests/page.tsx
 import Link from "next/link";
 import { eq, desc } from "drizzle-orm";
 import { Plus } from "lucide-react";
 import { db } from "@/db";
 import { leaveRequests } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
-import { LEAVE_TYPE_LABELS, LEAVE_TYPE_BADGE_STYLES, LEAVE_STATUS_LABELS, LEAVE_STATUS_STYLES } from "@/lib/leave";
+import {
+  LEAVE_TYPE_LABELS,
+  LEAVE_TYPE_BADGE_STYLES,
+  LEAVE_STATUS_LABELS,
+  LEAVE_STATUS_STYLES,
+  minutesBetween,
+  formatHoursLabel,
+  formatTimeLabel,
+} from "@/lib/leave";
 
 function formatDate(d: Date): string {
   return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
@@ -58,30 +67,39 @@ export default async function MyLeaveRequestsPage() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
-                <tr key={r.id} className="border-b border-[var(--sec-line)] last:border-0 hover:bg-slate-50">
-                  <td className="px-4 py-3">
-                    <Link href={`/leave-requests/${r.id}`} className="font-mono text-xs text-[var(--sec-blue)] hover:underline">
-                      {r.leaveNo}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${LEAVE_TYPE_BADGE_STYLES[r.type]}`}>
-                      {LEAVE_TYPE_LABELS[r.type]}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-[var(--sec-muted)]">
-                    {formatDate(r.startDate)} – {formatDate(r.endDate)}
-                  </td>
-                  <td className="px-4 py-3 text-[var(--sec-ink)]">{r.totalDays}</td>
-                  <td className="px-4 py-3">
-                    <span className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${LEAVE_STATUS_STYLES[r.status]}`}>
-                      {LEAVE_STATUS_LABELS[r.status]}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-[var(--sec-muted)]">{formatDate(r.createdAt)}</td>
-                </tr>
-              ))}
+              {rows.map((r) => {
+                const isTemporary = r.type === "temporary";
+                return (
+                  <tr key={r.id} className="border-b border-[var(--sec-line)] last:border-0 hover:bg-slate-50">
+                    <td className="px-4 py-3">
+                      <Link href={`/leave-requests/${r.id}`} className="font-mono text-xs text-[var(--sec-blue)] hover:underline">
+                        {r.leaveNo}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${LEAVE_TYPE_BADGE_STYLES[r.type]}`}>
+                        {LEAVE_TYPE_LABELS[r.type]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-[var(--sec-muted)]">
+                      {isTemporary && r.startTime && r.endTime
+                        ? `${formatDate(r.startDate)}, ${formatTimeLabel(r.startTime)} – ${formatTimeLabel(r.endTime)}`
+                        : `${formatDate(r.startDate)} – ${formatDate(r.endDate)}`}
+                    </td>
+                    <td className="px-4 py-3 text-[var(--sec-ink)]">
+                      {isTemporary && r.startTime && r.endTime
+                        ? formatHoursLabel(minutesBetween(r.startTime, r.endTime))
+                        : r.totalDays}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${LEAVE_STATUS_STYLES[r.status]}`}>
+                        {LEAVE_STATUS_LABELS[r.status]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-[var(--sec-muted)]">{formatDate(r.createdAt)}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

@@ -1,10 +1,11 @@
+// Save as: app/api/leave-requests/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { leaveRequests } from "@/db/schema";
 import { authorizePermissionApi } from "@/lib/auth";
 import { nextDocumentCode } from "@/lib/sequences";
 import { logActivity } from "@/lib/activity";
-import { LEAVE_TYPES, LEAVE_TYPE_LABELS, countWorkingDays, type LeaveType } from "@/lib/leave";
+import { LEAVE_TYPES, LEAVE_TYPE_LABELS, countWorkingDays, minutesBetween, type LeaveType } from "@/lib/leave";
 
 function str(v: unknown): string {
   return typeof v === "string" ? v.trim() : "";
@@ -12,6 +13,10 @@ function str(v: unknown): string {
 
 function isValidDateKey(v: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(new Date(`${v}T00:00:00.000Z`).getTime());
+}
+
+function isValidTime(v: string): boolean {
+  return /^([01]\d|2[0-3]):([0-5]\d)$/.test(v);
 }
 
 export async function POST(request: NextRequest) {
@@ -28,6 +33,50 @@ export async function POST(request: NextRequest) {
     if (!LEAVE_TYPES.includes(type)) {
       return NextResponse.json({ error: "Choose a leave type." }, { status: 400 });
     }
+
+    // Temporary Leave: a single date + a start/end time, measured in hours
+    // rather than working days — totalDays stays 0 so it doesn't count as
+    // a full day's absence, unlike every other leave type here.
+    if (type === "temporary") {
+      const startTime = str(body?.startTime);
+      const endTime = str(body?.endTime);
+
+      if (!isValidDateKey(startDate)) {
+        return NextResponse.json({ error: "Pick a date." }, { status: 400 });
+      }
+      if (!isValidTime(startTime) || !isValidTime(endTime)) {
+        return NextResponse.json({ error: "Pick a start and end time." }, { status: 400 });
+      }
+      if (minutesBetween(startTime, endTime) <= 0) {
+        return NextResponse.json({ error: "End time must be after the start time." }, { status: 400 });
+      }
+
+      const leaveNo = await nextDocumentCode("LV");
+
+      const [row] = await db
+        .insert(leaveRequests)
+        .values({
+          leaveNo,
+          userId: auth.user.id,
+          type,
+          startDate: new Date(`${startDate}T00:00:00.000Z`),
+          endDate: new Date(`${startDate}T00:00:00.000Z`),
+          totalDays: 0,
+          startTime,
+          endTime,
+          reason: reason || null,
+        })
+        .returning();
+
+      await logActivity({
+        userId: auth.user.id,
+        action: "leave_request_created",
+        targetName: `${row.leaveNo} — ${LEAVE_TYPE_LABELS[type]} (${auth.user.name})`,
+      });
+
+      return NextResponse.json({ success: true, request: row }, { status: 201 });
+    }
+
     if (!isValidDateKey(startDate) || !isValidDateKey(endDate)) {
       return NextResponse.json({ error: "Enter a valid start and end date." }, { status: 400 });
     }

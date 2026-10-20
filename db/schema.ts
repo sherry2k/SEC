@@ -535,6 +535,11 @@ export const leaveRequests = pgTable("leave_requests", {
   endDate: date("end_date", { mode: "date" }).notNull(),
   totalDays: integer("total_days").notNull(),
   reason: text("reason"),
+// Only set for Temporary Leave — "HH:MM" UAE local time. startDate and
+  // endDate both hold the same single day for this type, and totalDays
+  // stays 0 since a few hours off isn't a full working day absent.
+  startTime: text("start_time"),
+  endTime: text("end_time"),
   // Optional supporting document (e.g. a medical certificate for sick
   // leave) — same private-Blob pattern as project attachments.
   attachmentUrl: text("attachment_url"),
