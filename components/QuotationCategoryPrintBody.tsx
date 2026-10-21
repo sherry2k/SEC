@@ -22,6 +22,25 @@ export default function QuotationCategoryPrintBody({ quotation }: { quotation: P
   const balance = scopeFee - downPayment;
   const createdDateLabel = quotation.createdAt.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
 
+  const scopeLines = linesOf(quotation.scopeItemsText);
+  const exclusionLines = linesOf(quotation.exclusionsText);
+  const commercialLines = linesOf(quotation.commercialConditions);
+
+  // Numbered sections only count the ones that actually have content — a
+  // section with nothing to show (e.g. no mandatory fees on BOC/CBC) is
+  // skipped entirely rather than printing an empty heading, and every
+  // section after it shifts up to fill the gap.
+  const sectionOrder = [
+    { key: "scope", show: scopeLines.length > 0 },
+    { key: "mandatory", show: quotation.mandatoryFees.length > 0 },
+    { key: "exclusions", show: exclusionLines.length > 0 },
+    { key: "optional", show: quotation.optionalServices.length > 0 },
+    { key: "commercial", show: commercialLines.length > 0 },
+    { key: "summary", show: true },
+  ];
+  const included = sectionOrder.filter((s) => s.show).map((s) => s.key);
+  const numberOf = (key: string) => included.indexOf(key) + 1;
+
   type SummaryRow = { label: string; type: "Required" | "Optional"; feeExclVat: number };
   const summaryRows: SummaryRow[] = [
     { label: "Consultancy Down Payment - Upon Appointment", type: "Required", feeExclVat: downPayment },
@@ -64,45 +83,47 @@ export default function QuotationCategoryPrintBody({ quotation }: { quotation: P
         </p>
       ))}
 
-      {/* Each section below is wrapped in a single break-inside-avoid block
-          so the heading and its content move to the next page together —
-          a heading on its own at the bottom of a page is exactly what that
-          prevents. */}
-      <div className="mt-6 break-inside-avoid">
-        <h2 className="text-base font-bold text-[var(--sec-blue)]">1 Scope of Services</h2>
-        <ol className="mt-2 list-decimal space-y-0.5 pl-5 text-sm">
-          {linesOf(quotation.scopeItemsText).map((line, i) => (
-            <li key={i}>{line}</li>
-          ))}
-        </ol>
-        <p className="mt-3 text-sm font-bold">
-          Professional Consultancy Fee: AED {money(scopeFee)} + {quotation.vatRatePercent}% VAT = AED {money(scopeFee * (1 + vat))} including VAT.
-        </p>
-      </div>
+      {scopeLines.length > 0 && (
+        <div className="mt-6 break-inside-avoid">
+          <h2 className="text-base font-bold text-[var(--sec-blue)]">{numberOf("scope")} Scope of Services</h2>
+          <ol className="mt-2 list-decimal space-y-0.5 pl-5 text-sm">
+            {scopeLines.map((line, i) => (
+              <li key={i}>{line}</li>
+            ))}
+          </ol>
+          <p className="mt-3 text-sm font-bold">
+            Professional Consultancy Fee: AED {money(scopeFee)} + {quotation.vatRatePercent}% VAT = AED {money(scopeFee * (1 + vat))} including VAT.
+          </p>
+        </div>
+      )}
 
-      <div className="mt-6 break-inside-avoid">
-        <h2 className="text-base font-bold text-[var(--sec-blue)]">2 Mandatory Authority Fees</h2>
-        <ol className="mt-2 list-decimal space-y-0.5 pl-5 text-sm">
-          {quotation.mandatoryFees.map((f, i) => (
-            <li key={i}>
-              {f.name}: AED {money(f.price)} + VAT{f.note ? `, ${f.note}` : ""}.
-            </li>
-          ))}
-        </ol>
-      </div>
+      {quotation.mandatoryFees.length > 0 && (
+        <div className="mt-6 break-inside-avoid">
+          <h2 className="text-base font-bold text-[var(--sec-blue)]">{numberOf("mandatory")} Mandatory Authority Fees</h2>
+          <ol className="mt-2 list-decimal space-y-0.5 pl-5 text-sm">
+            {quotation.mandatoryFees.map((f, i) => (
+              <li key={i}>
+                {f.name}: AED {money(f.price)} + VAT{f.note ? `, ${f.note}` : ""}.
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
 
-      <div className="mt-6 break-inside-avoid">
-        <h2 className="text-base font-bold text-[var(--sec-blue)]">3 Exclusions and Limitations</h2>
-        <ul className="mt-2 list-disc space-y-0.5 pl-5 text-sm">
-          {linesOf(quotation.exclusionsText).map((line, i) => (
-            <li key={i}>{line}</li>
-          ))}
-        </ul>
-      </div>
+      {exclusionLines.length > 0 && (
+        <div className="mt-6 break-inside-avoid">
+          <h2 className="text-base font-bold text-[var(--sec-blue)]">{numberOf("exclusions")} Exclusions and Limitations</h2>
+          <ul className="mt-2 list-disc space-y-0.5 pl-5 text-sm">
+            {exclusionLines.map((line, i) => (
+              <li key={i}>{line}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {quotation.optionalServices.length > 0 && (
         <div className="mt-6 break-inside-avoid">
-          <h2 className="text-base font-bold text-[var(--sec-blue)]">4 Optional Additional Services If Required</h2>
+          <h2 className="text-base font-bold text-[var(--sec-blue)]">{numberOf("optional")} Optional Additional Services If Required</h2>
           <ol className="mt-2 list-decimal space-y-0.5 pl-5 text-sm">
             {quotation.optionalServices.map((f, i) => (
               <li key={i}>
@@ -113,17 +134,19 @@ export default function QuotationCategoryPrintBody({ quotation }: { quotation: P
         </div>
       )}
 
-      <div className="mt-6 break-inside-avoid">
-        <h2 className="text-base font-bold text-[var(--sec-blue)]">5 Commercial Terms</h2>
-        <ol className="mt-2 list-decimal space-y-0.5 pl-5 text-sm">
-          {linesOf(quotation.commercialConditions).map((line, i) => (
-            <li key={i}>{line}</li>
-          ))}
-        </ol>
-      </div>
+      {commercialLines.length > 0 && (
+        <div className="mt-6 break-inside-avoid">
+          <h2 className="text-base font-bold text-[var(--sec-blue)]">{numberOf("commercial")} Commercial Terms</h2>
+          <ol className="mt-2 list-decimal space-y-0.5 pl-5 text-sm">
+            {commercialLines.map((line, i) => (
+              <li key={i}>{line}</li>
+            ))}
+          </ol>
+        </div>
+      )}
 
       <div className="mt-6 break-inside-avoid">
-        <h2 className="text-base font-bold text-[var(--sec-blue)]">6 Commercial Summary and Payment Schedule</h2>
+        <h2 className="text-base font-bold text-[var(--sec-blue)]">{numberOf("summary")} Commercial Summary and Payment Schedule</h2>
         <table className="mt-2 w-full border-collapse text-sm">
           <thead>
             <tr className="bg-[var(--sec-blue-deep)] text-white">
@@ -199,7 +222,7 @@ export default function QuotationCategoryPrintBody({ quotation }: { quotation: P
         </div>
       </div>
 
-           <div className="mt-6 break-inside-avoid">
+      <div className="mt-6 break-inside-avoid">
         <div className="text-sm">
           <p className="text-base font-bold">Client Confirmation</p>
           <p className="mt-1">
