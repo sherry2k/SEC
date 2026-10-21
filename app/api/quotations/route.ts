@@ -120,7 +120,9 @@ export async function POST(request: NextRequest) {
       })
       .returning();
 
-    await db.insert(quotationItems).values(rows.map((r) => ({ ...r, quotationId: quotation.id })));
+    if (rows.length > 0) {
+  await db.insert(quotationItems).values(rows.map((r) => ({ ...r, quotationId: quotation.id })));
+}
 
     await logActivity({
       userId: auth.user.id,
