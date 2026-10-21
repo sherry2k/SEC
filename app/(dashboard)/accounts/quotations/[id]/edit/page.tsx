@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import { eq, asc } from "drizzle-orm";
 import { db } from "@/db";
@@ -71,6 +73,14 @@ export default async function EditQuotationPage({ params }: { params: Promise<{ 
 
   return (
     <div>
+      <Link
+        href="/accounts/quotations"
+        className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--sec-blue)] hover:underline"
+      >
+        <ArrowLeft size={14} />
+        Back to Quotations
+      </Link>
+
       <p className="font-mono text-xs text-[var(--sec-muted)]">
         {quotation.quotationNo}
         {quotation.category && ` · ${QUOTATION_CATEGORY_LABELS[quotation.category as QuotationCategory] ?? quotation.category}`}
