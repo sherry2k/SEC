@@ -135,7 +135,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   // as one document, not cell-by-cell like a checklist, so there's no
   // meaningful "partial" edit to preserve.
   await db.delete(quotationItems).where(eq(quotationItems.quotationId, id));
+  if (rows.length > 0) {
   await db.insert(quotationItems).values(rows);
+}
 
   await logActivity({
     userId: auth.user.id,
