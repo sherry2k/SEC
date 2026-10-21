@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { desc } from "drizzle-orm";
-import { Plus, ArrowLeft } from "lucide-react";
+import { Plus, ArrowLeft, Pencil } from "lucide-react";
 import { db } from "@/db";
 import { quotations, quotationItems } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import { calcGrandTotals } from "@/lib/quotation-calc";
+import DeleteQuotationButton from "@/components/DeleteQuotationButton";
 
 export default async function QuotationsListPage() {
   await requirePermission("accounts.view");
@@ -51,7 +52,7 @@ export default async function QuotationsListPage() {
         </div>
       ) : (
         <div className="mt-6 overflow-x-auto rounded-lg border border-[var(--sec-line)] bg-white">
-          <table className="w-full min-w-[720px] text-left text-sm">
+          <table className="w-full min-w-[840px] text-left text-sm">
             <thead>
               <tr className="border-b border-[var(--sec-line)] text-xs uppercase tracking-wide text-[var(--sec-muted)]">
                 <th className="px-4 py-3 font-medium">Quotation No.</th>
@@ -60,6 +61,7 @@ export default async function QuotationsListPage() {
                 <th className="px-4 py-3 font-medium">Grand Total</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Date</th>
+                <th className="px-4 py-3 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -99,6 +101,18 @@ export default async function QuotationsListPage() {
                     <td className="px-4 py-3 text-[var(--sec-muted)] capitalize">{q.status}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-[var(--sec-muted)]">
                       {q.createdAt.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/accounts/quotations/${q.id}/edit`}
+                          className="flex items-center gap-1.5 rounded-md border border-[var(--sec-line)] px-3 py-1.5 text-xs font-medium text-[var(--sec-muted)] transition-colors hover:border-[var(--sec-blue)] hover:bg-blue-50 hover:text-[var(--sec-blue)]"
+                        >
+                          <Pencil size={13} />
+                          Edit
+                        </Link>
+                        <DeleteQuotationButton quotationId={q.id} />
+                      </div>
                     </td>
                   </tr>
                 );
