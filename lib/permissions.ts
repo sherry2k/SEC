@@ -12,8 +12,8 @@ const ALWAYS: Record<string, readonly Role[]> = {
   "accounts.edit": ["master_admin", "admin", "finance"],
   "users.manage": USER_MANAGEMENT_ROLES,
   "settings.manage": ["master_admin", "admin"],
-  "attendance.view": ["master_admin", "admin"],
-  "attendance.manage": ["master_admin", "admin"],
+  "attendance.view": ["master_admin", "admin", "finance"],
+  "attendance.manage": ["master_admin", "admin", "finance"],
   // Finance (Yousef) now self check-in/out too, same as staff — admin and
   // master admin manage attendance rather than check in for themselves.
   "attendance.checkin": ["staff", "finance"],
@@ -24,8 +24,8 @@ const ALWAYS: Record<string, readonly Role[]> = {
   // restricted.
   "leave_requests.create": ["master_admin", "admin", "finance", "staff"],
   "leave_requests.review": ["master_admin", "admin"],
-  "document_renewals.view": ["master_admin", "admin"],
-  "document_renewals.edit": ["master_admin", "admin"],
+  "document_renewals.view": ["master_admin", "admin", "finance"],
+  "document_renewals.edit": ["master_admin", "admin", "finance"],
   // Direct messages — every approved user can message any other, no role
   // restriction at all. Kept as a named permission (rather than skipping
   // the check) so the Messages page/API follow the same
