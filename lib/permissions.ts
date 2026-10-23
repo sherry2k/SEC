@@ -14,9 +14,10 @@ const ALWAYS: Record<string, readonly Role[]> = {
   "settings.manage": ["master_admin", "admin"],
   "attendance.view": ["master_admin", "admin", "finance"],
   "attendance.manage": ["master_admin", "admin", "finance"],
-  // Finance (Yousef) now self check-in/out too, same as staff — admin and
-  // master admin manage attendance rather than check in for themselves.
-  "attendance.checkin": ["staff", "finance"],
+  // Admin and Finance can self check-in/out too, same as staff — only
+  // master admin is purely a manager/reviewer of attendance, not a
+  // check-in participant.
+  "attendance.checkin": ["staff", "finance", "admin"],
   "daily_report.submit": ["staff"],
   "daily_report.view_all": ["master_admin", "admin"],
   // Everyone can submit a leave request for themselves, including
