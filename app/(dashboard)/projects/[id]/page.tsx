@@ -15,9 +15,6 @@ import DeleteProjectButton from "@/components/DeleteProjectButton";
 import ProjectStatusControl from "@/components/ProjectStatusControl";
 import PrintButton from "@/components/PrintButton";
 import ProjectPrintView from "@/components/ProjectPrintView";
-import { getProjectFinancials } from "@/lib/project-finance";
-import LinkExistingDocument from "@/components/LinkExistingDocument";
-import ProjectTotalAmountEditor from "@/components/ProjectTotalAmountEditor";
 import ProjectAttachments, { type Attachment } from "@/components/ProjectAttachments";
 import { toFilenameSafe } from "@/lib/pdf-filename";
 import BackButton from "@/components/BackButton";
@@ -36,7 +33,6 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   const allowFinanceEdit = await financeCanEditProjects();
   const canEdit = can(user.role, "projects.edit", allowFinanceEdit);
   const canDelete = can(user.role, "projects.delete", allowFinanceEdit);
-  const canViewFinance = can(user.role, "accounts.view");
   const canReassignResponsible = can(user.role, "projects.reassign_responsible");
   const assignableUsers = await getAssignableUsers();
 
@@ -44,8 +40,6 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
   const [project] = await db.select().from(projects).where(eq(projects.id, id)).limit(1);
   if (!project) notFound();
-
-  const financials = canViewFinance ? await getProjectFinancials(id) : null;
 
   const attachmentRows = await db
     .select({
@@ -256,47 +250,6 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       )}
 
       {project.notes && <p className="mt-4 text-sm text-[var(--sec-muted)]">{project.notes}</p>}
-
-      {financials && (
-        <div className="no-print mt-8 rounded-lg border border-[var(--sec-line)] bg-white p-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="font-bold text-lg text-[var(--sec-ink)]">Financial Summary</h2>
-            <Link
-              href={`/projects/${project.id}/statement`}
-              className="text-sm font-medium text-[var(--sec-blue)] hover:underline"
-            >
-              View Statement of Account →
-            </Link>
-          </div>
-          {can(user.role, "accounts.edit") && <LinkExistingDocument projectId={project.id} />}
-          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <ProjectTotalAmountEditor projectId={project.id} initialAmount={financials.totalAmount} canEdit={can(user.role, "accounts.edit")} />
-            <div>
-              <p className="text-xs uppercase tracking-wide text-[var(--sec-muted)]">Invoiced</p>
-              <p className="mt-0.5 text-lg font-bold text-[var(--sec-ink)]">
-                AED {financials.invoicedTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-wide text-[var(--sec-muted)]">Paid</p>
-              <p className="mt-0.5 text-lg font-bold text-emerald-600">
-                AED {financials.paidTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-wide text-[var(--sec-muted)]">Balance</p>
-              <p className={`mt-0.5 text-lg font-bold ${financials.balance > 0 ? "text-amber-600" : "text-emerald-600"}`}>
-                AED {financials.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-              </p>
-            </div>
-          </div>
-          {financials.totalAmount === 0 && financials.ledger.length === 0 && (
-            <p className="mt-3 text-xs text-[var(--sec-muted)]">
-              No Total Amount set, and no Tax Invoice, Invoice, or Receipt Voucher is linked to this project yet.
-            </p>
-          )}
-        </div>
-      )}
 
       <ProjectAttachments projectId={project.id} initialAttachments={attachments} canEdit={canEdit} />
 
