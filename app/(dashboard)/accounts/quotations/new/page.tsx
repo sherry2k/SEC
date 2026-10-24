@@ -10,6 +10,21 @@ import QuotationCategoryForm from "@/components/QuotationCategoryForm";
 import { defaultQuotationValues, categoryQuotationValues } from "@/lib/quotation-defaults";
 import { QUOTATION_CATEGORIES, QUOTATION_CATEGORY_LABELS, getAvailableQuotationTemplateCategories, getQuotationCategoryTemplate, type QuotationCategory } from "@/lib/quotation-category";
 
+// Picker-only label suffixes — a clarifying note shown just on this
+// category-picker screen, not on the printed quotation, the Fee Breakdown
+// badge, or anywhere QUOTATION_CATEGORY_LABELS is used elsewhere. Keyed by
+// the label text itself so this doesn't need to know the category's
+// internal slug.
+const PICKER_LABEL_SUFFIX: Record<string, string> = {
+  Permit: " (Modifications)",
+  "Work Permit": " (ADCD)",
+};
+
+function pickerLabel(category: QuotationCategory): string {
+  const label = QUOTATION_CATEGORY_LABELS[category];
+  return `${label}${PICKER_LABEL_SUFFIX[label] ?? ""}`;
+}
+
 export default async function NewQuotationPage({
   searchParams,
 }: {
@@ -62,7 +77,7 @@ export default async function NewQuotationPage({
                 href={`/accounts/quotations/new?category=${c}${qs}`}
                 className="flex items-center justify-between rounded-lg border border-[var(--sec-line)] bg-white px-4 py-3.5 text-sm font-semibold text-[var(--sec-ink)] transition-colors hover:border-[var(--sec-blue)]"
               >
-                {QUOTATION_CATEGORY_LABELS[c]}
+                {pickerLabel(c)}
                 <ArrowRight size={16} className="text-[var(--sec-muted)]" />
               </Link>
             ) : (
@@ -70,7 +85,7 @@ export default async function NewQuotationPage({
                 key={c}
                 className="flex items-center justify-between rounded-lg border border-dashed border-[var(--sec-line)] bg-slate-50 px-4 py-3.5 text-sm font-medium text-[var(--sec-muted)]"
               >
-                {QUOTATION_CATEGORY_LABELS[c]}
+                {pickerLabel(c)}
                 <span className="text-xs">Template not set up yet</span>
               </div>
             );
