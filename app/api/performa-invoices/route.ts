@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
         project: str(body?.project) || null,
         customerAddress: str(body?.customerAddress) || null,
         projectId: str(body?.projectId) || null,
+        accountProjectId: str(body?.accountProjectId) || null,
         vatRatePercent: String(vatRatePercent),
         signatoryName: str(body?.signatoryName) || null,
         showStamp: Boolean(body?.showStamp),

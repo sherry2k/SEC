@@ -24,6 +24,7 @@ export default async function EditPerformaInvoicePage({ params }: { params: Prom
 
   const initial: PerformaInvoiceFormValues = {
     projectId: invoice.projectId ?? "",
+    accountProjectId: invoice.accountProjectId ?? "",
     issueDate: invoice.issueDate,
     customerName: invoice.customerName ?? "",
     project: invoice.project ?? "",

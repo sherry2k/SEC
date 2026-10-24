@@ -6,6 +6,11 @@ export function emptyItem(): PerformaInvoiceItemDraft {
 
 export type PerformaInvoiceFormValues = {
   projectId: string; // "" = not linked to a project
+  // Set from context (the Account Project a document is created under),
+  // same pattern as QuotationFormValues.accountProjectId — never picked
+  // manually in the form, just carried through from the "New performa
+  // invoice" link's ?accountProjectId= query param.
+  accountProjectId: string;
   issueDate: string;
   customerName: string;
   project: string;
@@ -20,6 +25,7 @@ export type PerformaInvoiceFormValues = {
 export function defaultPerformaInvoiceValues(): PerformaInvoiceFormValues {
   return {
     projectId: "",
+    accountProjectId: "",
     issueDate: new Date().toLocaleDateString("en-GB"),
     customerName: "",
     project: "",
