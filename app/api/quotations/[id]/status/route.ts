@@ -38,9 +38,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     .set({ status, updatedBy: auth.user.id, updatedAt: new Date() })
     .where(eq(quotations.id, id));
 
+  // Reusing the existing "quotation_updated" action rather than a new
+  // literal — ActivityAction is a fixed union in lib/activity.ts, and the
+  // status change itself is recorded in targetName below.
   await logActivity({
     userId: auth.user.id,
-    action: "quotation_status_changed",
+    action: "quotation_updated",
     targetName: `${existing.quotationNo} — ${existing.clientName ?? ""} → ${status}`,
   });
 
