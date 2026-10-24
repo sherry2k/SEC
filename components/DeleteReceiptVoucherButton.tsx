@@ -4,7 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, Loader2, Check } from "lucide-react";
 
-export default function DeleteReceiptVoucherButton({ voucherId }: { voucherId: string }) {
+export default function DeleteReceiptVoucherButton({
+  voucherId,
+  redirectTo = "/accounts/receipt-vouchers",
+}: {
+  voucherId: string;
+  redirectTo?: string;
+}) {
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -21,7 +27,7 @@ export default function DeleteReceiptVoucherButton({ voucherId }: { voucherId: s
         setDeleting(false);
         return;
       }
-      router.push("/accounts/receipt-vouchers");
+      router.push(redirectTo);
       router.refresh();
     } catch {
       setError("Couldn't reach the server.");

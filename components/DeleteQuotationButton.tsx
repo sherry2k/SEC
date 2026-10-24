@@ -4,7 +4,17 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, Loader2, Check } from "lucide-react";
 
-export default function DeleteQuotationButton({ quotationId }: { quotationId: string }) {
+export default function DeleteQuotationButton({
+  quotationId,
+  redirectTo = "/accounts/quotations",
+}: {
+  quotationId: string;
+  // Where to send the user after a successful delete — defaults to the
+  // quotations list (the quotation's own page's behavior), but a caller
+  // like the Account Project detail page can pass its own URL instead so
+  // deleting from that table doesn't bounce the user away from it.
+  redirectTo?: string;
+}) {
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -21,7 +31,7 @@ export default function DeleteQuotationButton({ quotationId }: { quotationId: st
         setDeleting(false);
         return;
       }
-      router.push("/accounts/quotations");
+      router.push(redirectTo);
       router.refresh();
     } catch {
       setError("Couldn't reach the server.");

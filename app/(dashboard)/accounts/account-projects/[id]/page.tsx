@@ -1,12 +1,17 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Plus, Pencil } from "lucide-react";
 import { db } from "@/db";
 import { accountProjects } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import { getAccountProjectFinancials } from "@/lib/account-project-finance";
 import DeleteAccountProjectButton from "@/components/DeleteAccountProjectButton";
+import DeleteQuotationButton from "@/components/DeleteQuotationButton";
+import DeleteTaxInvoiceButton from "@/components/DeleteTaxInvoiceButton";
+import DeleteInvoiceButton from "@/components/DeleteInvoiceButton";
+import DeletePerformaInvoiceButton from "@/components/DeletePerformaInvoiceButton";
+import DeleteReceiptVoucherButton from "@/components/DeleteReceiptVoucherButton";
 
 function money(n: number): string {
   return n.toLocaleString(undefined, { minimumFractionDigits: 2 });
@@ -20,6 +25,17 @@ const DOC_BADGE: Record<string, string> = {
   receipt_voucher: "border-emerald-200 bg-emerald-50 text-emerald-700",
 };
 
+// Where each document kind's own view/edit pages and list page live —
+// `fin.documents[].kind` is the key. One place to keep this in sync if a
+// route ever moves, rather than repeating the path per branch below.
+const DOC_ROUTES: Record<string, { base: string }> = {
+  quotation: { base: "/accounts/quotations" },
+  tax_invoice: { base: "/accounts/tax-invoices" },
+  invoice: { base: "/accounts/invoices" },
+  performa_invoice: { base: "/accounts/performa-invoices" },
+  receipt_voucher: { base: "/accounts/receipt-vouchers" },
+};
+
 export default async function AccountProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await requirePermission("accounts.view");
   const { id } = await params;
@@ -28,6 +44,27 @@ export default async function AccountProjectDetailPage({ params }: { params: Pro
   if (!accountProject) notFound();
 
   const fin = await getAccountProjectFinancials(id);
+  const projectHref = `/accounts/account-projects/${id}`;
+
+  // One delete button per document kind — each component hits its own
+  // document type's DELETE route, but all redirect back to this project
+  // page afterward instead of their own type's full list.
+  function renderDelete(kind: string, docId: string) {
+    switch (kind) {
+      case "quotation":
+        return <DeleteQuotationButton quotationId={docId} redirectTo={projectHref} />;
+      case "tax_invoice":
+        return <DeleteTaxInvoiceButton invoiceId={docId} redirectTo={projectHref} />;
+      case "invoice":
+        return <DeleteInvoiceButton invoiceId={docId} redirectTo={projectHref} />;
+      case "performa_invoice":
+        return <DeletePerformaInvoiceButton invoiceId={docId} redirectTo={projectHref} />;
+      case "receipt_voucher":
+        return <DeleteReceiptVoucherButton voucherId={docId} redirectTo={projectHref} />;
+      default:
+        return null;
+    }
+  }
 
   return (
     <div>
@@ -204,7 +241,7 @@ export default async function AccountProjectDetailPage({ params }: { params: Pro
           </div>
         ) : (
           <div className="mt-3 overflow-x-auto rounded-lg border border-[var(--sec-line)] bg-white">
-            <table className="w-full min-w-[720px] text-left text-sm">
+            <table className="w-full min-w-[820px] text-left text-sm">
               <thead>
                 <tr className="border-b border-[var(--sec-line)] text-xs uppercase tracking-wide text-[var(--sec-muted)]">
                   <th className="px-4 py-3 font-medium">Type</th>
@@ -212,20 +249,56 @@ export default async function AccountProjectDetailPage({ params }: { params: Pro
                   <th className="px-4 py-3 font-medium">Date</th>
                   <th className="px-4 py-3 font-medium text-right">Amount</th>
                   <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {fin.documents.map((d) => (
-                  <tr key={`${d.kind}-${d.id}`} className="border-b border-[var(--sec-line)] last:border-0">
-                    <td className="px-4 py-3">
-                      <span className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-semibold ${DOC_BADGE[d.kind]}`}>{d.label}</span>
-                    </td>
-                    <td className="px-4 py-3 font-mono text-xs text-[var(--sec-blue)]">{d.ref}</td>
-                    <td className="px-4 py-3 text-[var(--sec-muted)]">{d.dateLabel}</td>
-                    <td className="px-4 py-3 text-right">AED {money(d.amount)}</td>
-                    <td className="px-4 py-3 capitalize text-[var(--sec-muted)]">{d.status}</td>
-                  </tr>
-                ))}
+                {fin.documents.map((d) => {
+                  const routes = DOC_ROUTES[d.kind];
+                  const viewHref = routes ? `${routes.base}/${d.id}` : undefined;
+                  const editHref = routes ? `${routes.base}/${d.id}/edit` : undefined;
+                  return (
+                    <tr key={`${d.kind}-${d.id}`} className="border-b border-[var(--sec-line)] last:border-0 hover:bg-slate-50">
+                      <td className="px-4 py-3">
+                        <span className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-semibold ${DOC_BADGE[d.kind]}`}>{d.label}</span>
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs">
+                        {viewHref ? (
+                          <Link href={viewHref} className="text-[var(--sec-blue)] hover:underline">
+                            {d.ref}
+                          </Link>
+                        ) : (
+                          <span className="text-[var(--sec-muted)]">{d.ref}</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-[var(--sec-muted)]">{d.dateLabel}</td>
+                      <td className="px-4 py-3 text-right">AED {money(d.amount)}</td>
+                      <td className="px-4 py-3 capitalize text-[var(--sec-muted)]">{d.status}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          {viewHref && (
+                            <Link
+                              href={viewHref}
+                              className="rounded-md border border-[var(--sec-line)] px-3 py-1.5 text-xs font-medium text-[var(--sec-muted)] transition-colors hover:border-[var(--sec-blue)] hover:bg-blue-50 hover:text-[var(--sec-blue)]"
+                            >
+                              View
+                            </Link>
+                          )}
+                          {editHref && (
+                            <Link
+                              href={editHref}
+                              className="flex items-center gap-1.5 rounded-md border border-[var(--sec-line)] px-3 py-1.5 text-xs font-medium text-[var(--sec-muted)] transition-colors hover:border-[var(--sec-blue)] hover:bg-blue-50 hover:text-[var(--sec-blue)]"
+                            >
+                              <Pencil size={13} />
+                              Edit
+                            </Link>
+                          )}
+                          {renderDelete(d.kind, d.id)}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

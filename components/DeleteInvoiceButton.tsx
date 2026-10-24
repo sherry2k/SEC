@@ -4,7 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, Loader2, Check } from "lucide-react";
 
-export default function DeleteInvoiceButton({ invoiceId }: { invoiceId: string }) {
+export default function DeleteInvoiceButton({
+  invoiceId,
+  redirectTo = "/accounts/invoices",
+}: {
+  invoiceId: string;
+  redirectTo?: string;
+}) {
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -21,7 +27,7 @@ export default function DeleteInvoiceButton({ invoiceId }: { invoiceId: string }
         setDeleting(false);
         return;
       }
-      router.push("/accounts/invoices");
+      router.push(redirectTo);
       router.refresh();
     } catch {
       setError("Couldn't reach the server.");
