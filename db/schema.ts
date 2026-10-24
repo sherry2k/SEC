@@ -304,6 +304,7 @@ export const quotationCategoryTemplates = pgTable("quotation_category_templates"
 export const performaInvoices = pgTable("performa_invoices", {
   id: uuid("id").primaryKey().defaultRandom(),
   projectId: uuid("project_id").references(() => projects.id),
+  accountProjectId: uuid("account_project_id").references(() => accountProjects.id),
   invoiceNo: text("invoice_no").notNull().unique(),
   issueDate: text("issue_date").notNull(),
   customerName: text("customer_name"),
@@ -343,6 +344,7 @@ export const performaInvoiceItems = pgTable("performa_invoice_items", {
 export const taxInvoices = pgTable("tax_invoices", {
   id: uuid("id").primaryKey().defaultRandom(),
   projectId: uuid("project_id").references(() => projects.id),
+  accountProjectId: uuid("account_project_id").references(() => accountProjects.id),
   invoiceNo: text("invoice_no").notNull().unique(),
   issueDate: text("issue_date").notNull(),
   clientName: text("client_name"),
@@ -407,6 +409,7 @@ export const attendanceRecords = pgTable(
 export const receiptVouchers = pgTable("receipt_vouchers", {
   id: uuid("id").primaryKey().defaultRandom(),
   projectId: uuid("project_id").references(() => projects.id),
+  accountProjectId: uuid("account_project_id").references(() => accountProjects.id),
   voucherNo: text("voucher_no").notNull().unique(),
   issueDate: text("issue_date").notNull(),
   toName: text("to_name"),
@@ -445,6 +448,7 @@ export const receiptVoucherItems = pgTable("receipt_voucher_items", {
 export const invoices = pgTable("invoices", {
   id: uuid("id").primaryKey().defaultRandom(),
   projectId: uuid("project_id").references(() => projects.id),
+  accountProjectId: uuid("account_project_id").references(() => accountProjects.id),
   invoiceNo: text("invoice_no").notNull().unique(),
   issueDate: text("issue_date").notNull(),
   customerName: text("customer_name"),
