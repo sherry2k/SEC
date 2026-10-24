@@ -37,7 +37,7 @@ export default async function AttendancePage({
   const staff = await db
     .select({ id: users.id, name: users.name })
     .from(users)
-    .where(and(inArray(users.role, ["staff", "finance"]), eq(users.status, "approved")));
+    .where(and(inArray(users.role, ["staff", "finance", "admin"]), eq(users.status, "approved")));
 
   return (
     <div>

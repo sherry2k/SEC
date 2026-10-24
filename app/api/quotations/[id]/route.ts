@@ -112,6 +112,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       location: str(body?.location) || null,
       buildingConfig: str(body?.buildingConfig) || null,
       projectId: str(body?.projectId) || null,
+      accountProjectId: str(body?.accountProjectId) || null,
       vatRatePercent: String(vatRatePercent),
       intro: str(body?.intro) || null,
       paymentTerms: str(body?.paymentTerms) || null,

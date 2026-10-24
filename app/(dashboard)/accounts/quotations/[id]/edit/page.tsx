@@ -3,12 +3,11 @@ import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import { eq, asc } from "drizzle-orm";
 import { db } from "@/db";
-import { quotations, quotationItems } from "@/db/schema";
+import { quotations, quotationItems, accountProjects } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import QuotationForm from "@/components/QuotationForm";
 import QuotationCategoryForm from "@/components/QuotationCategoryForm";
 import type { QuotationFormValues, QuotationItemDraft, FeeItemDraft } from "@/lib/quotation-defaults";
-import { getProjectOptions } from "@/lib/project-options";
 import { QUOTATION_CATEGORY_LABELS, type QuotationCategory } from "@/lib/quotation-category";
 
 export default async function EditQuotationPage({ params }: { params: Promise<{ id: string }> }) {
@@ -24,7 +23,15 @@ export default async function EditQuotationPage({ params }: { params: Promise<{ 
     .where(eq(quotationItems.quotationId, id))
     .orderBy(asc(quotationItems.sortOrder));
 
-  const projectOptions = await getProjectOptions();
+  let accountProject: { id: string; clientName: string; location: string | null } | null = null;
+  if (quotation.accountProjectId) {
+    const [row] = await db
+      .select({ id: accountProjects.id, clientName: accountProjects.clientName, location: accountProjects.location })
+      .from(accountProjects)
+      .where(eq(accountProjects.id, quotation.accountProjectId))
+      .limit(1);
+    accountProject = row ?? null;
+  }
 
   const toFeeDraft = (i: (typeof items)[number]): FeeItemDraft => ({
     key: i.id,
@@ -34,7 +41,7 @@ export default async function EditQuotationPage({ params }: { params: Promise<{ 
   });
 
   const initial: QuotationFormValues = {
-    projectId: quotation.projectId ?? "",
+    accountProjectId: quotation.accountProjectId ?? "",
     title: quotation.title,
     subtitle: quotation.subtitle ?? "",
     attention: quotation.attention ?? "",
@@ -71,15 +78,21 @@ export default async function EditQuotationPage({ params }: { params: Promise<{ 
     optionalServices: items.filter((i) => i.section === "optional").map(toFeeDraft),
   };
 
+  const backHref = accountProject ? `/accounts/account-projects/${accountProject.id}` : "/accounts/quotations";
+
   return (
     <div>
-      <Link
-        href="/accounts/quotations"
-        className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--sec-blue)] hover:underline"
-      >
+      <Link href={backHref} className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--sec-blue)] hover:underline">
         <ArrowLeft size={14} />
-        Back to Quotations
+        {accountProject ? "Back to project" : "Back to Quotations"}
       </Link>
+
+      {accountProject && (
+        <div className="mb-4 rounded-md border border-[var(--sec-blue)]/25 bg-[var(--sec-blue)]/[0.06] px-3.5 py-2.5 text-sm">
+          <span className="font-semibold text-[var(--sec-blue)]">{accountProject.clientName}</span>
+          {accountProject.location && <span className="text-[var(--sec-muted)]"> · {accountProject.location}</span>}
+        </div>
+      )}
 
       <p className="font-mono text-xs text-[var(--sec-muted)]">
         {quotation.quotationNo}
@@ -88,9 +101,9 @@ export default async function EditQuotationPage({ params }: { params: Promise<{ 
       <h1 className="mt-1 text-2xl font-bold text-[var(--sec-ink)]">Edit quotation</h1>
       <div className="mt-8 max-w-4xl">
         {quotation.category ? (
-          <QuotationCategoryForm mode="edit" quotationId={quotation.id} initial={initial} projectOptions={projectOptions} />
+          <QuotationCategoryForm mode="edit" quotationId={quotation.id} initial={initial} />
         ) : (
-          <QuotationForm mode="edit" quotationId={quotation.id} initial={initial} projectOptions={projectOptions} />
+          <QuotationForm mode="edit" quotationId={quotation.id} initial={initial} />
         )}
       </div>
     </div>

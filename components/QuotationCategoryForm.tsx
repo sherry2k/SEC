@@ -12,11 +12,9 @@ export default function QuotationCategoryForm({
   mode,
   quotationId,
   initial,
-  projectOptions,
 }: {
   mode: "create" | "edit";
   quotationId?: string;
-  projectOptions: { id: string; label: string }[];
   initial: QuotationFormValues;
 }) {
   const router = useRouter();
@@ -91,18 +89,6 @@ export default function QuotationCategoryForm({
       <div className="flex items-center gap-2 rounded-md border border-[var(--sec-blue)]/25 bg-[var(--sec-blue)]/[0.06] px-3.5 py-2.5 text-sm text-[var(--sec-blue)]">
         <span className="font-semibold">{QUOTATION_CATEGORY_LABELS[values.category as QuotationCategory] ?? values.category}</span>
         <span className="text-[var(--sec-muted)]">quotation — scope, exclusions, and terms are pre-filled from the template.</span>
-      </div>
-
-      <div>
-        <label className={labelClass}>Project</label>
-        <select value={values.projectId} onChange={(e) => set("projectId", e.target.value)} className={inputClass}>
-          <option value="">Not linked to a project</option>
-          {projectOptions.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.label}
-            </option>
-          ))}
-        </select>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

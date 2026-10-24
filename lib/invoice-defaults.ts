@@ -23,7 +23,9 @@ export type InvoiceFormValues = {
   customerName: string;
   project: string;
   customerAddress: string;
-  projectId: string; // "" = not linked to a project
+  // Replaces the old free-choice `projectId` select — always set from
+  // context (the Account Project an invoice is created under).
+  accountProjectId: string;
   vatRatePercent: number;
   signatoryName: string;
   showStamp: boolean;
@@ -45,7 +47,7 @@ export function defaultInvoiceValues(): InvoiceFormValues {
     customerName: "",
     project: "",
     customerAddress: "Abu Dhabi - UAE",
-    projectId: "",
+    accountProjectId: "",
     vatRatePercent: 5,
     signatoryName: "Eng. Mohammad Abu Eisa",
     showStamp: false,

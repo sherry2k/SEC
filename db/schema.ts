@@ -194,6 +194,18 @@ export const checklistItemComments = pgTable("checklist_item_comments", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const accountProjects = pgTable("account_projects", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  clientName: text("client_name").notNull(),
+  location: text("location"),
+  projectDetails: text("project_details"),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedBy: integer("updated_by").references(() => users.id),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+
 // ---------------------------------------------------------------------------
 // Finance — Quotations (framework doc Section 4, refined against SEC's real
 // quotation format)
@@ -212,6 +224,7 @@ export const quotations = pgTable("quotations", {
   location: text("location"),
   buildingConfig: text("building_config"),
   projectId: uuid("project_id").references(() => projects.id),
+  accountProjectId: uuid("account_project_id").references(() => accountProjects.id),
   vatRatePercent: numeric("vat_rate_percent", { precision: 5, scale: 2 }).notNull().default("5"),
   intro: text("intro"),
   paymentTerms: text("payment_terms"),

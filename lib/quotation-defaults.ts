@@ -40,7 +40,11 @@ export type QuotationFormValues = {
   projectDescription: string;
   location: string;
   buildingConfig: string;
-  projectId: string; // "" = not linked to a project
+  // Replaces the old free-choice `projectId` select — now always set from
+  // context (the Account Project a quotation is created under), never
+  // picked manually in the form. "" only for a quotation created outside
+  // any Account Project (kept possible for now, not promoted in the UI).
+  accountProjectId: string;
   vatRatePercent: number;
   intro: string;
   paymentTerms: string;
@@ -91,7 +95,7 @@ export function defaultQuotationValues(): QuotationFormValues {
     projectDescription: "",
     location: "Abu Dhabi - UAE",
     buildingConfig: "",
-    projectId: "",
+    accountProjectId: "",
     vatRatePercent: 5,
     intro: DEFAULT_INTRO,
     paymentTerms: DEFAULT_PAYMENT_TERMS,
@@ -138,7 +142,7 @@ export function categoryQuotationValues(template: {
     projectDescription: "",
     location: "Abu Dhabi - UAE",
     buildingConfig: "",
-    projectId: "",
+    accountProjectId: "",
     vatRatePercent: 5,
     intro: template.intro,
     paymentTerms: "",
