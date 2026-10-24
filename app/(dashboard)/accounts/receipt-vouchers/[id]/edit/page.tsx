@@ -5,7 +5,6 @@ import { receiptVouchers, receiptVoucherItems } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import ReceiptVoucherForm from "@/components/ReceiptVoucherForm";
 import type { ReceiptVoucherFormValues, ReceiptVoucherItemDraft } from "@/lib/receipt-voucher-defaults";
-import { getProjectOptions } from "@/lib/project-options";
 
 export default async function EditReceiptVoucherPage({ params }: { params: Promise<{ id: string }> }) {
   await requirePermission("accounts.edit");
@@ -20,10 +19,13 @@ export default async function EditReceiptVoucherPage({ params }: { params: Promi
     .where(eq(receiptVoucherItems.voucherId, id))
     .orderBy(asc(receiptVoucherItems.sortOrder));
 
-  const projectOptions = await getProjectOptions();
-
   const initial: ReceiptVoucherFormValues = {
+    // No UI control sets this any more (the old Projects-checklist picker
+    // was removed — documents are created from inside their Account
+    // Project now), but the field stays on the type/row so an old linked
+    // value from before this change isn't silently dropped on save.
     projectId: voucher.projectId ?? "",
+    accountProjectId: voucher.accountProjectId ?? "",
     issueDate: voucher.issueDate,
     toName: voucher.toName ?? "",
     project: voucher.project ?? "",
@@ -46,7 +48,7 @@ export default async function EditReceiptVoucherPage({ params }: { params: Promi
       <p className="font-mono text-xs text-[var(--sec-muted)]">{voucher.voucherNo}</p>
       <h1 className="mt-1 text-2xl font-bold text-[var(--sec-ink)]">Edit receipt voucher</h1>
       <div className="mt-8 max-w-3xl">
-        <ReceiptVoucherForm mode="edit" voucherId={voucher.id} initial={initial} projectOptions={projectOptions} />
+        <ReceiptVoucherForm mode="edit" voucherId={voucher.id} initial={initial} />
       </div>
     </div>
   );

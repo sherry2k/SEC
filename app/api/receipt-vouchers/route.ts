@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
         issueDate: str(body?.issueDate) || new Date().toLocaleDateString("en-GB"),
         toName,
         projectId: str(body?.projectId) || null,
+        accountProjectId: str(body?.accountProjectId) || null,
         project: str(body?.project) || null,
         location: str(body?.location) || null,
         vatRatePercent: String(vatRatePercent),
