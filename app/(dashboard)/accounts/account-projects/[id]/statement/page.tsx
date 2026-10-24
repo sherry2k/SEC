@@ -8,6 +8,7 @@ import { requirePermission } from "@/lib/auth";
 import { getAccountProjectStatementData } from "@/lib/account-project-statement";
 import AccountProjectStatementView from "@/components/AccountProjectStatementView";
 import PrintButton from "@/components/PrintButton";
+import DownloadPdfButton from "@/components/DownloadPdfButton";
 import { toFilenameSafe } from "@/lib/pdf-filename";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -37,7 +38,10 @@ export default async function AccountProjectStatementPage({ params }: { params: 
           <ArrowLeft size={14} />
           Back to project
         </Link>
-        <PrintButton />
+        <div className="flex items-center gap-3">
+          <DownloadPdfButton href={`/api/account-projects/${id}/statement/pdf`} />
+          <PrintButton />
+        </div>
       </div>
 
       <AccountProjectStatementView data={data} />
