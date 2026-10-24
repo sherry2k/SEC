@@ -126,6 +126,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       scopeFeeExclVat: category ? String(Number(body?.scopeFeeExclVat)) : null,
       exclusionsText: str(body?.exclusionsText) || null,
       acceptanceNote: str(body?.acceptanceNote) || null,
+      showCommercialSummary: body?.showCommercialSummary === undefined ? true : Boolean(body?.showCommercialSummary),
       status: str(body?.status) || undefined,
       updatedBy: auth.user.id,
       updatedAt: new Date(),

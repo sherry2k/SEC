@@ -173,19 +173,46 @@ export default function QuotationCategoryForm({
       </div>
 
       <div className="rounded-md border border-[var(--sec-line)] bg-slate-50 p-4 text-sm">
-        <p className="font-bold text-[var(--sec-ink)]">Commercial Summary preview</p>
-        <div className="mt-2 flex justify-between">
-          <span className="text-[var(--sec-muted)]">Total Required Payments</span>
-          <span>AED {requiredTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+        <div className="flex items-center justify-between gap-4">
+          <p className="font-bold text-[var(--sec-ink)]">Commercial Summary preview</p>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={values.showCommercialSummary}
+            aria-label="Show Commercial Summary and Payment Schedule on the printed document"
+            onClick={() => set("showCommercialSummary", !values.showCommercialSummary)}
+            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
+              values.showCommercialSummary ? "bg-[var(--sec-blue)]" : "bg-slate-300"
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                values.showCommercialSummary ? "translate-x-[22px]" : "translate-x-0.5"
+              }`}
+            />
+          </button>
         </div>
-        <div className="mt-1 flex justify-between">
-          <span className="text-[var(--sec-muted)]">Total Optional Services</span>
-          <span>AED {optionalTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-        </div>
-        <div className="mt-1 flex justify-between font-bold">
-          <span>Potential Total Including All Optional Services</span>
-          <span>AED {(requiredTotal + optionalTotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-        </div>
+        <p className="mt-1 text-xs text-[var(--sec-muted)]">
+          {values.showCommercialSummary
+            ? "This table prints on the document as its own numbered section."
+            : "Switched off — this table is hidden on the printed document; the itemized sections above still print."}
+        </p>
+        {values.showCommercialSummary && (
+          <>
+            <div className="mt-3 flex justify-between">
+              <span className="text-[var(--sec-muted)]">Total Required Payments</span>
+              <span>AED {requiredTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+            </div>
+            <div className="mt-1 flex justify-between">
+              <span className="text-[var(--sec-muted)]">Total Optional Services</span>
+              <span>AED {optionalTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+            </div>
+            <div className="mt-1 flex justify-between font-bold">
+              <span>Potential Total Including All Optional Services</span>
+              <span>AED {(requiredTotal + optionalTotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+            </div>
+          </>
+        )}
       </div>
 
       <div>

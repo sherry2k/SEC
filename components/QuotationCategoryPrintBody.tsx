@@ -22,25 +22,6 @@ export default function QuotationCategoryPrintBody({ quotation }: { quotation: P
   const balance = scopeFee - downPayment;
   const createdDateLabel = quotation.createdAt.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
 
-  const scopeLines = linesOf(quotation.scopeItemsText);
-  const exclusionLines = linesOf(quotation.exclusionsText);
-  const commercialLines = linesOf(quotation.commercialConditions);
-
-  // Numbered sections only count the ones that actually have content — a
-  // section with nothing to show (e.g. no mandatory fees on BOC/CBC) is
-  // skipped entirely rather than printing an empty heading, and every
-  // section after it shifts up to fill the gap.
-  const sectionOrder = [
-    { key: "scope", show: scopeLines.length > 0 },
-    { key: "mandatory", show: quotation.mandatoryFees.length > 0 },
-    { key: "exclusions", show: exclusionLines.length > 0 },
-    { key: "optional", show: quotation.optionalServices.length > 0 },
-    { key: "commercial", show: commercialLines.length > 0 },
-    { key: "summary", show: true },
-  ];
-  const included = sectionOrder.filter((s) => s.show).map((s) => s.key);
-  const numberOf = (key: string) => included.indexOf(key) + 1;
-
   type SummaryRow = { label: string; type: "Required" | "Optional"; feeExclVat: number };
   const summaryRows: SummaryRow[] = [
     { label: "Consultancy Down Payment - Upon Appointment", type: "Required", feeExclVat: downPayment },
@@ -83,182 +64,160 @@ export default function QuotationCategoryPrintBody({ quotation }: { quotation: P
         </p>
       ))}
 
-      {scopeLines.length > 0 && (
-        <div className="mt-6 break-inside-avoid">
-          <h2 className="text-base font-bold text-[var(--sec-blue)]">{numberOf("scope")} Scope of Services</h2>
-          <ol className="mt-2 list-decimal space-y-0.5 pl-5 text-sm">
-            {scopeLines.map((line, i) => (
-              <li key={i}>{line}</li>
-            ))}
-          </ol>
-          <p className="mt-3 text-sm font-bold">
-            Professional Consultancy Fee: AED {money(scopeFee)} + {quotation.vatRatePercent}% VAT = AED {money(scopeFee * (1 + vat))} including VAT.
-          </p>
-        </div>
-      )}
+      <h2 className="mt-8 text-base font-bold text-[var(--sec-blue)]">1 Scope of Services</h2>
+      <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm">
+        {linesOf(quotation.scopeItemsText).map((line, i) => (
+          <li key={i}>{line}</li>
+        ))}
+      </ol>
+      <p className="mt-3 text-sm font-bold">
+        Professional Consultancy Fee: AED {money(scopeFee)} + {quotation.vatRatePercent}% VAT = AED {money(scopeFee * (1 + vat))} including VAT.
+      </p>
 
-      {quotation.mandatoryFees.length > 0 && (
-        <div className="mt-6 break-inside-avoid">
-          <h2 className="text-base font-bold text-[var(--sec-blue)]">{numberOf("mandatory")} Mandatory Authority Fees</h2>
-          <ol className="mt-2 list-decimal space-y-0.5 pl-5 text-sm">
-            {quotation.mandatoryFees.map((f, i) => (
-              <li key={i}>
-                {f.name}: AED {money(f.price)} + VAT{f.note ? `, ${f.note}` : ""}.
-              </li>
-            ))}
-          </ol>
-        </div>
-      )}
+      <h2 className="mt-8 text-base font-bold text-[var(--sec-blue)]">2 Mandatory Authority Fees</h2>
+      <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm">
+        {quotation.mandatoryFees.map((f, i) => (
+          <li key={i}>
+            {f.name}: AED {money(f.price)} + VAT{f.note ? `, ${f.note}` : ""}.
+          </li>
+        ))}
+      </ol>
 
-      {exclusionLines.length > 0 && (
-        <div className="mt-6 break-inside-avoid">
-          <h2 className="text-base font-bold text-[var(--sec-blue)]">{numberOf("exclusions")} Exclusions and Limitations</h2>
-          <ul className="mt-2 list-disc space-y-0.5 pl-5 text-sm">
-            {exclusionLines.map((line, i) => (
-              <li key={i}>{line}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <h2 className="mt-8 break-inside-avoid text-base font-bold text-[var(--sec-blue)]">3 Exclusions and Limitations</h2>
+      <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
+        {linesOf(quotation.exclusionsText).map((line, i) => (
+          <li key={i}>{line}</li>
+        ))}
+      </ul>
 
       {quotation.optionalServices.length > 0 && (
-        <div className="mt-6 break-inside-avoid">
-          <h2 className="text-base font-bold text-[var(--sec-blue)]">{numberOf("optional")} Optional Additional Services If Required</h2>
-          <ol className="mt-2 list-decimal space-y-0.5 pl-5 text-sm">
+        <>
+          <h2 className="mt-8 break-inside-avoid text-base font-bold text-[var(--sec-blue)]">4 Optional Additional Services If Required</h2>
+          <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm">
             {quotation.optionalServices.map((f, i) => (
               <li key={i}>
                 {f.name}: AED {money(f.price)} + VAT{f.note ? `, ${f.note}` : ""}.
               </li>
             ))}
           </ol>
-        </div>
+        </>
       )}
 
-      {commercialLines.length > 0 && (
-        <div className="mt-6 break-inside-avoid">
-          <h2 className="text-base font-bold text-[var(--sec-blue)]">{numberOf("commercial")} Commercial Terms</h2>
-          <ol className="mt-2 list-decimal space-y-0.5 pl-5 text-sm">
-            {commercialLines.map((line, i) => (
-              <li key={i}>{line}</li>
-            ))}
-          </ol>
-        </div>
-      )}
+      <h2 className="mt-8 break-inside-avoid text-base font-bold text-[var(--sec-blue)]">5 Commercial Terms</h2>
+      <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm">
+        {linesOf(quotation.commercialConditions).map((line, i) => (
+          <li key={i}>{line}</li>
+        ))}
+      </ol>
 
-      <div className="mt-6 break-inside-avoid">
-        <h2 className="text-base font-bold text-[var(--sec-blue)]">{numberOf("summary")} Commercial Summary and Payment Schedule</h2>
-        <table className="mt-2 w-full border-collapse text-sm">
-          <thead>
-            <tr className="bg-[var(--sec-blue-deep)] text-white">
-              <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-left">No.</th>
-              <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-left">Service and Payment Trigger</th>
-              <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-left">Type</th>
-              <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-right">Fee Excl. VAT</th>
-              <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-right">Total Incl. VAT</th>
+      <h2 className="mt-8 text-base font-bold text-[var(--sec-blue)]">6 Commercial Summary and Payment Schedule</h2>
+      <table className="mt-2 w-full border-collapse text-sm">
+        <thead>
+          <tr className="bg-[var(--sec-blue-deep)] text-white">
+            <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-left">No.</th>
+            <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-left">Service and Payment Trigger</th>
+            <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-left">Type</th>
+            <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-right">Fee Excl. VAT</th>
+            <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-right">Total Incl. VAT</th>
+          </tr>
+        </thead>
+        <tbody>
+          {summaryRows.map((row, i) => (
+            <tr key={i}>
+              <td className="border border-[var(--sec-line)] px-2 py-1.5">{i + 1}</td>
+              <td className="border border-[var(--sec-line)] px-2 py-1.5">{row.label}</td>
+              <td className="border border-[var(--sec-line)] px-2 py-1.5">{row.type}</td>
+              <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(row.feeExclVat)}</td>
+              <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(row.feeExclVat * (1 + vat))}</td>
             </tr>
-          </thead>
-          <tbody>
-            {summaryRows.map((row, i) => (
-              <tr key={i}>
-                <td className="border border-[var(--sec-line)] px-2 py-1.5">{i + 1}</td>
-                <td className="border border-[var(--sec-line)] px-2 py-1.5">{row.label}</td>
-                <td className="border border-[var(--sec-line)] px-2 py-1.5">{row.type}</td>
-                <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(row.feeExclVat)}</td>
-                <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(row.feeExclVat * (1 + vat))}</td>
-              </tr>
-            ))}
-            <tr className="font-bold">
-              <td className="border border-[var(--sec-line)] px-2 py-1.5" colSpan={3}>
-                Total Required Payments
-              </td>
-              <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(requiredTotal)}</td>
-              <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(requiredTotal * (1 + vat))}</td>
+          ))}
+          <tr className="font-bold">
+            <td className="border border-[var(--sec-line)] px-2 py-1.5" colSpan={3}>
+              Total Required Payments
+            </td>
+            <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(requiredTotal)}</td>
+            <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(requiredTotal * (1 + vat))}</td>
+          </tr>
+          {optionalRows.map((row, i) => (
+            <tr key={i}>
+              <td className="border border-[var(--sec-line)] px-2 py-1.5">{summaryRows.length + i + 1}</td>
+              <td className="border border-[var(--sec-line)] px-2 py-1.5">{row.label}</td>
+              <td className="border border-[var(--sec-line)] px-2 py-1.5">{row.type}</td>
+              <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(row.feeExclVat)}</td>
+              <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(row.feeExclVat * (1 + vat))}</td>
             </tr>
-            {optionalRows.map((row, i) => (
-              <tr key={i}>
-                <td className="border border-[var(--sec-line)] px-2 py-1.5">{summaryRows.length + i + 1}</td>
-                <td className="border border-[var(--sec-line)] px-2 py-1.5">{row.label}</td>
-                <td className="border border-[var(--sec-line)] px-2 py-1.5">{row.type}</td>
-                <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(row.feeExclVat)}</td>
-                <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(row.feeExclVat * (1 + vat))}</td>
+          ))}
+          {optionalRows.length > 0 && (
+            <>
+              <tr className="font-bold">
+                <td className="border border-[var(--sec-line)] px-2 py-1.5" colSpan={3}>
+                  Total Optional Services
+                </td>
+                <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(optionalTotal)}</td>
+                <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(optionalTotal * (1 + vat))}</td>
               </tr>
-            ))}
-            {optionalRows.length > 0 && (
-              <>
-                <tr className="font-bold">
-                  <td className="border border-[var(--sec-line)] px-2 py-1.5" colSpan={3}>
-                    Total Optional Services
-                  </td>
-                  <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(optionalTotal)}</td>
-                  <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(optionalTotal * (1 + vat))}</td>
-                </tr>
-                <tr className="font-bold">
-                  <td className="border border-[var(--sec-line)] px-2 py-1.5" colSpan={3}>
-                    Potential Total Including All Optional Services
-                  </td>
-                  <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(requiredTotal + optionalTotal)}</td>
-                  <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money((requiredTotal + optionalTotal) * (1 + vat))}</td>
-                </tr>
-              </>
-            )}
-          </tbody>
-        </table>
-        <p className="mt-2 text-xs italic text-[var(--sec-muted)]">
-          Optional services apply only upon the Client&apos;s written instruction. No site supervision or site visit is included in this quotation.
+              <tr className="font-bold">
+                <td className="border border-[var(--sec-line)] px-2 py-1.5" colSpan={3}>
+                  Potential Total Including All Optional Services
+                </td>
+                <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(requiredTotal + optionalTotal)}</td>
+                <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money((requiredTotal + optionalTotal) * (1 + vat))}</td>
+              </tr>
+            </>
+          )}
+        </tbody>
+      </table>
+      <p className="mt-2 text-xs italic text-[var(--sec-muted)]">
+        Optional services apply only upon the Client&apos;s written instruction. No site supervision or site visit is included in this quotation.
+      </p>
+
+      <h2 className="mt-8 break-inside-avoid text-base font-bold text-[var(--sec-blue)]">Bank Account and Client Acceptance</h2>
+      {quotation.acceptanceNote && <p className="mt-1 text-sm">{quotation.acceptanceNote}</p>}
+
+      <p className="mt-4 text-sm font-bold underline">Bank Account Details</p>
+      <div className="text-sm">
+        <p>Account Name: {BANK_DETAILS.accountName}</p>
+        <p>Bank Name: {BANK_DETAILS.bankName}</p>
+        <p>Account Number: {BANK_DETAILS.accountNumber}</p>
+        <p>IBAN: {BANK_DETAILS.iban}</p>
+        <p>Currency: {BANK_DETAILS.currency}</p>
+      </div>
+
+      <div className="mt-6 text-sm">
+        <p className="text-base font-bold">Client Confirmation</p>
+        <p className="mt-1">
+          We hereby confirm our acceptance of this quotation, including its scope, exclusions, commercial terms, authority fees,
+          optional services, and payment schedule.
         </p>
       </div>
 
-      <div className="mt-6 break-inside-avoid">
-        <h2 className="text-base font-bold text-[var(--sec-blue)]">Bank Account and Client Acceptance</h2>
-        {quotation.acceptanceNote && <p className="mt-1 text-sm">{quotation.acceptanceNote}</p>}
-
-        <p className="mt-4 text-sm font-bold underline">Bank Account Details</p>
-        <div className="text-sm">
-          <p>Account Name: {BANK_DETAILS.accountName}</p>
-          <p>Bank Name: {BANK_DETAILS.bankName}</p>
-          <p>Account Number: {BANK_DETAILS.accountNumber}</p>
-          <p>IBAN: {BANK_DETAILS.iban}</p>
-          <p>Currency: {BANK_DETAILS.currency}</p>
-        </div>
-      </div>
-
-      <div className="mt-6 break-inside-avoid">
-        <div className="text-sm">
-          <p className="text-base font-bold">Client Confirmation</p>
-          <p className="mt-1">
-            We hereby confirm our acceptance of this quotation, including its scope, exclusions, commercial terms, authority fees,
-            optional services, and payment schedule.
-          </p>
-        </div>
-
-        <div className="mt-4 grid grid-cols-1 gap-8 text-sm sm:grid-cols-2">
-          <div>
-            <p className="bg-slate-100 px-2 py-1.5 font-semibold">For SOLID Engineering Consultancy</p>
-            <div className="mt-4 space-y-4">
-              <p>Authorized Signatory: {quotation.signatoryName || "Eng. Mohammad Abu Eisa"}</p>
-              <p>
-                Signature and Stamp: <Blank />
-                {quotation.showStamp && <img src="/images/stamp.png" alt="Company stamp" className="mt-2 h-[120px] object-contain" />}
-              </p>
-              <p>Date: {createdDateLabel}</p>
-            </div>
+      <div className="mt-4 grid grid-cols-1 gap-8 text-sm sm:grid-cols-2">
+        <div>
+          <p className="bg-slate-100 px-2 py-1.5 font-semibold">For SOLID Engineering Consultancy</p>
+          <div className="mt-4 space-y-4">
+            <p>Authorized Signatory: {quotation.signatoryName || "Eng. Mohammad Abu Eisa"}</p>
+            <p>
+              Signature and Stamp: <Blank />
+              {quotation.showStamp && <img src="/images/stamp.png" alt="Company stamp" className="mt-2 h-[120px] object-contain" />}
+            </p>
+            <p>Date: {createdDateLabel}</p>
           </div>
-          <div>
-            <p className="bg-slate-100 px-2 py-1.5 font-semibold">For {quotation.clientName || "Client"}</p>
-            <div className="mt-4 space-y-4">
-              <p>
-                Authorized Name: <Blank />
-              </p>
-              <p>
-                Designation: <Blank />
-              </p>
-              <p>
-                Signature and Stamp: <Blank />
-              </p>
-              <p>
-                Date: <Blank width="w-32" />
-              </p>
-            </div>
+        </div>
+        <div>
+          <p className="bg-slate-100 px-2 py-1.5 font-semibold">For {quotation.clientName || "Client"}</p>
+          <div className="mt-4 space-y-4">
+            <p>
+              Authorized Name: <Blank />
+            </p>
+            <p>
+              Designation: <Blank />
+            </p>
+            <p>
+              Signature and Stamp: <Blank />
+            </p>
+            <p>
+              Date: <Blank width="w-32" />
+            </p>
           </div>
         </div>
       </div>

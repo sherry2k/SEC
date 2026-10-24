@@ -76,6 +76,7 @@ export default async function EditQuotationPage({ params }: { params: Promise<{ 
     acceptanceNote: quotation.acceptanceNote ?? "",
     mandatoryFees: items.filter((i) => i.section === "mandatory").map(toFeeDraft),
     optionalServices: items.filter((i) => i.section === "optional").map(toFeeDraft),
+    showCommercialSummary: quotation.showCommercialSummary,
   };
 
   const backHref = accountProject ? `/accounts/account-projects/${accountProject.id}` : "/accounts/quotations";

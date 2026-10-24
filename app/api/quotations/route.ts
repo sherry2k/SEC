@@ -116,6 +116,7 @@ export async function POST(request: NextRequest) {
         scopeFeeExclVat: category ? String(Number(body?.scopeFeeExclVat)) : null,
         exclusionsText: str(body?.exclusionsText) || null,
         acceptanceNote: str(body?.acceptanceNote) || null,
+        showCommercialSummary: body?.showCommercialSummary === undefined ? true : Boolean(body?.showCommercialSummary),
         createdBy: auth.user.id,
         updatedBy: auth.user.id,
       })

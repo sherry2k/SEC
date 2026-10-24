@@ -63,6 +63,10 @@ export type QuotationFormValues = {
   acceptanceNote: string;
   mandatoryFees: FeeItemDraft[];
   optionalServices: FeeItemDraft[];
+  // Toggle, on by default — whether the Commercial Summary and Payment
+  // Schedule table prints on category-based quotations. Same on/off pattern
+  // as showStamp above, just defaulting to true instead of false.
+  showCommercialSummary: boolean;
 };
 
 const DEFAULT_INTRO =
@@ -112,6 +116,7 @@ export function defaultQuotationValues(): QuotationFormValues {
     acceptanceNote: "",
     mandatoryFees: [],
     optionalServices: [],
+    showCommercialSummary: true,
   };
 }
 
@@ -159,6 +164,7 @@ export function categoryQuotationValues(template: {
     acceptanceNote: template.acceptanceNote,
     mandatoryFees: toFeeItems(template.mandatoryFeeItems),
     optionalServices: toFeeItems(template.optionalServiceItems),
+    showCommercialSummary: true,
   };
 }
 

@@ -242,6 +242,11 @@ export const quotations = pgTable("quotations", {
   scopeFeeExclVat: numeric("scope_fee_excl_vat", { precision: 12, scale: 2 }),
   exclusionsText: text("exclusions_text"),
   acceptanceNote: text("acceptance_note"),
+  // Toggle, on by default — the Commercial Summary and Payment Schedule
+  // table (category-format quotations only) can be switched off per
+  // document for a client who only wants the itemized sections. Same
+  // pattern as showStamp below.
+  showCommercialSummary: boolean("show_commercial_summary").notNull().default(true),
   signatoryName: text("signatory_name"),
   // Toggle, off by default — the stamp only appears on the printed page
   // when explicitly turned on for that document.
@@ -649,5 +654,3 @@ export const messages = pgTable("messages", {
   // markSeen() in lib/messages.ts. Meaningless on the sender's own messages.
   seenAt: timestamp("seen_at", { withTimezone: true }),
 });
-
-
