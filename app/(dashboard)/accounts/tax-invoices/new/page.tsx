@@ -1,18 +1,43 @@
+import { eq } from "drizzle-orm";
+import { db } from "@/db";
+import { accountProjects } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import TaxInvoiceForm from "@/components/TaxInvoiceForm";
-import { defaultTaxInvoiceValues } from "@/lib/tax-invoice-defaults";
-import { getProjectOptions } from "@/lib/project-options";
+import { defaultTaxInvoiceValues, type TaxInvoiceFormValues } from "@/lib/tax-invoice-defaults";
 
-export default async function NewTaxInvoicePage() {
+export default async function NewTaxInvoicePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ accountProjectId?: string }>;
+}) {
   await requirePermission("accounts.edit");
-  const projectOptions = await getProjectOptions();
+
+  const { accountProjectId } = await searchParams;
+  const initial: TaxInvoiceFormValues = defaultTaxInvoiceValues();
+
+  if (accountProjectId) {
+    initial.accountProjectId = accountProjectId;
+
+    const [accountProject] = await db
+      .select({
+        clientName: accountProjects.clientName,
+        location: accountProjects.location,
+      })
+      .from(accountProjects)
+      .where(eq(accountProjects.id, accountProjectId))
+      .limit(1);
+
+    if (accountProject) {
+      initial.clientName = accountProject.clientName;
+      if (accountProject.location) initial.clientAddress = accountProject.location;
+    }
+  }
 
   return (
     <div>
       <h1 className="text-2xl font-bold text-[var(--sec-ink)]">New tax invoice</h1>
-      <p className="mt-1 text-sm text-[var(--sec-muted)]">Numbered automatically once saved.</p>
       <div className="mt-8 max-w-3xl">
-        <TaxInvoiceForm mode="create" initial={defaultTaxInvoiceValues()} projectOptions={projectOptions} />
+        <TaxInvoiceForm mode="create" initial={initial} />
       </div>
     </div>
   );

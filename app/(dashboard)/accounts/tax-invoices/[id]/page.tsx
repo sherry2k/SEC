@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { eq } from "drizzle-orm";
-import { Pencil, Download, FolderOpen } from "lucide-react";
+import { ArrowLeft, Pencil, Download } from "lucide-react";
 import { db } from "@/db";
-import { taxInvoices, projects } from "@/db/schema";
+import { taxInvoices, accountProjects } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import { toFilenameSafe } from "@/lib/pdf-filename";
 import { getTaxInvoiceForPrint } from "@/lib/tax-invoice-data";
@@ -27,29 +27,24 @@ export default async function TaxInvoiceViewPage({ params }: { params: Promise<{
   // A separate, light query rather than widening getTaxInvoiceForPrint()'s
   // return shape — that function is shared with the Puppeteer PDF route,
   // which has no use for the raw project link, only display-ready fields.
-  const [linkedProject] = await db
-    .select({ projectId: taxInvoices.projectId, projectName: projects.name })
+  const [linked] = await db
+    .select({ accountProjectId: taxInvoices.accountProjectId, clientName: accountProjects.clientName })
     .from(taxInvoices)
-    .leftJoin(projects, eq(taxInvoices.projectId, projects.id))
+    .leftJoin(accountProjects, eq(taxInvoices.accountProjectId, accountProjects.id))
     .where(eq(taxInvoices.id, id))
     .limit(1);
+
+  const backHref = linked?.accountProjectId ? `/accounts/account-projects/${linked.accountProjectId}` : "/accounts/tax-invoices";
+  const backLabel = linked?.accountProjectId ? linked.clientName || "Back to project" : "All tax invoices";
 
   return (
     <div>
       <div className="no-print mb-6 flex items-center justify-between">
-        <Link href="/accounts/tax-invoices" className="text-sm font-medium text-[var(--sec-blue)] hover:underline">
-          ← All tax invoices
+        <Link href={backHref} className="flex items-center gap-1 text-sm font-medium text-[var(--sec-blue)] hover:underline">
+          <ArrowLeft size={14} />
+          {backLabel}
         </Link>
         <div className="flex items-center gap-2">
-          {linkedProject?.projectId && (
-            <Link
-              href={`/projects/${linkedProject.projectId}`}
-              className="flex items-center gap-1.5 rounded-md border border-[var(--sec-line)] px-3 py-1.5 text-xs font-medium text-[var(--sec-ink)] transition-colors hover:border-[var(--sec-blue)]"
-            >
-              <FolderOpen size={13} />
-              {linkedProject.projectName || "View Project"}
-            </Link>
-          )}
           <Link
             href={`/accounts/tax-invoices/${id}/edit`}
             className="flex items-center gap-1.5 rounded-md border border-[var(--sec-line)] px-3 py-1.5 text-xs font-medium text-[var(--sec-ink)] transition-colors hover:border-[var(--sec-blue)]"
@@ -57,7 +52,7 @@ export default async function TaxInvoiceViewPage({ params }: { params: Promise<{
             <Pencil size={13} />
             Edit
           </Link>
-          <DeleteTaxInvoiceButton invoiceId={id} />
+          <DeleteTaxInvoiceButton invoiceId={id} redirectTo={backHref} />
           <a
             href={`/api/tax-invoices/${id}/pdf`}
             className="flex items-center gap-1.5 rounded-md bg-[var(--sec-blue)] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[var(--sec-blue-deep)]"
