@@ -18,11 +18,8 @@ export type StatementOfAccountData = {
 };
 
 export default function StatementOfAccountPrintBody({ data }: { data: StatementOfAccountData }) {
-  // Running balance walked chronologically — a charge adds to what's owed,
-  // a payment reduces it. Remarks on a charge row reflect whether the
-  // account had fully caught up again by that point in the sequence, not
-  // a strict per-invoice reconciliation (payments aren't matched to one
-  // specific invoice) — simple and honest for how these are actually used.
+  // Running balance walked chronologically — purely for the Balance
+  // column, charges add to what's owed, payments reduce it.
   let running = 0;
   const rows = data.ledger.map((entry) => {
     if (entry.kind === "charge") running += entry.amount;
@@ -30,6 +27,22 @@ export default function StatementOfAccountPrintBody({ data }: { data: StatementO
     return { entry, runningBalance: running };
   });
   const balanceDue = rows.length > 0 ? rows[rows.length - 1].runningBalance : 0;
+
+  // Remarks are a separate pass from the running balance above: total
+  // payments received are allocated against charges in order (FIFO) — the
+  // earliest charge absorbs money first — so a charge shows PAID once it,
+  // and everything before it, is fully covered by payments received so
+  // far. (Checking the running balance at a charge's own row, as this used
+  // to, meant it was evaluated before any later payment existed, so it
+  // could never show PAID for a normal invoice-then-payment sequence.)
+  let paymentPool = data.ledger.filter((e) => e.kind === "payment").reduce((sum, e) => sum + e.amount, 0);
+  const isCharged = new Map<string, boolean>();
+  for (const entry of data.ledger) {
+    if (entry.kind !== "charge") continue;
+    const covered = paymentPool >= entry.amount;
+    isCharged.set(entry.id, covered);
+    paymentPool -= Math.min(paymentPool, entry.amount);
+  }
 
   return (
     <>
@@ -84,27 +97,30 @@ export default function StatementOfAccountPrintBody({ data }: { data: StatementO
             <td className="border border-[var(--sec-line)] px-2 py-2 text-right align-top">AED 0.00</td>
             <td className="border border-[var(--sec-line)] px-2 py-2 align-top" />
           </tr>
-          {rows.map(({ entry, runningBalance }) => (
-            <tr key={entry.id}>
-              <td className="border border-[var(--sec-line)] px-2 py-2 align-top">{entry.dateLabel}</td>
-              <td className="border border-[var(--sec-line)] px-2 py-2 align-top">{entry.docLabel}</td>
-              <td className="border border-[var(--sec-line)] px-2 py-2 align-top">{entry.description}</td>
-              <td className="border border-[var(--sec-line)] px-2 py-2 text-right align-top">
-                {entry.kind === "charge" ? `AED ${money(entry.amount)}` : ""}
-              </td>
-              <td className="border border-[var(--sec-line)] px-2 py-2 text-right align-top">
-                {entry.kind === "payment" ? `AED ${money(entry.amount)}` : ""}
-              </td>
-              <td className="border border-[var(--sec-line)] px-2 py-2 text-right align-top">AED {money(runningBalance)}</td>
-              <td className="border border-[var(--sec-line)] px-2 py-2 align-top">
-                {entry.kind === "charge" && (
-                  <span className={runningBalance > 0 ? "font-semibold text-red-600" : "font-semibold text-emerald-600"}>
-                    {runningBalance > 0 ? "NOT PAID" : "PAID"}
-                  </span>
-                )}
-              </td>
-            </tr>
-          ))}
+          {rows.map(({ entry, runningBalance }) => {
+            const paid = isCharged.get(entry.id);
+            return (
+              <tr key={entry.id}>
+                <td className="border border-[var(--sec-line)] px-2 py-2 align-top">{entry.dateLabel}</td>
+                <td className="border border-[var(--sec-line)] px-2 py-2 align-top">{entry.docLabel}</td>
+                <td className="border border-[var(--sec-line)] px-2 py-2 align-top">{entry.description}</td>
+                <td className="border border-[var(--sec-line)] px-2 py-2 text-right align-top">
+                  {entry.kind === "charge" ? `AED ${money(entry.amount)}` : ""}
+                </td>
+                <td className="border border-[var(--sec-line)] px-2 py-2 text-right align-top">
+                  {entry.kind === "payment" ? `AED ${money(entry.amount)}` : ""}
+                </td>
+                <td className="border border-[var(--sec-line)] px-2 py-2 text-right align-top">AED {money(runningBalance)}</td>
+                <td className="border border-[var(--sec-line)] px-2 py-2 align-top">
+                  {entry.kind === "charge" && (
+                    <span className={paid ? "font-semibold text-emerald-600" : "font-semibold text-red-600"}>
+                      {paid ? "PAID" : "NOT PAID"}
+                    </span>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
           {data.ledger.length === 0 && (
             <tr>
               <td className="border border-[var(--sec-line)] px-2 py-6 text-center text-[var(--sec-muted)]" colSpan={7}>
