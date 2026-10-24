@@ -5,7 +5,6 @@ import { performaInvoices, performaInvoiceItems } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import PerformaInvoiceForm from "@/components/PerformaInvoiceForm";
 import type { PerformaInvoiceFormValues } from "@/lib/performa-invoice-defaults";
-import { getProjectOptions } from "@/lib/project-options";
 
 export default async function EditPerformaInvoicePage({ params }: { params: Promise<{ id: string }> }) {
   await requirePermission("accounts.edit");
@@ -20,9 +19,11 @@ export default async function EditPerformaInvoicePage({ params }: { params: Prom
     .where(eq(performaInvoiceItems.invoiceId, id))
     .orderBy(asc(performaInvoiceItems.sortOrder));
 
-  const projectOptions = await getProjectOptions();
-
   const initial: PerformaInvoiceFormValues = {
+    // No UI control sets this any more (the old Projects-checklist picker
+    // was removed — documents are created from inside their Account
+    // Project now), but the field stays on the type/row so an old linked
+    // value from before this change isn't silently dropped on save.
     projectId: invoice.projectId ?? "",
     accountProjectId: invoice.accountProjectId ?? "",
     issueDate: invoice.issueDate,
@@ -46,7 +47,7 @@ export default async function EditPerformaInvoicePage({ params }: { params: Prom
       <p className="font-mono text-xs text-[var(--sec-muted)]">{invoice.invoiceNo}</p>
       <h1 className="mt-1 text-2xl font-bold text-[var(--sec-ink)]">Edit performa invoice</h1>
       <div className="mt-8 max-w-4xl">
-        <PerformaInvoiceForm mode="edit" invoiceId={invoice.id} initial={initial} projectOptions={projectOptions} />
+        <PerformaInvoiceForm mode="edit" invoiceId={invoice.id} initial={initial} />
       </div>
     </div>
   );
