@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
-import { ArrowLeft, Plus, Pencil } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, FileText } from "lucide-react";
 import { db } from "@/db";
 import { accountProjects } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
@@ -225,11 +225,14 @@ export default async function AccountProjectDetailPage({ params }: { params: Pro
             <Plus size={15} />
             New receipt voucher
           </Link>
+          <Link
+            href={`/accounts/account-projects/${id}/statement`}
+            className="flex items-center gap-2 rounded-md border border-[var(--sec-line)] bg-white px-4 py-2.5 text-sm font-semibold text-[var(--sec-ink)] transition-colors hover:border-[var(--sec-blue)]"
+          >
+            <FileText size={15} />
+            Statement of account
+          </Link>
         </div>
-        <p className="mt-2 text-xs text-[var(--sec-muted)]">
-          Only &quot;New quotation&quot; is wired to this project so far — the other four still open their existing forms, which don&apos;t accept this
-          link yet. We&apos;ll wire those next.
-        </p>
       </div>
 
       {/* Documents */}
