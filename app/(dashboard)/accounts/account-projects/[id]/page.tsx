@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
-import { ArrowLeft, Plus, Pencil } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, FileText } from "lucide-react";
 import { db } from "@/db";
 import { accountProjects } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
@@ -225,7 +225,13 @@ export default async function AccountProjectDetailPage({ params }: { params: Pro
             <Plus size={15} />
             New receipt voucher
           </Link>
-          {/* Statement of Account button lands here once its source page is in hand. */}
+          <Link
+            href={`/accounts/account-projects/${id}/statement`}
+            className="flex items-center gap-2 rounded-md border border-[var(--sec-line)] bg-white px-4 py-2.5 text-sm font-semibold text-[var(--sec-ink)] transition-colors hover:border-[var(--sec-blue)]"
+          >
+            <FileText size={15} />
+            Statement of account
+          </Link>
         </div>
       </div>
 
