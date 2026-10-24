@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
-import { FileText, ArrowRight } from "lucide-react";
+import { ArrowLeft, FileText, ArrowRight } from "lucide-react";
 import { db } from "@/db";
 import { accountProjects } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
@@ -45,6 +45,10 @@ export default async function NewQuotationPage({
     const qs = accountProjectId ? `&accountProjectId=${accountProjectId}` : "";
     return (
       <div>
+        <Link href={backHref} className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--sec-blue)] hover:underline">
+          <ArrowLeft size={14} />
+          {accountProject ? "Back to project" : "Back to Quotations"}
+        </Link>
         {projectBanner}
         <h1 className="text-2xl font-bold text-[var(--sec-ink)]">New quotation</h1>
         <p className="mt-1 text-sm text-[var(--sec-muted)]">Pick a category to start from its standard template, or create a blank quotation.</p>
