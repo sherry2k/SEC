@@ -73,6 +73,9 @@ export async function getAccountProjectStatementData(accountProjectId: string): 
 
   const linkedVouchers = await db.select().from(receiptVouchers).where(eq(receiptVouchers.accountProjectId, accountProjectId));
   for (const v of linkedVouchers) {
+    // Same gate as getAccountProjectFinancials' paidTotal — a Draft voucher
+    // isn't a confirmed payment, so it doesn't appear on the ledger at all.
+    if (v.status !== "received") continue;
     const items = await db.select().from(receiptVoucherItems).where(eq(receiptVoucherItems.voucherId, v.id));
     const totals = calcReceiptVoucherTotals(
       items.map((i) => ({ description: i.description, amount: Number(i.amount) })),

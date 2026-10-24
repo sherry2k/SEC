@@ -8,6 +8,7 @@ import { requirePermission } from "@/lib/auth";
 import { toFilenameSafe } from "@/lib/pdf-filename";
 import { getReceiptVoucherForPrint } from "@/lib/receipt-voucher-data";
 import ReceiptVoucherPrintView from "@/components/ReceiptVoucherPrintView";
+import ReceiptVoucherStatusControl from "@/components/ReceiptVoucherStatusControl";
 import PrintButton from "@/components/PrintButton";
 import DeleteReceiptVoucherButton from "@/components/DeleteReceiptVoucherButton";
 
@@ -24,7 +25,11 @@ export default async function ReceiptVoucherViewPage({ params }: { params: Promi
   const voucher = await getReceiptVoucherForPrint(id);
   if (!voucher) notFound();
 
-  const [row] = await db.select({ accountProjectId: receiptVouchers.accountProjectId }).from(receiptVouchers).where(eq(receiptVouchers.id, id)).limit(1);
+  const [row] = await db
+    .select({ accountProjectId: receiptVouchers.accountProjectId, status: receiptVouchers.status })
+    .from(receiptVouchers)
+    .where(eq(receiptVouchers.id, id))
+    .limit(1);
 
   // If this voucher was created under an Account Project, "back" should
   // return there — where the Documents table and Fee Breakdown live —
@@ -49,6 +54,7 @@ export default async function ReceiptVoucherViewPage({ params }: { params: Promi
           {backLabel}
         </Link>
         <div className="flex items-center gap-2">
+          <ReceiptVoucherStatusControl voucherId={id} status={row?.status ?? "draft"} />
           <Link
             href={`/accounts/receipt-vouchers/${id}/edit`}
             className="flex items-center gap-1.5 rounded-md border border-[var(--sec-line)] px-3 py-1.5 text-xs font-medium text-[var(--sec-ink)] transition-colors hover:border-[var(--sec-blue)]"

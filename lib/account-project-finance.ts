@@ -59,7 +59,10 @@ export type AccountProjectFinancials = {
   // pre-payment bill, not a charge, so it never counted toward a project's
   // invoiced total there either. It still shows up in `documents` below.
   invoicedTotal: number;
-  paidTotal: number; // Receipt Vouchers
+  // Receipt Vouchers marked "received" only — a Draft voucher is a prepared
+  // record, not confirmed money in hand, so it doesn't count here even
+  // though it still shows up in `documents` below with its real status.
+  paidTotal: number;
   balance: number; // totalQuoted - paidTotal
   documents: LinkedDocument[];
 };
@@ -191,7 +194,9 @@ export async function getAccountProjectFinancials(accountProjectId: string): Pro
   for (const v of linkedVouchers) {
     const items = await db.select().from(receiptVoucherItems).where(eq(receiptVoucherItems.voucherId, v.id));
     const { total } = simpleTotals(items, Number(v.vatRatePercent));
-    paidTotal += total;
+    // Only a voucher marked "received" is confirmed money in hand — a
+    // Draft is just a prepared record and shouldn't inflate Total Received.
+    if (v.status === "received") paidTotal += total;
     documents.push({
       id: v.id,
       kind: "receipt_voucher",
