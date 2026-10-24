@@ -18,15 +18,22 @@ export type StatementOfAccountData = {
 };
 
 export default function StatementOfAccountPrintBody({ data }: { data: StatementOfAccountData }) {
-  // Running balance walked chronologically — purely for the Balance
-  // column, charges add to what's owed, payments reduce it.
-  let running = 0;
+  // Running balance walked chronologically. Starts at the Total Amount —
+  // the agreed contract/quoted value — rather than 0: a Tax Invoice or
+  // Invoice is paperwork billing a portion of that already-fixed total,
+  // not a new charge on top of it, so it's listed here for the record but
+  // doesn't move the balance. Only a payment (Receipt Voucher) reduces
+  // what's still owed. This keeps the ledger's own Balance Due in step
+  // with the Remaining Balance shown in the summary box above — before
+  // this, a fully-invoiced-and-paid portion could read "Balance Due: AED
+  // 0.00" here while the summary box still correctly showed what's left
+  // on the uninvoiced remainder of the quote.
+  let running = data.totalAmount;
   const rows = data.ledger.map((entry) => {
-    if (entry.kind === "charge") running += entry.amount;
-    else running -= entry.amount;
+    if (entry.kind === "payment") running -= entry.amount;
     return { entry, runningBalance: running };
   });
-  const balanceDue = rows.length > 0 ? rows[rows.length - 1].runningBalance : 0;
+  const balanceDue = rows.length > 0 ? rows[rows.length - 1].runningBalance : data.totalAmount;
 
   // Remarks are a separate pass from the running balance above: total
   // payments received are allocated against charges in order (FIFO) — the
@@ -92,9 +99,9 @@ export default function StatementOfAccountPrintBody({ data }: { data: StatementO
           <tr>
             <td className="border border-[var(--sec-line)] px-2 py-2 align-top">{data.ledger[0]?.dateLabel ?? ""}</td>
             <td className="border border-[var(--sec-line)] px-2 py-2 align-top italic" colSpan={4}>
-              ***Opening Balance***
+              ***Opening Balance*** — Total Amount per approved quotation
             </td>
-            <td className="border border-[var(--sec-line)] px-2 py-2 text-right align-top">AED 0.00</td>
+            <td className="border border-[var(--sec-line)] px-2 py-2 text-right align-top">AED {money(data.totalAmount)}</td>
             <td className="border border-[var(--sec-line)] px-2 py-2 align-top" />
           </tr>
           {rows.map(({ entry, runningBalance }) => {
