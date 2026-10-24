@@ -11,6 +11,9 @@ export type ActivityAction =
   | "category_removed"
   | "checklist_status_changed"
   | "checklist_item_added"
+  | "account_project_created"
+  | "account_project_updated"
+  | "account_project_deleted"
   | "quotation_created"
   | "quotation_updated"
   | "quotation_deleted"
@@ -42,6 +45,9 @@ export const ACTIVITY_LABELS: Record<ActivityAction, string> = {
   category_removed: "removed a category from",
   checklist_status_changed: "updated a checklist item on",
   checklist_item_added: "added a checklist item to",
+  account_project_created: "created account project",
+  account_project_updated: "updated account project",
+  account_project_deleted: "deleted account project",
   quotation_created: "created quotation",
   quotation_updated: "updated quotation",
   quotation_deleted: "deleted quotation",
