@@ -3,12 +3,32 @@ import { FolderKanban, Wallet, ArrowRight } from "lucide-react";
 import { db } from "@/db";
 import { quotations, quotationItems } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
-import { calcGrandTotals } from "@/lib/quotation-calc";
 import { getOfficeLedgerSummary } from "@/lib/office-ledger";
 import { inArray } from "drizzle-orm";
 
 function money(n: number): string {
   return n.toLocaleString(undefined, { minimumFractionDigits: 2 });
+}
+
+// Mirrors the quotation-total logic in lib/account-project-finance.ts:
+// a category quotation's Professional/Consultancy Fee lives on the
+// quotation row itself (scopeFeeExclVat), not as a quotationItems row, and
+// only "mandatory"-section items count toward its total. A flat/custom
+// quotation has no category and no scope fee — every section-less item
+// counts instead. calcGrandTotals() (the old calc this replaced) summed
+// every quotationItems row regardless of section, which both missed the
+// scope fee and could double-count non-mandatory rows for category
+// quotations — undercounting or overcounting depending on the quotation.
+function quotationTotal(
+  q: { category: string | null; scopeFeeExclVat: string | null; vatRatePercent: string },
+  items: { section: string | null; feeExclVat: string }[]
+): number {
+  const vatPct = Number(q.vatRatePercent);
+  const subTotal = q.category
+    ? (q.scopeFeeExclVat ? Number(q.scopeFeeExclVat) : 0) +
+      items.filter((i) => i.section === "mandatory").reduce((s, i) => s + Number(i.feeExclVat), 0)
+    : items.filter((i) => !i.section).reduce((s, i) => s + Number(i.feeExclVat), 0);
+  return subTotal + subTotal * (vatPct / 100);
 }
 
 // The Accounts landing page — a small stats strip (this month's activity)
@@ -22,8 +42,9 @@ export default async function AccountsIndexPage() {
   startOfMonth.setHours(0, 0, 0, 0);
   const monthKey = `${startOfMonth.getFullYear()}-${String(startOfMonth.getMonth() + 1).padStart(2, "0")}`;
 
-  // Quotations this month — count + value, same calc the quotations list
-  // itself uses, so this figure never disagrees with what's shown there.
+  // Quotations this month — count + value, computed the same way as the
+  // Account Project page's Fee Breakdown, so this figure never disagrees
+  // with what's shown there.
   const allQuotations = await db.select().from(quotations);
   const monthQuotations = allQuotations.filter((q) => q.createdAt >= startOfMonth);
   const quotationIds = monthQuotations.map((q) => q.id);
@@ -31,10 +52,8 @@ export default async function AccountsIndexPage() {
     ? await db.select().from(quotationItems).where(inArray(quotationItems.quotationId, quotationIds))
     : [];
   const quotationValue = monthQuotations.reduce((sum, q) => {
-    const items = qItems
-      .filter((i) => i.quotationId === q.id)
-      .map((i) => ({ description: i.description, classification: i.classification ?? "", feeExclVat: Number(i.feeExclVat) }));
-    return sum + calcGrandTotals(items, Number(q.vatRatePercent)).grandTotal;
+    const items = qItems.filter((i) => i.quotationId === q.id);
+    return sum + quotationTotal(q, items);
   }, 0);
 
   // This month's income/expenses — reuses the same summary function the
