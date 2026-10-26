@@ -45,6 +45,10 @@ export type PrintableQuotation = {
   acceptanceNote: string;
   mandatoryFees: PrintableFeeItem[];
   optionalServices: PrintableFeeItem[];
+  // Drives whether QuotationCategoryPrintBody prints section 6 (Commercial
+  // Summary and Payment Schedule) — set from the form's "Commercial
+  // Summary preview" toggle.
+  showCommercialSummary: boolean;
 };
 
 function money(n: number) {

@@ -52,5 +52,10 @@ export async function getQuotationForPrint(id: string): Promise<PrintableQuotati
     acceptanceNote: quotation.acceptanceNote ?? "",
     mandatoryFees: mandatoryFees.map((i) => ({ name: i.description, price: Number(i.feeExclVat), note: i.note ?? "" })),
     optionalServices: optionalServices.map((i) => ({ name: i.description, price: Number(i.feeExclVat), note: i.note ?? "" })),
+    // Was never mapped before — the toggle saved fine on the quotation
+    // row, but getQuotationForPrint() silently dropped it, so the print
+    // component always received undefined (falsy) and could never key off
+    // the real saved value.
+    showCommercialSummary: quotation.showCommercialSummary ?? true,
   };
 }
