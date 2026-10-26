@@ -119,6 +119,13 @@ export default function QuotationCategoryPrintBody({ quotation }: { quotation: P
         ))}
       </ol>
 
+      {/* The form's "Commercial Summary preview" toggle sets
+          showCommercialSummary and saves it, but this section never
+          actually checked that field before — it always printed
+          regardless of the toggle. Gating the whole block on it is the
+          fix. */}
+      {quotation.showCommercialSummary && (
+        <>
       <h2 className="mt-8 break-inside-avoid break-after-avoid text-base font-bold text-[var(--sec-blue)]">6 Commercial Summary and Payment Schedule</h2>
       <table className="mt-2 w-full border-collapse text-sm">
         <thead>
@@ -179,6 +186,8 @@ export default function QuotationCategoryPrintBody({ quotation }: { quotation: P
       <p className="mt-2 text-xs italic text-[var(--sec-muted)]">
         Optional services apply only upon the Client&apos;s written instruction. No site supervision or site visit is included in this quotation.
       </p>
+        </>
+      )}
 
       <h2 className="mt-8 break-inside-avoid break-after-avoid text-base font-bold text-[var(--sec-blue)]">Bank Account and Client Acceptance</h2>
       {quotation.acceptanceNote && <p className="mt-1 text-sm">{quotation.acceptanceNote}</p>}
