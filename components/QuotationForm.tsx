@@ -176,6 +176,17 @@ export default function QuotationForm({
         </div>
       )}
 
+      <div>
+        <label className={labelClass}>Scope of Services (one per line)</label>
+        <textarea
+          value={values.scopeItemsText}
+          onChange={(e) => set("scopeItemsText", e.target.value)}
+          rows={6}
+          placeholder="Optional — paste or type scope text here for a quotation that doesn't match a saved category. Printed as its own Scope of Services section, right after the Pricing Schedule."
+          className={inputClass}
+        />
+      </div>
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label className={labelClass}>Payment terms (one per line)</label>

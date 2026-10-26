@@ -131,6 +131,26 @@ export default function QuotationPrintBody({ quotation }: { quotation: Printable
         Grand Total: AED {money(totals.grandTotal)} including {quotation.vatRatePercent}% VAT.
       </p>
 
+      {/* Optional standalone Scope of Services block — free text, not tied
+          to any single line item's fee. Blank/custom quotations price
+          everything through the Pricing Schedule table above; this is
+          purely descriptive, for quotations that don't match a saved
+          category template and need scope text typed or pasted in. */}
+      {quotation.scopeItemsText.trim() && (
+        <div className="mt-6 break-inside-avoid">
+          <p className="text-sm font-bold">Scope of Services</p>
+          <ol className="mt-1 list-decimal space-y-0.5 pl-5 text-sm">
+            {quotation.scopeItemsText
+              .split("\n")
+              .map((l) => l.trim())
+              .filter(Boolean)
+              .map((line, i) => (
+                <li key={i}>{line}</li>
+              ))}
+          </ol>
+        </div>
+      )}
+
       {/* Per-item detailed scope, only for items where it was filled in */}
       {itemsWithScope.length > 0 &&
         itemsWithScope.map((item, i) => {
