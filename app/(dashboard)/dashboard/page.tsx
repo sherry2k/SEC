@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { desc, eq, inArray } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { Plus, AlertTriangle } from "lucide-react";
 import DownloadPdfButton from "@/components/DownloadPdfButton";
 import { db } from "@/db";
@@ -9,16 +9,12 @@ import {
   projectChecklistItems,
   checklistTemplates,
   users,
-  quotations,
-  performaInvoices,
-  performaInvoiceItems,
 } from "@/db/schema";
 import { requireRole } from "@/lib/auth";
 import { ROLE_LABELS } from "@/lib/roles";
 import { can } from "@/lib/permissions";
 import { financeCanEditProjects } from "@/lib/settings";
 import { getExpiringAlerts } from "@/lib/document-renewals";
-import { calcPerformaInvoiceTotals } from "@/lib/performa-invoice-calc";
 import {
   PROJECT_CATEGORIES,
   CATEGORY_LABELS,
@@ -35,7 +31,6 @@ export default async function DashboardHome() {
   const user = await requireRole();
   const allowFinanceEdit = await financeCanEditProjects();
   const canCreateProject = can(user.role, "projects.create", allowFinanceEdit);
-  const canViewFinance = can(user.role, "accounts.view");
   const expiryAlerts = can(user.role, "document_renewals.view") ? await getExpiringAlerts() : [];
 
   const allProjects = await db.select().from(projects).orderBy(desc(projects.createdAt));
@@ -110,50 +105,12 @@ export default async function DashboardHome() {
   }
   const workload = [...workloadCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
 
-  // Finance snapshot — Admin/Finance/Master admin only.
-  let financeSnapshot: {
-    quotationCount: number;
-    quotedValue: number;
-    invoiceCount: number;
-    invoiceTotal: number;
-  } | null = null;
-
-  if (canViewFinance) {
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
-
-    const allQuotations = await db.select().from(quotations);
-    const monthQuotations = allQuotations.filter((q) => q.createdAt >= startOfMonth);
-
-    // Quoted Value now reflects each project's agreed Total Amount (set
-    // manually in its Financial Summary) rather than raw Quotation
-    // document totals — Total Amount is the real contracted figure, and
-    // unlike a Quotation it isn't tied to a creation date, so this is an
-    // all-time total across every project, not scoped to this month like
-    // the other three figures here.
-    const quotedValue = allProjects.reduce((sum, p) => sum + (p.totalAmount ? Number(p.totalAmount) : 0), 0);
-
-    const allInvoices = await db.select().from(performaInvoices);
-    const monthInvoices = allInvoices.filter((inv) => inv.createdAt >= startOfMonth);
-    const invoiceIds = monthInvoices.map((inv) => inv.id);
-    const invItems = invoiceIds.length
-      ? await db.select().from(performaInvoiceItems).where(inArray(performaInvoiceItems.invoiceId, invoiceIds))
-      : [];
-    const invoiceTotal = monthInvoices.reduce((sum, inv) => {
-      const items = invItems
-        .filter((i) => i.invoiceId === inv.id)
-        .map((i) => ({ description: i.description, amount: Number(i.amount) }));
-      return sum + calcPerformaInvoiceTotals(items, Number(inv.vatRatePercent)).total;
-    }, 0);
-
-    financeSnapshot = {
-      quotationCount: monthQuotations.length,
-      quotedValue,
-      invoiceCount: monthInvoices.length,
-      invoiceTotal,
-    };
-  }
+  // Finance snapshot removed — it summed each project's legacy
+  // `totalAmount` field (set manually in the old per-project Financial
+  // Summary, which was itself removed from the Project detail page),
+  // not anything from the current Accounts / Account Projects system.
+  // Finance now lives entirely under Accounts, which has its own
+  // up-to-date stats on its landing page.
 
   return (
     <div>
@@ -207,34 +164,6 @@ export default async function DashboardHome() {
           </div>
         ))}
       </div>
-
-      {financeSnapshot && (
-        <div className="mt-6 rounded-lg border border-[var(--sec-line)] bg-white p-5">
-          <h2 className="text-base font-bold text-[var(--sec-ink)]">Finance this month</h2>
-          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <div>
-              <p className="text-2xl font-bold text-[var(--sec-ink)]">{financeSnapshot.quotationCount}</p>
-              <p className="text-xs text-[var(--sec-muted)]">Quotations issued</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-[var(--sec-ink)]">
-                AED {financeSnapshot.quotedValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-              </p>
-              <p className="text-xs text-[var(--sec-muted)]">Quoted value (all projects)</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-[var(--sec-ink)]">{financeSnapshot.invoiceCount}</p>
-              <p className="text-xs text-[var(--sec-muted)]">Invoices issued</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-[var(--sec-ink)]">
-                AED {financeSnapshot.invoiceTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-              </p>
-              <p className="text-xs text-[var(--sec-muted)]">Invoiced value</p>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="rounded-lg border border-[var(--sec-line)] bg-white p-5">
