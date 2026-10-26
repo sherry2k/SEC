@@ -11,6 +11,34 @@ function money(n: number) {
 
 const linesOf = (text: string) => text.split("\n").map((l) => l.trim()).filter(Boolean);
 
+// Scope of Services supports an optional two-level structure: a line like
+// "1.1  Site Survey and As-Built Architectural Drawings" (digit.digit) is a
+// bold sub-heading, and the numbered lines under it ("1.  Conduct a
+// comprehensive...") restart their own numbered list, stripped of their
+// typed-in number since the <ol> adds it automatically. A template with no
+// sub-headings (Permit, BOC, CBC, Work Permit) has no lines matching either
+// pattern, so every line falls into one single top-level list — identical
+// to the old flat behavior, nothing to change for those.
+type ScopeBlock = { type: "heading"; text: string } | { type: "items"; items: string[] };
+function parseScopeBlocks(text: string): ScopeBlock[] {
+  const blocks: ScopeBlock[] = [];
+  for (const line of linesOf(text)) {
+    if (/^\d+\.\d+\s+.+/.test(line)) {
+      blocks.push({ type: "heading", text: line });
+      continue;
+    }
+    const itemMatch = line.match(/^\d+\.\s+(.+)$/);
+    const itemText = itemMatch ? itemMatch[1] : line;
+    const last = blocks[blocks.length - 1];
+    if (last && last.type === "items") {
+      last.items.push(itemText);
+    } else {
+      blocks.push({ type: "items", items: [itemText] });
+    }
+  }
+  return blocks;
+}
+
 // Every section heading below carries "break-after-avoid" alongside
 // "break-inside-avoid". break-inside-avoid alone only stops the heading's
 // OWN content from splitting across a page break — a single-line heading
@@ -74,11 +102,19 @@ export default function QuotationCategoryPrintBody({ quotation }: { quotation: P
       ))}
 
       <h2 className="mt-8 break-inside-avoid break-after-avoid text-base font-bold text-[var(--sec-blue)]">1 Scope of Services</h2>
-      <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm">
-        {linesOf(quotation.scopeItemsText).map((line, i) => (
-          <li key={i}>{line}</li>
-        ))}
-      </ol>
+      {parseScopeBlocks(quotation.scopeItemsText).map((block, bi) =>
+        block.type === "heading" ? (
+          <p key={bi} className="mt-4 break-inside-avoid break-after-avoid text-sm font-bold text-[var(--sec-ink)]">
+            {block.text}
+          </p>
+        ) : (
+          <ol key={bi} className="mt-2 list-decimal space-y-1 pl-5 text-sm">
+            {block.items.map((item, ii) => (
+              <li key={ii}>{item}</li>
+            ))}
+          </ol>
+        )
+      )}
       <p className="mt-3 text-sm font-bold">
         Professional Consultancy Fee: AED {money(scopeFee)} + {quotation.vatRatePercent}% VAT = AED {money(scopeFee * (1 + vat))} including VAT.
       </p>

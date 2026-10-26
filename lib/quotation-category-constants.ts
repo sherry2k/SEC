@@ -2,7 +2,7 @@
 // be importable from client components (the category form) as well as
 // server code.
 
-export const QUOTATION_CATEGORIES = ["permit", "boc", "cbc", "work_permit"] as const;
+export const QUOTATION_CATEGORIES = ["permit", "boc", "cbc", "work_permit", "legalization"] as const;
 export type QuotationCategory = (typeof QUOTATION_CATEGORIES)[number];
 
 export const QUOTATION_CATEGORY_LABELS: Record<QuotationCategory, string> = {
@@ -10,6 +10,7 @@ export const QUOTATION_CATEGORY_LABELS: Record<QuotationCategory, string> = {
   boc: "BOC",
   cbc: "CBC",
   work_permit: "Work Permit",
+  legalization: "Legalization",
 };
 
 export type TemplateFeeItem = { name: string; defaultPrice: number; note: string };
