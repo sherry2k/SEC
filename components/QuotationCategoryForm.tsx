@@ -138,6 +138,17 @@ export default function QuotationCategoryForm({
       </div>
 
       <div>
+        <label className={labelClass}>Quotation Overview (shown under the details table, before "1 Scope of Services")</label>
+        <textarea value={values.intro} onChange={(e) => set("intro", e.target.value)} rows={4} className={inputClass} />
+        <p className="mt-1.5 text-xs text-[var(--sec-muted)]">
+          This text was previously copied from the category template once, at creation, with no way to see or edit it here — if it
+          mentions a fee amount, changing the Professional Consultancy Fee below didn&apos;t update it, which is why it could go stale.
+          Type <code className="rounded bg-slate-100 px-1 py-0.5 font-mono">{"{{SCOPE_FEE}}"}</code> anywhere in this text to have it
+          always print as the current fee + VAT automatically, even after you change the fee later.
+        </p>
+      </div>
+
+      <div>
         <h2 className="text-base font-bold text-[var(--sec-ink)]">1 &nbsp;Scope of Services</h2>
         <label className={`${labelClass} mt-3`}>Scope items (one per line)</label>
         <textarea value={values.scopeItemsText} onChange={(e) => set("scopeItemsText", e.target.value)} rows={6} className={inputClass} />

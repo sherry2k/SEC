@@ -4,6 +4,19 @@ import { db } from "@/db";
 import { quotations, quotationItems } from "@/db/schema";
 import type { PrintableQuotation } from "@/components/QuotationPrintBody";
 
+// Category-quotation Intro text can contain the literal token
+// "{{SCOPE_FEE}}" instead of a hardcoded amount, so it keeps matching the
+// Professional Consultancy Fee even after the fee is edited later — before
+// this, the template's intro text baked in a dollar figure at creation
+// time with no way to re-sync it, which is exactly what let the "AED
+// 18,000.00" overview sentence go stale after the fee was dropped to AED
+// 13,000.00 on an already-created quotation.
+function substituteScopeFeePlaceholder(text: string, scopeFeeExclVat: number, vatRatePercent: number): string {
+  if (!text.includes("{{SCOPE_FEE}}")) return text;
+  const formatted = `AED ${scopeFeeExclVat.toLocaleString(undefined, { minimumFractionDigits: 2 })} plus ${vatRatePercent}% VAT`;
+  return text.split("{{SCOPE_FEE}}").join(formatted);
+}
+
 // Shared between the normal in-app view page and the PDF-source page, so
 // both render from exactly the same data mapping.
 export async function getQuotationForPrint(id: string): Promise<PrintableQuotation | null> {
@@ -30,7 +43,11 @@ export async function getQuotationForPrint(id: string): Promise<PrintableQuotati
     location: quotation.location ?? "",
     buildingConfig: quotation.buildingConfig ?? "",
     vatRatePercent: Number(quotation.vatRatePercent),
-    intro: quotation.intro ?? "",
+    intro: substituteScopeFeePlaceholder(
+      quotation.intro ?? "",
+      quotation.scopeFeeExclVat ? Number(quotation.scopeFeeExclVat) : 0,
+      Number(quotation.vatRatePercent)
+    ),
     paymentTerms: quotation.paymentTerms ?? "",
     commercialConditions: quotation.commercialConditions ?? "",
     notes: quotation.notes ?? "",
