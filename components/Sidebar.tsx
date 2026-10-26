@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   LayoutGrid,
   FolderKanban,
@@ -12,7 +12,6 @@ import {
   ClipboardList,
   CalendarOff,
   FileClock,
-  Hourglass,
   MessageCircle,
 } from "lucide-react";
 import type { CurrentUser } from "@/lib/auth";
@@ -38,15 +37,6 @@ export default function Sidebar({
   unreadMessageCount?: number;
 }) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  // "Pending Projects" is one of the checklist categories (lib/checklist.ts),
-  // not a project status — this is a shortcut straight into the Projects
-  // list pre-filtered to it, reusing the ?category= URL state ProjectsTable
-  // already reads on load. Kept out of navItems below and given its own
-  // always-on orange styling (not just an active-state highlight) so it
-  // reads as a distinct kind of button, not just another nav link.
-  const pendingProjectsActive = pathname === "/projects" && searchParams.get("category") === "pending_projects";
 
   const navItems = [
     { href: "/dashboard", label: "Overview", icon: LayoutGrid, show: true },
@@ -113,20 +103,6 @@ export default function Sidebar({
               </Link>
             );
           })}
-
-        {can(user.role, "projects.view") && (
-          <Link
-            href="/projects?category=pending_projects"
-            className={`flex items-center gap-3 rounded-md border-l-2 px-3 py-2 text-sm font-medium transition-colors ${
-              pendingProjectsActive
-                ? "border-orange-400 bg-orange-500 text-white"
-                : "border-orange-400/60 bg-orange-500/15 text-orange-200 hover:bg-orange-500/25 hover:text-orange-50"
-            }`}
-          >
-            <Hourglass size={17} className={pendingProjectsActive ? "text-white" : "text-orange-300"} />
-            <span className="flex-1">Pending Projects</span>
-          </Link>
-        )}
       </nav>
 
       {can(user.role, "attendance.checkin") && todayAttendance && (
