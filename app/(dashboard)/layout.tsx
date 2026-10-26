@@ -14,8 +14,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
   // No role list passed: any approved user reaches the shell.
   // Each page/section inside applies its own requireRole for finer limits.
   const user = await requireRole();
-  const todayAttendance =
-    user.role === "staff" || user.role === "finance" ? await getTodayAttendance(user.id) : null;
+  // Mirrors the "attendance.checkin" permission (lib/permissions.ts) rather
+  // than its own hardcoded role list — Admin already has that permission,
+  // but this fetch was still skipping Admin, so the Sidebar's Check-in
+  // widget never had data to render even though the permission allowed it.
+  const todayAttendance = can(user.role, "attendance.checkin") ? await getTodayAttendance(user.id) : null;
 
   // Only Admin/Master admin review leave requests, so only they need the
   // pending-count badge — everyone else never queries this table here.
