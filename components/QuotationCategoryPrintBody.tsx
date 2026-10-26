@@ -59,7 +59,7 @@ export default function QuotationCategoryPrintBody({ quotation }: { quotation: P
             .filter(([, v]) => v)
             .map(([label, value]) => (
               <tr key={label} className="border border-[var(--sec-line)]">
-                <td className="w-48 border border-[var(--sec-line)] bg-slate-50 px-3 py-2 font-semibold">{label}</td>
+                <td className="w-48 border border-[var(--sec-line)] bg-slate-200 px-3 py-2 font-semibold">{label}</td>
                 <td className="border border-[var(--sec-line)] px-3 py-2">{value}</td>
               </tr>
             ))}
