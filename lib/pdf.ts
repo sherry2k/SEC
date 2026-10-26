@@ -56,12 +56,14 @@ export async function generatePdf(opts: {
       displayHeaderFooter: true,
       headerTemplate: opts.headerTemplate,
       footerTemplate: opts.footerTemplate,
-      // Trimmed to what the header/footer templates actually need,
-      // rather than the earlier, more generously-padded values — the
-      // header's real content (logo + wordmark row + date/ref) only
-      // needs about 28mm; 32mm leaves a small safety margin without the
-      // large empty gap the bigger figure was leaving on every document.
-      margin: { top: "32mm", bottom: "20mm", left: "18mm", right: "18mm" },
+      // bottom was previously trimmed to 20mm to match the footer
+      // template's own rendered height as closely as possible — but that
+      // left almost no buffer, so ordinary rendering variance (line-height
+      // rounding, font metrics) let the last line of page content collide
+      // with the footer's cert row/address line. The footer template
+      // (buildFooterTemplate) renders at roughly 19mm tall — 26mm leaves a
+      // real margin of safety instead of a near-exact match.
+      margin: { top: "32mm", bottom: "26mm", left: "18mm", right: "18mm" },
     });
 
     return await addWatermarkToPdf(Buffer.from(pdfBytes));
