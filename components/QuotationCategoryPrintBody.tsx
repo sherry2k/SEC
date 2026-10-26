@@ -11,6 +11,15 @@ function money(n: number) {
 
 const linesOf = (text: string) => text.split("\n").map((l) => l.trim()).filter(Boolean);
 
+// Every section heading below carries "break-after-avoid" alongside
+// "break-inside-avoid". break-inside-avoid alone only stops the heading's
+// OWN content from splitting across a page break — a single-line heading
+// has nothing to split, so it did nothing on its own. break-after-avoid is
+// what actually stops Chromium's print engine from placing a page break
+// right after the heading, which is what stranded "3 Exclusions and
+// Limitations" and "6 Commercial Summary and Payment Schedule" alone at
+// the bottom of a page with their content pushed onto the next one.
+
 // The category-based (BOC/CBC/Permit/Work Permit) layout — fixed
 // sections copied from that category's template at creation time, plus
 // editable prices, rendered into a Commercial Summary & Payment Schedule
@@ -64,7 +73,7 @@ export default function QuotationCategoryPrintBody({ quotation }: { quotation: P
         </p>
       ))}
 
-      <h2 className="mt-8 text-base font-bold text-[var(--sec-blue)]">1 Scope of Services</h2>
+      <h2 className="mt-8 break-inside-avoid break-after-avoid text-base font-bold text-[var(--sec-blue)]">1 Scope of Services</h2>
       <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm">
         {linesOf(quotation.scopeItemsText).map((line, i) => (
           <li key={i}>{line}</li>
@@ -74,7 +83,7 @@ export default function QuotationCategoryPrintBody({ quotation }: { quotation: P
         Professional Consultancy Fee: AED {money(scopeFee)} + {quotation.vatRatePercent}% VAT = AED {money(scopeFee * (1 + vat))} including VAT.
       </p>
 
-      <h2 className="mt-8 text-base font-bold text-[var(--sec-blue)]">2 Mandatory Authority Fees</h2>
+      <h2 className="mt-8 break-inside-avoid break-after-avoid text-base font-bold text-[var(--sec-blue)]">2 Mandatory Authority Fees</h2>
       <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm">
         {quotation.mandatoryFees.map((f, i) => (
           <li key={i}>
@@ -83,7 +92,7 @@ export default function QuotationCategoryPrintBody({ quotation }: { quotation: P
         ))}
       </ol>
 
-      <h2 className="mt-8 break-inside-avoid text-base font-bold text-[var(--sec-blue)]">3 Exclusions and Limitations</h2>
+      <h2 className="mt-8 break-inside-avoid break-after-avoid text-base font-bold text-[var(--sec-blue)]">3 Exclusions and Limitations</h2>
       <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
         {linesOf(quotation.exclusionsText).map((line, i) => (
           <li key={i}>{line}</li>
@@ -92,7 +101,7 @@ export default function QuotationCategoryPrintBody({ quotation }: { quotation: P
 
       {quotation.optionalServices.length > 0 && (
         <>
-          <h2 className="mt-8 break-inside-avoid text-base font-bold text-[var(--sec-blue)]">4 Optional Additional Services If Required</h2>
+          <h2 className="mt-8 break-inside-avoid break-after-avoid text-base font-bold text-[var(--sec-blue)]">4 Optional Additional Services If Required</h2>
           <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm">
             {quotation.optionalServices.map((f, i) => (
               <li key={i}>
@@ -103,14 +112,14 @@ export default function QuotationCategoryPrintBody({ quotation }: { quotation: P
         </>
       )}
 
-      <h2 className="mt-8 break-inside-avoid text-base font-bold text-[var(--sec-blue)]">5 Commercial Terms</h2>
+      <h2 className="mt-8 break-inside-avoid break-after-avoid text-base font-bold text-[var(--sec-blue)]">5 Commercial Terms</h2>
       <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm">
         {linesOf(quotation.commercialConditions).map((line, i) => (
           <li key={i}>{line}</li>
         ))}
       </ol>
 
-      <h2 className="mt-8 text-base font-bold text-[var(--sec-blue)]">6 Commercial Summary and Payment Schedule</h2>
+      <h2 className="mt-8 break-inside-avoid break-after-avoid text-base font-bold text-[var(--sec-blue)]">6 Commercial Summary and Payment Schedule</h2>
       <table className="mt-2 w-full border-collapse text-sm">
         <thead>
           <tr className="bg-[var(--sec-blue-deep)] text-white">
@@ -171,7 +180,7 @@ export default function QuotationCategoryPrintBody({ quotation }: { quotation: P
         Optional services apply only upon the Client&apos;s written instruction. No site supervision or site visit is included in this quotation.
       </p>
 
-      <h2 className="mt-8 break-inside-avoid text-base font-bold text-[var(--sec-blue)]">Bank Account and Client Acceptance</h2>
+      <h2 className="mt-8 break-inside-avoid break-after-avoid text-base font-bold text-[var(--sec-blue)]">Bank Account and Client Acceptance</h2>
       {quotation.acceptanceNote && <p className="mt-1 text-sm">{quotation.acceptanceNote}</p>}
 
       <p className="mt-4 text-sm font-bold underline">Bank Account Details</p>

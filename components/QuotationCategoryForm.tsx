@@ -34,6 +34,17 @@ export default function QuotationCategoryForm({
   const optionalTotal = values.optionalServices.reduce((sum, f) => sum + (Number(f.price) || 0), 0);
   const requiredTotal = scopeFee + mandatoryTotal;
 
+  // Client accepted an optional service: move it into Mandatory Authority
+  // Fees so it's saved with section "mandatory" instead of "optional" and
+  // starts counting toward Total Required Payments on the printed
+  // document and the Fee Breakdown on the Account Project page.
+  const moveToMandatory = (index: number) => {
+    const item = values.optionalServices[index];
+    if (!item) return;
+    set("mandatoryFees", [...values.mandatoryFees, item]);
+    set("optionalServices", values.optionalServices.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -164,6 +175,31 @@ export default function QuotationCategoryForm({
         <div className="mt-3">
           <QuotationFeeItemsEditor items={values.optionalServices} onChange={(items) => set("optionalServices", items)} addLabel="Add optional service" />
         </div>
+        {values.optionalServices.length > 0 && (
+          <div className="mt-3 space-y-2">
+            <p className="text-xs text-[var(--sec-muted)]">
+              Client accepted one of these? Move it to Required so it counts toward the printed Required Payments total and the
+              project&apos;s Fee Breakdown.
+            </p>
+            {values.optionalServices.map((item, i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between gap-3 rounded-md border border-[var(--sec-line)] bg-white px-3 py-2 text-sm"
+              >
+                <span className="truncate">
+                  {item.name || "Untitled"} — AED {(Number(item.price) || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => moveToMandatory(i)}
+                  className="shrink-0 whitespace-nowrap text-xs font-semibold text-[var(--sec-blue)] hover:underline"
+                >
+                  Move to Required →
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div>
