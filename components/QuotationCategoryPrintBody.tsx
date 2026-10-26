@@ -192,41 +192,46 @@ export default function QuotationCategoryPrintBody({ quotation }: { quotation: P
         <p>Currency: {BANK_DETAILS.currency}</p>
       </div>
 
-      <div className="mt-6 text-sm">
+      {/* Client Confirmation text and the two signature blocks are wrapped
+          as one break-inside-avoid unit so the printed document never
+          splits the heading from its signature boxes again — if the whole
+          block doesn't fit on the current page, it moves to the next page
+          together instead of the heading being stranded alone. */}
+      <div className="mt-6 break-inside-avoid text-sm">
         <p className="text-base font-bold">Client Confirmation</p>
         <p className="mt-1">
           We hereby confirm our acceptance of this quotation, including its scope, exclusions, commercial terms, authority fees,
           optional services, and payment schedule.
         </p>
-      </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-8 text-sm sm:grid-cols-2">
-        <div>
-          <p className="bg-slate-100 px-2 py-1.5 font-semibold">For SOLID Engineering Consultancy</p>
-          <div className="mt-4 space-y-4">
-            <p>Authorized Signatory: {quotation.signatoryName || "Eng. Mohammad Abu Eisa"}</p>
-            <p>
-              Signature and Stamp: <Blank />
-              {quotation.showStamp && <img src="/images/stamp.png" alt="Company stamp" className="mt-2 h-[120px] object-contain" />}
-            </p>
-            <p>Date: {createdDateLabel}</p>
+        <div className="mt-4 grid grid-cols-1 gap-8 sm:grid-cols-2">
+          <div>
+            <p className="bg-slate-100 px-2 py-1.5 font-semibold">For SOLID Engineering Consultancy</p>
+            <div className="mt-4 space-y-4">
+              <p>Authorized Signatory: {quotation.signatoryName || "Eng. Mohammad Abu Eisa"}</p>
+              <p>
+                Signature and Stamp: <Blank />
+                {quotation.showStamp && <img src="/images/stamp.png" alt="Company stamp" className="mt-2 h-[120px] object-contain" />}
+              </p>
+              <p>Date: {createdDateLabel}</p>
+            </div>
           </div>
-        </div>
-        <div>
-          <p className="bg-slate-100 px-2 py-1.5 font-semibold">For {quotation.clientName || "Client"}</p>
-          <div className="mt-4 space-y-4">
-            <p>
-              Authorized Name: <Blank />
-            </p>
-            <p>
-              Designation: <Blank />
-            </p>
-            <p>
-              Signature and Stamp: <Blank />
-            </p>
-            <p>
-              Date: <Blank width="w-32" />
-            </p>
+          <div>
+            <p className="bg-slate-100 px-2 py-1.5 font-semibold">For {quotation.clientName || "Client"}</p>
+            <div className="mt-4 space-y-4">
+              <p>
+                Authorized Name: <Blank />
+              </p>
+              <p>
+                Designation: <Blank />
+              </p>
+              <p>
+                Signature and Stamp: <Blank />
+              </p>
+              <p>
+                Date: <Blank width="w-32" />
+              </p>
+            </div>
           </div>
         </div>
       </div>
