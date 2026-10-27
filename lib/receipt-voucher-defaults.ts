@@ -20,14 +20,10 @@ export type ReceiptVoucherFormValues = {
   project: string;
   location: string;
   projectId: string; // "" = not linked to a project
-  // Set from context (the Account Project a document is created under),
-  // same pattern as QuotationFormValues.accountProjectId — never picked
-  // manually in the form, just carried through from the "New receipt
-  // voucher" link's ?accountProjectId= query param.
-  accountProjectId: string;
   vatRatePercent: number;
   signatoryName: string;
   showStamp: boolean;
+  notes: string;
   items: ReceiptVoucherItemDraft[];
 };
 
@@ -45,10 +41,10 @@ export function defaultReceiptVoucherValues(): ReceiptVoucherFormValues {
     project: "",
     location: "Abu Dhabi - UAE",
     projectId: "",
-    accountProjectId: "",
     vatRatePercent: 5,
     signatoryName: "Eng. Mohammad Abu Eisa",
     showStamp: false,
+    notes: "",
     items: [emptyReceiptItem()],
   };
 }

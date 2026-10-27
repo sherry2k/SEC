@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     }
 
     const vatRatePercent = typeof body?.vatRatePercent === "number" ? body.vatRatePercent : 5;
-    const voucherNo = await nextDocumentCode("RV");
+    const voucherNo = await nextDocumentCode("INV");
 
     const [voucher] = await db
       .insert(receiptVouchers)
@@ -46,12 +46,12 @@ export async function POST(request: NextRequest) {
         issueDate: str(body?.issueDate) || new Date().toLocaleDateString("en-GB"),
         toName,
         projectId: str(body?.projectId) || null,
-        accountProjectId: str(body?.accountProjectId) || null,
         project: str(body?.project) || null,
         location: str(body?.location) || null,
         vatRatePercent: String(vatRatePercent),
         signatoryName: str(body?.signatoryName) || null,
         showStamp: Boolean(body?.showStamp),
+        notes: str(body?.notes) || null,
         createdBy: auth.user.id,
         updatedBy: auth.user.id,
       })
