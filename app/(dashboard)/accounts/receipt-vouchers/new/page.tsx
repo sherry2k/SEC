@@ -4,6 +4,7 @@ import { accountProjects } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import ReceiptVoucherForm from "@/components/ReceiptVoucherForm";
 import { defaultReceiptVoucherValues } from "@/lib/receipt-voucher-defaults";
+import BackButton from "@/components/BackButton";
 
 export default async function NewReceiptVoucherPage({
   searchParams,
@@ -36,6 +37,7 @@ export default async function NewReceiptVoucherPage({
 
   return (
     <div>
+      <BackButton />
       <h1 className="text-2xl font-bold text-[var(--sec-ink)]">New receipt voucher</h1>
       <p className="mt-1 text-sm text-[var(--sec-muted)]">Numbered automatically once saved.</p>
       <div className="mt-8 max-w-3xl">
