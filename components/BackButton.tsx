@@ -13,7 +13,7 @@ export default function BackButton({ label = "Back" }: { label?: string }) {
     <button
       type="button"
       onClick={() => router.back()}
-      className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--sec-blue)] hover:underline"
+      className="mb-3 inline-flex cursor-pointer items-center gap-1 text-sm font-medium text-[var(--sec-blue)] hover:underline"
     >
       <ArrowLeft size={14} />
       {label}
