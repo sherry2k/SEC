@@ -16,11 +16,13 @@ export default function ReceiptVoucherForm({
   mode,
   voucherId,
   initial,
-  projectOptions,
+  projectOptions = [],
 }: {
   mode: "create" | "edit";
   voucherId?: string;
-  projectOptions: { id: string; label: string }[];
+  // Optional — "new/page.tsx" doesn't pass this (it links a voucher via
+  // accountProjectId instead), only "edit/page.tsx" does.
+  projectOptions?: { id: string; label: string }[];
   initial: ReceiptVoucherFormValues;
 }) {
   const router = useRouter();
