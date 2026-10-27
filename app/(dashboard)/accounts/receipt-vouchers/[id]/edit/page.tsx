@@ -24,6 +24,7 @@ export default async function EditReceiptVoucherPage({ params }: { params: Promi
 
   const initial: ReceiptVoucherFormValues = {
     projectId: voucher.projectId ?? "",
+    accountProjectId: voucher.accountProjectId ?? "",
     issueDate: voucher.issueDate,
     toName: voucher.toName ?? "",
     project: voucher.project ?? "",
