@@ -63,11 +63,16 @@ export default async function AccountsIndexPage() {
   const ledgerSummary = await getOfficeLedgerSummary(monthKey);
   const { incomeTotal, expenseTotal, net } = ledgerSummary;
 
-  const stats = [
+  const stats: { label: string; value: string; sub?: string; valueClass?: string; href?: string }[] = [
     { label: "Quotations this month", value: `${monthQuotations.length}`, sub: `AED ${money(quotationValue)}` },
-    { label: "Income this month", value: `AED ${money(incomeTotal)}`, valueClass: "text-emerald-600" },
+    { label: "Income this month", value: `AED ${money(incomeTotal)}`, valueClass: "text-emerald-600", href: "/accounts/office-ledger#income-entries" },
     { label: "Expenses this month", value: `AED ${money(expenseTotal)}`, valueClass: "text-red-600" },
-    { label: "Net this month", value: `AED ${money(net)}`, valueClass: net >= 0 ? "text-[var(--sec-ink)]" : "text-red-600" },
+    {
+      label: "Net this month",
+      value: `AED ${money(net)}`,
+      valueClass: net >= 0 ? "text-[var(--sec-ink)]" : "text-red-600",
+      href: "/accounts/office-ledger#income-entries",
+    },
   ];
 
   return (
@@ -76,13 +81,36 @@ export default async function AccountsIndexPage() {
       <p className="mt-1 text-sm text-[var(--sec-muted)]">Client documents and office bookkeeping, in one place.</p>
 
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {stats.map((s) => (
-          <div key={s.label} className="rounded-lg border border-[var(--sec-line)] bg-white p-4">
-            <p className="text-xs uppercase tracking-wide text-[var(--sec-muted)]">{s.label}</p>
-            <p className={`mt-1 text-xl font-bold ${s.valueClass ?? "text-[var(--sec-ink)]"}`}>{s.value}</p>
-            {s.sub && <p className="mt-0.5 text-xs text-[var(--sec-muted)]">{s.sub}</p>}
-          </div>
-        ))}
+        {stats.map((s) => {
+          const card = (
+            <>
+              <p className="text-xs uppercase tracking-wide text-[var(--sec-muted)]">{s.label}</p>
+              <p className={`mt-1 text-xl font-bold ${s.valueClass ?? "text-[var(--sec-ink)]"}`}>{s.value}</p>
+              {s.sub && <p className="mt-0.5 text-xs text-[var(--sec-muted)]">{s.sub}</p>}
+            </>
+          );
+          // Income and Net both link straight to this month's Income entries
+          // on the Income & Expenses page — that's where "who paid, when,
+          // and why" already lives (Receipt Voucher client name + date +
+          // category), so clicking the number takes you right to the
+          // breakdown instead of just showing a total with nothing behind it.
+          if (s.href) {
+            return (
+              <Link
+                key={s.label}
+                href={s.href}
+                className="rounded-lg border border-[var(--sec-line)] bg-white p-4 transition-colors hover:border-[var(--sec-blue)]"
+              >
+                {card}
+              </Link>
+            );
+          }
+          return (
+            <div key={s.label} className="rounded-lg border border-[var(--sec-line)] bg-white p-4">
+              {card}
+            </div>
+          );
+        })}
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">

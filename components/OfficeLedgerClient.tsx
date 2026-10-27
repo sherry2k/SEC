@@ -231,7 +231,12 @@ export default function OfficeLedgerClient({
         </div>
       </div>
 
-      <div>
+      {/* id target for the Accounts landing page's Income/Net cards, which
+          link to /accounts/office-ledger#income-entries so clicking the
+          total jumps straight to who-paid-when-why instead of just landing
+          at the top of the page. scroll-mt accounts for the sticky topbar
+          so the heading isn't hidden under it after the jump. */}
+      <div id="income-entries" className="scroll-mt-20">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold uppercase tracking-wide text-[var(--sec-muted)]">Income entries</h2>
           {canEdit && <EntryForm type="income" categorySuggestions={incomeCategorySuggestions} onAdded={() => router.refresh()} />}

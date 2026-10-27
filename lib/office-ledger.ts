@@ -89,9 +89,15 @@ export async function getOfficeLedgerSummary(monthKey: string): Promise<OfficeLe
   }));
 
   // Receipt Vouchers issued this month count as income automatically —
-  // computed live here, not duplicated into this table.
+  // computed live here, not duplicated into this table. Only vouchers whose
+  // status is "received" are counted: a voucher still in "draft" means the
+  // payment hasn't actually been confirmed yet, so including it would show
+  // money as already-paid when it may never land — the same bug pattern
+  // already fixed in lib/account-project-finance.ts and
+  // lib/account-project-statement.ts, just missed here.
   const allVouchers = await db.select().from(receiptVouchers);
   const monthVouchers = allVouchers.filter((v) => {
+    if (v.status !== "received") return false;
     const t = parseDMY(v.issueDate);
     return t >= start.getTime() && t < end.getTime();
   });
