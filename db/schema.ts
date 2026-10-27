@@ -425,6 +425,7 @@ export const receiptVouchers = pgTable("receipt_vouchers", {
   // Toggle, off by default — the stamp only appears on the printed page
   // when explicitly turned on for that document.
   showStamp: boolean("show_stamp").notNull().default(false),
+  notes: text("notes"),
   status: text("status").notNull().default("draft"),
   createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
