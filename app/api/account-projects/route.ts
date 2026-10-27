@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { or, ilike, desc } from "drizzle-orm";
 import { db } from "@/db";
 import { accountProjects } from "@/db/schema";
 import { authorizePermissionApi } from "@/lib/auth";
@@ -6,6 +7,40 @@ import { logActivity } from "@/lib/activity";
 
 function str(v: unknown): string {
   return typeof v === "string" ? v.trim() : "";
+}
+
+// Used by GlobalProjectSearch while on an /accounts page — mirrors
+// /api/projects/search's shape and behavior, just against accountProjects
+// instead of the main Projects module's table.
+export async function GET(request: NextRequest) {
+  const auth = await authorizePermissionApi("accounts.view");
+  if (!auth.ok) return auth.response;
+
+  const q = request.nextUrl.searchParams.get("q")?.trim() ?? "";
+  if (q.length < 2) {
+    return NextResponse.json({ results: [] });
+  }
+
+  const pattern = `%${q}%`;
+  const results = await db
+    .select({
+      id: accountProjects.id,
+      clientName: accountProjects.clientName,
+      location: accountProjects.location,
+      projectDetails: accountProjects.projectDetails,
+    })
+    .from(accountProjects)
+    .where(
+      or(
+        ilike(accountProjects.clientName, pattern),
+        ilike(accountProjects.location, pattern),
+        ilike(accountProjects.projectDetails, pattern)
+      )
+    )
+    .orderBy(desc(accountProjects.createdAt))
+    .limit(8);
+
+  return NextResponse.json({ results });
 }
 
 export async function POST(request: NextRequest) {
