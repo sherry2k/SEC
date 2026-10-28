@@ -2,7 +2,7 @@ import "server-only";
 import { eq, asc } from "drizzle-orm";
 import { db } from "@/db";
 import { receiptVouchers, receiptVoucherItems } from "@/db/schema";
-import type { PrintableReceiptVoucher } from "@/components/ReceiptVoucherPrintBody";
+import type { PrintableReceiptVoucher } from "@/components/ReceiptVoucherPrintView";
 
 export async function getReceiptVoucherForPrint(id: string): Promise<PrintableReceiptVoucher | null> {
   const [voucher] = await db.select().from(receiptVouchers).where(eq(receiptVouchers.id, id)).limit(1);
@@ -23,6 +23,7 @@ export async function getReceiptVoucherForPrint(id: string): Promise<PrintableRe
     vatRatePercent: Number(voucher.vatRatePercent),
     signatoryName: voucher.signatoryName ?? "",
     showStamp: voucher.showStamp,
+    notes: voucher.notes ?? "",
     items: items.map((i) => ({
       itemDate: i.itemDate ?? "",
       description: i.description,
