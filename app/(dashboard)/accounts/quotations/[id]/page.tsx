@@ -10,7 +10,6 @@ import { getQuotationForPrint } from "@/lib/quotation-data";
 import type { QuotationStatus } from "@/lib/quotation-status";
 import QuotationPrintView from "@/components/QuotationPrintView";
 import QuotationStatusControl from "@/components/QuotationStatusControl";
-import PrintButton from "@/components/PrintButton";
 import DeleteQuotationButton from "@/components/DeleteQuotationButton";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -68,7 +67,7 @@ export default async function QuotationViewPage({ params }: { params: Promise<{ 
             <Download size={13} />
             Download PDF
           </a>
-          <PrintButton />
+          
         </div>
       </div>
 
