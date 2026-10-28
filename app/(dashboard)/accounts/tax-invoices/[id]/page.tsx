@@ -8,7 +8,6 @@ import { requirePermission } from "@/lib/auth";
 import { toFilenameSafe } from "@/lib/pdf-filename";
 import { getTaxInvoiceForPrint } from "@/lib/tax-invoice-data";
 import TaxInvoicePrintView from "@/components/TaxInvoicePrintView";
-import PrintButton from "@/components/PrintButton";
 import DeleteTaxInvoiceButton from "@/components/DeleteTaxInvoiceButton";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -60,7 +59,7 @@ export default async function TaxInvoiceViewPage({ params }: { params: Promise<{
             <Download size={13} />
             Download PDF
           </a>
-          <PrintButton />
+          
         </div>
       </div>
 
