@@ -13,6 +13,7 @@ export type PrintableReceiptVoucher = {
   vatRatePercent: number;
   signatoryName: string;
   showStamp: boolean;
+  notes: string;
   items: PrintableRVItem[];
 };
 
@@ -72,6 +73,21 @@ export default function ReceiptVoucherPrintBody({ voucher }: { voucher: Printabl
       <p className="mt-3 text-right text-sm font-bold text-[var(--sec-ink)]">
         Total Amount: AED {money(totals.total)} including {voucher.vatRatePercent}% VAT.
       </p>
+
+      {voucher.notes && (
+        <div className="mt-5 text-sm">
+          <p className="font-bold">Notes</p>
+          <ul className="mt-1 list-disc space-y-0.5 pl-5">
+            {voucher.notes
+              .split("\n")
+              .map((l) => l.trim())
+              .filter(Boolean)
+              .map((line, i) => (
+                <li key={i}>{line}</li>
+              ))}
+          </ul>
+        </div>
+      )}
 
       <div className="mt-6 text-sm">
         <p className="font-bold underline">Bank Account Details:</p>
