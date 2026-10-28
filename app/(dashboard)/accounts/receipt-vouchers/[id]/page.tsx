@@ -7,7 +7,6 @@ import { receiptVouchers, receiptVoucherItems, accountProjects } from "@/db/sche
 import { requirePermission } from "@/lib/auth";
 import { toFilenameSafe } from "@/lib/pdf-filename";
 import ReceiptVoucherPrintView from "@/components/ReceiptVoucherPrintView";
-import PrintButton from "@/components/PrintButton";
 import DeleteReceiptVoucherButton from "@/components/DeleteReceiptVoucherButton";
 import ReceiptVoucherStatusControl from "@/components/ReceiptVoucherStatusControl";
 
