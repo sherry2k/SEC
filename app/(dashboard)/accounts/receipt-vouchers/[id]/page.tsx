@@ -67,8 +67,7 @@ export default async function ReceiptVoucherViewPage({ params }: { params: Promi
             <Download size={13} />
             Download PDF
           </a>
-          <PrintButton />
-        </div>
+                  </div>
       </div>
 
       <ReceiptVoucherPrintView
