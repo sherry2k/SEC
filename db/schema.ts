@@ -362,6 +362,7 @@ export const taxInvoices = pgTable("tax_invoices", {
   clientTrn: text("client_trn"),
   vatRatePercent: numeric("vat_rate_percent", { precision: 5, scale: 2 }).notNull().default("5"),
   signatoryName: text("signatory_name"),
+  notes: text("notes"),
   // Toggle, off by default — the stamp only appears on the printed page
   // when explicitly turned on for that document.
   showStamp: boolean("show_stamp").notNull().default(false),
@@ -467,6 +468,7 @@ export const invoices = pgTable("invoices", {
   customerAddress: text("customer_address"),
   vatRatePercent: numeric("vat_rate_percent", { precision: 5, scale: 2 }).notNull().default("5"),
   signatoryName: text("signatory_name"),
+  notes: text("notes"),
   // Toggle, off by default — the stamp only appears on the printed page
   // when explicitly turned on for that document.
   showStamp: boolean("show_stamp").notNull().default(false),

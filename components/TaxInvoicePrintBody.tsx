@@ -14,6 +14,7 @@ export type PrintableTaxInvoice = {
   vatRatePercent: number;
   signatoryName: string;
   showStamp: boolean;
+  notes: string;
   items: PrintableTaxItem[];
 };
 
@@ -90,6 +91,21 @@ export default function TaxInvoicePrintBody({ invoice }: { invoice: PrintableTax
       </table>
 
       <p className="mt-1 text-sm italic text-[var(--sec-muted)]">{amountToWordsAED(totals.total)}</p>
+
+      {invoice.notes && (
+        <div className="mt-2 text-sm">
+          <p className="font-bold">Notes</p>
+          <ul className="mt-0.5 list-disc space-y-0.5 pl-5">
+            {invoice.notes
+              .split("\n")
+              .map((l) => l.trim())
+              .filter(Boolean)
+              .map((line, i) => (
+                <li key={i}>{line}</li>
+              ))}
+          </ul>
+        </div>
+      )}
 
       <div className="mt-2 text-sm">
         <p className="font-bold underline">Bank Account Details:</p>

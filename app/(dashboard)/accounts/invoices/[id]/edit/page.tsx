@@ -40,6 +40,7 @@ export default async function EditInvoicePage({ params }: { params: Promise<{ id
     vatRatePercent: Number(invoice.vatRatePercent),
     signatoryName: invoice.signatoryName ?? "",
     showStamp: invoice.showStamp,
+    notes: invoice.notes ?? "",
     items: items.map(
       (i): InvoiceItemDraft => ({
         key: i.id,

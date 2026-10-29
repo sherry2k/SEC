@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
         vatRatePercent: String(vatRatePercent),
         signatoryName: str(body?.signatoryName) || null,
         showStamp: Boolean(body?.showStamp),
+        notes: str(body?.notes) || null,
         createdBy: auth.user.id,
         updatedBy: auth.user.id,
       })

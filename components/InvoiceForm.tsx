@@ -209,6 +209,17 @@ export default function InvoiceForm({
       )}
 
       <div>
+        <label className={labelClass}>Notes (optional)</label>
+        <textarea
+          value={values.notes}
+          onChange={(e) => set("notes", e.target.value)}
+          rows={3}
+          placeholder="One per line — leave blank if there's nothing to add"
+          className={inputClass}
+        />
+      </div>
+
+      <div>
         <label className={labelClass}>Signatory name</label>
         <input
           value={values.signatoryName}

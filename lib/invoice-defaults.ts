@@ -29,6 +29,7 @@ export type InvoiceFormValues = {
   vatRatePercent: number;
   signatoryName: string;
   showStamp: boolean;
+  notes: string;
   items: InvoiceItemDraft[];
 };
 
@@ -51,6 +52,7 @@ export function defaultInvoiceValues(): InvoiceFormValues {
     vatRatePercent: 5,
     signatoryName: "Eng. Mohammad Abu Eisa",
     showStamp: false,
+    notes: "",
     items: [emptyInvoiceItem()],
   };
 }
