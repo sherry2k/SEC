@@ -1,7 +1,9 @@
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import { eq, asc } from "drizzle-orm";
 import { db } from "@/db";
-import { taxInvoices, taxInvoiceItems } from "@/db/schema";
+import { taxInvoices, taxInvoiceItems, accountProjects } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import TaxInvoiceForm from "@/components/TaxInvoiceForm";
 import type { TaxInvoiceFormValues, TaxInvoiceItemDraft } from "@/lib/tax-invoice-defaults";
@@ -18,6 +20,16 @@ export default async function EditTaxInvoicePage({ params }: { params: Promise<{
     .from(taxInvoiceItems)
     .where(eq(taxInvoiceItems.invoiceId, id))
     .orderBy(asc(taxInvoiceItems.sortOrder));
+
+  let accountProject: { id: string; clientName: string; location: string | null } | null = null;
+  if (invoice.accountProjectId) {
+    const [row] = await db
+      .select({ id: accountProjects.id, clientName: accountProjects.clientName, location: accountProjects.location })
+      .from(accountProjects)
+      .where(eq(accountProjects.id, invoice.accountProjectId))
+      .limit(1);
+    accountProject = row ?? null;
+  }
 
   const initial: TaxInvoiceFormValues = {
     projectId: invoice.projectId ?? "",
@@ -42,6 +54,21 @@ export default async function EditTaxInvoicePage({ params }: { params: Promise<{
 
   return (
     <div>
+      {accountProject && (
+        <Link
+          href={`/accounts/account-projects/${accountProject.id}`}
+          className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--sec-blue)] hover:underline"
+        >
+          <ArrowLeft size={14} />
+          Back to project
+        </Link>
+      )}
+      {accountProject && (
+        <div className="mb-4 rounded-md border border-[var(--sec-blue)]/25 bg-[var(--sec-blue)]/[0.06] px-3.5 py-2.5 text-sm">
+          <span className="font-semibold text-[var(--sec-blue)]">{accountProject.clientName}</span>
+          {accountProject.location && <span className="text-[var(--sec-muted)]"> · {accountProject.location}</span>}
+        </div>
+      )}
       <p className="font-mono text-xs text-[var(--sec-muted)]">{invoice.invoiceNo}</p>
       <h1 className="mt-1 text-2xl font-bold text-[var(--sec-ink)]">Edit tax invoice</h1>
       <div className="mt-8 max-w-3xl">
