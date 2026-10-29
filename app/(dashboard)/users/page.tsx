@@ -21,6 +21,7 @@ export default async function UsersPage() {
       username: users.username,
       role: users.role,
       designation: users.designation,
+      canSubmitDailyReport: users.canSubmitDailyReport,
       status: users.status,
       lastLoginAt: users.lastLoginAt,
       createdAt: users.createdAt,

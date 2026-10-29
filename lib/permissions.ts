@@ -39,12 +39,23 @@ export type Permission = keyof typeof ALWAYS;
 // financeCanEditProjects comes from the app_settings row
 // ('finance_can_edit_projects'), read once per request and passed in —
 // this function itself never touches the database.
-export function can(role: Role, permission: Permission, financeCanEditProjects = false): boolean {
+//
+// canSubmitDailyReport is the per-user override from users.can_submit_daily_report
+// — a one-off exception for a specific non-staff person (set in User
+// Management), not a role-wide grant like the other permissions here.
+export function can(
+  role: Role,
+  permission: Permission,
+  financeCanEditProjects = false,
+  canSubmitDailyReport = false
+): boolean {
   if (ALWAYS[permission].includes(role)) return true;
 
   if (role === "finance" && financeCanEditProjects) {
     if (permission === "projects.create" || permission === "projects.edit") return true;
   }
+
+  if (permission === "daily_report.submit" && canSubmitDailyReport) return true;
 
   return false;
 }

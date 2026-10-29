@@ -11,6 +11,7 @@ type UserRow = {
   username: string;
   role: Role;
   designation: string | null;
+  canSubmitDailyReport: boolean;
   status: UserStatus;
   lastLoginAt: Date | null;
   createdAt: Date;
@@ -38,7 +39,10 @@ export default function UsersTable({ users, currentUserId }: { users: UserRow[];
     Object.fromEntries(users.map((u) => [u.id, u.designation ?? ""]))
   );
 
-  const patchUser = async (id: number, body: { role?: Role; status?: UserStatus; designation?: string }) => {
+  const patchUser = async (
+    id: number,
+    body: { role?: Role; status?: UserStatus; designation?: string; canSubmitDailyReport?: boolean }
+  ) => {
     setError("");
     setBusyId(id);
     try {
@@ -95,6 +99,7 @@ export default function UsersTable({ users, currentUserId }: { users: UserRow[];
               <th className="px-4 py-3 font-medium">Username</th>
               <th className="px-4 py-3 font-medium">Role</th>
               <th className="px-4 py-3 font-medium">Designation</th>
+              <th className="px-4 py-3 font-medium">Daily report</th>
               <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3 font-medium">Last login</th>
               <th className="px-4 py-3 font-medium">Actions</th>
@@ -146,6 +151,24 @@ export default function UsersTable({ users, currentUserId }: { users: UserRow[];
                         placeholder="e.g. Architectural Engineer"
                         className="w-full rounded-md border border-[var(--sec-line)] bg-white px-2.5 py-1.5 text-sm text-[var(--sec-ink)] outline-none focus:border-[var(--sec-blue)] disabled:opacity-50"
                       />
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    {isMasterAdmin ? (
+                      <span className="text-[var(--sec-muted)]">—</span>
+                    ) : u.role === "staff" ? (
+                      <span className="text-xs text-[var(--sec-muted)]">Always (Staff)</span>
+                    ) : (
+                      <label className="flex items-center gap-1.5 text-xs text-[var(--sec-ink)]">
+                        <input
+                          type="checkbox"
+                          checked={u.canSubmitDailyReport}
+                          disabled={rowBusy}
+                          onChange={(e) => patchUser(u.id, { canSubmitDailyReport: e.target.checked })}
+                          className="h-3.5 w-3.5 accent-[var(--sec-blue)] disabled:opacity-50"
+                        />
+                        Allow
+                      </label>
                     )}
                   </td>
                   <td className="px-4 py-3">

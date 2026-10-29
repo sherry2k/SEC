@@ -46,7 +46,7 @@ export default function Sidebar({
     { href: "/document-renewals", label: "Document Renewals", icon: FileClock, show: can(user.role, "document_renewals.view") },
     { href: "/attendance", label: "Attendance", icon: CalendarCheck, show: can(user.role, "attendance.view") },
     { href: "/leave-requests", label: "Leave Requests", icon: CalendarOff, show: true, badge: pendingLeaveCount },
-    { href: "/daily-report", label: "Daily Report", icon: ClipboardList, show: can(user.role, "daily_report.submit") },
+    { href: "/daily-report", label: "Daily Report", icon: ClipboardList, show: can(user.role, "daily_report.submit", false, user.canSubmitDailyReport) },
     { href: "/daily-reports", label: "Daily Reports", icon: ClipboardList, show: can(user.role, "daily_report.view_all") },
     { href: "/users", label: "User Management", icon: Users, show: can(user.role, "users.manage") },
     { href: "/settings", label: "Settings", icon: Settings, show: can(user.role, "settings.manage") },

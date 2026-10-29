@@ -23,6 +23,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const role = typeof body?.role === "string" ? (body.role as Role) : undefined;
   const status = typeof body?.status === "string" ? (body.status as UserStatus) : undefined;
   const designation = "designation" in (body ?? {}) ? (typeof body.designation === "string" ? body.designation.trim() : "") : undefined;
+  const canSubmitDailyReport = typeof body?.canSubmitDailyReport === "boolean" ? body.canSubmitDailyReport : undefined;
 
   // Lock-out guard: nobody changes their own role or status from this
   // screen — an admin can't accidentally demote or disable themselves.
@@ -35,7 +36,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     );
   }
 
-  if (role === undefined && status === undefined && designation === undefined) {
+  if (role === undefined && status === undefined && designation === undefined && canSubmitDailyReport === undefined) {
     return NextResponse.json({ error: "Nothing to update." }, { status: 400 });
   }
 
@@ -59,6 +60,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const update: Partial<typeof users.$inferInsert> = {};
   if (role !== undefined) update.role = role;
   if (designation !== undefined) update.designation = designation || null;
+  if (canSubmitDailyReport !== undefined) update.canSubmitDailyReport = canSubmitDailyReport;
   if (status !== undefined) {
     update.status = status;
     if (status === "approved") {

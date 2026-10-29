@@ -18,6 +18,7 @@ export type CurrentUser = {
   role: Role;
   status: UserStatus;
   designation: string | null;
+  canSubmitDailyReport: boolean;
 };
 
 export async function setSessionCookie(token: string): Promise<void> {
@@ -57,6 +58,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
       role: users.role,
       status: users.status,
       designation: users.designation,
+      canSubmitDailyReport: users.canSubmitDailyReport,
     })
     .from(users)
     .where(eq(users.id, session.id))
@@ -104,7 +106,7 @@ export async function requirePermission(permission: Permission): Promise<Current
   const user = await getCurrentUser();
   if (!user || user.status !== "approved") redirect("/login");
   const allowFinanceEdit = await financeCanEditProjects();
-  if (!can(user.role, permission, allowFinanceEdit)) redirect("/unauthorized");
+  if (!can(user.role, permission, allowFinanceEdit, user.canSubmitDailyReport)) redirect("/unauthorized");
   return user;
 }
 
@@ -117,7 +119,7 @@ export async function authorizePermissionApi(permission: Permission): Promise<Ap
     };
   }
   const allowFinanceEdit = await financeCanEditProjects();
-  if (!can(user.role, permission, allowFinanceEdit)) {
+  if (!can(user.role, permission, allowFinanceEdit, user.canSubmitDailyReport)) {
     return {
       ok: false,
       response: NextResponse.json({ error: "You don't have access to this." }, { status: 403 }),

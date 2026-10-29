@@ -32,6 +32,11 @@ export const users = pgTable("users", {
   // Engineer", "Structural Engineer") since titles vary and aren't
   // meaningfully tied to the account role.
   designation: text("designation"),
+  // One-off exception to daily_report.submit's role gate (normally just
+  // "staff") — lets a specific non-staff user (e.g. one Admin/Finance
+  // person) submit daily reports too, without opening it to every user
+  // who shares their role. See lib/permissions.ts.
+  canSubmitDailyReport: boolean("can_submit_daily_report").notNull().default(false),
   status: userStatusEnum("status").notNull().default("pending"),
   approvedBy: integer("approved_by").references((): AnyPgColumn => users.id),
   approvedAt: timestamp("approved_at", { withTimezone: true }),
