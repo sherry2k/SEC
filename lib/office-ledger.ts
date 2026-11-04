@@ -28,10 +28,22 @@ function parseDMY(s: string): number {
   return new Date(Number(y), Number(mo) - 1, Number(d)).getTime();
 }
 
+// "YYYY-MM-DD", using local date parts (not toISOString, which would shift
+// across a UTC day boundary for someone in UAE).
+function toDateValue(d: Date): string {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 export type LedgerRow = {
   id: string;
   type: "income" | "expense";
   dateLabel: string;
+  // "YYYY-MM-DD", for prefilling the edit form's <input type="date">.
+  // Unused for source "receipt_voucher" rows (those aren't editable here).
+  dateValue: string;
   sortKey: number;
   category: string;
   description: string;
@@ -80,6 +92,7 @@ export async function getOfficeLedgerSummary(monthKey: string): Promise<OfficeLe
     id: r.id,
     type: r.type as "income" | "expense",
     dateLabel: r.date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+    dateValue: toDateValue(r.date),
     sortKey: r.date.getTime(),
     category: r.category,
     description: r.description ?? "",
@@ -113,6 +126,7 @@ export async function getOfficeLedgerSummary(monthKey: string): Promise<OfficeLe
       id: v.id,
       type: "income",
       dateLabel: v.issueDate,
+      dateValue: "", // not editable here — see LedgerRow.dateValue
       sortKey: parseDMY(v.issueDate),
       category: "Receipt Voucher",
       description: `${v.voucherNo} — ${v.toName ?? ""}`,

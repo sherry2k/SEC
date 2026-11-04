@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2, Loader2, X } from "lucide-react";
+import { Plus, Trash2, Loader2, X, Pencil } from "lucide-react";
 import type { LedgerRow } from "@/lib/office-ledger";
 
 function money(n: number) {
@@ -134,9 +134,112 @@ function EntryForm({
   );
 }
 
-function LedgerRowItem({ row, canDelete }: { row: LedgerRow; canDelete: boolean }) {
+function EditLedgerRowForm({
+  row,
+  categorySuggestions,
+  onDone,
+  onCancel,
+}: {
+  row: LedgerRow;
+  categorySuggestions: string[];
+  onDone: () => void;
+  onCancel: () => void;
+}) {
+  const [date, setDate] = useState(row.dateValue);
+  const [category, setCategory] = useState(row.category);
+  const [description, setDescription] = useState(row.description);
+  const [amount, setAmount] = useState(String(row.amount));
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
+
+  const inputClass =
+    "w-full rounded-md border border-[var(--sec-line)] bg-white px-2.5 py-1.5 text-sm text-[var(--sec-ink)] outline-none focus:border-[var(--sec-blue)]";
+  const listId = `edit-category-suggestions-${row.id}`;
+
+  const submit = async () => {
+    if (!category.trim()) {
+      setError("Category is required.");
+      return;
+    }
+    if (!Number(amount) || Number(amount) <= 0) {
+      setError("Enter a valid amount.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/office-ledger/${row.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date, category, description, amount: Number(amount) }),
+      });
+      if (!res.ok) {
+        const data: { error?: string } = await res.json().catch(() => ({}));
+        setError(data.error || "Couldn't save that change.");
+        return;
+      }
+      router.refresh();
+      onDone();
+    } catch {
+      setError("Couldn't reach the server.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="border-b border-[var(--sec-line)] bg-slate-50 px-3 py-3 last:border-0">
+      <div className="grid grid-cols-2 gap-2">
+        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputClass} />
+        <div>
+          <input list={listId} value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Category" className={inputClass} />
+          <datalist id={listId}>
+            {categorySuggestions.map((c) => (
+              <option key={c} value={c} />
+            ))}
+          </datalist>
+        </div>
+        <input
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Description (optional)"
+          className={`${inputClass} col-span-2`}
+        />
+        <div className="col-span-2 flex items-center gap-2">
+          <span className="text-sm text-[var(--sec-muted)]">AED</span>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className={`${inputClass} max-w-[140px]`}
+          />
+          <div className="ml-auto flex items-center gap-2">
+            <button onClick={onCancel} className="rounded-md px-3 py-1.5 text-xs font-medium text-[var(--sec-muted)] hover:bg-slate-200">
+              Cancel
+            </button>
+            <button
+              onClick={submit}
+              disabled={saving}
+              className="flex items-center gap-1.5 rounded-md bg-[var(--sec-blue)] px-3 py-1.5 text-xs font-medium text-white hover:bg-[var(--sec-blue-deep)] disabled:opacity-50"
+            >
+              {saving && <Loader2 size={13} className="animate-spin" />}
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+      {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+    </div>
+  );
+}
+
+function LedgerRowItem({ row, canEdit, categorySuggestions }: { row: LedgerRow; canEdit: boolean; categorySuggestions: string[] }) {
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [editing, setEditing] = useState(false);
   const router = useRouter();
 
   const handleDelete = async () => {
@@ -149,6 +252,10 @@ function LedgerRowItem({ row, canDelete }: { row: LedgerRow; canDelete: boolean 
       setConfirming(false);
     }
   };
+
+  if (editing) {
+    return <EditLedgerRowForm row={row} categorySuggestions={categorySuggestions} onDone={() => setEditing(false)} onCancel={() => setEditing(false)} />;
+  }
 
   return (
     <div className="flex items-center justify-between gap-2 border-b border-[var(--sec-line)] px-3 py-2 text-sm last:border-0">
@@ -165,7 +272,12 @@ function LedgerRowItem({ row, canDelete }: { row: LedgerRow; canDelete: boolean 
       </div>
       <div className="flex shrink-0 items-center gap-2">
         <span className="font-medium text-[var(--sec-ink)]">AED {money(row.amount)}</span>
-        {canDelete &&
+        {canEdit && row.source === "manual" && (
+          <button onClick={() => setEditing(true)} className="rounded p-1 text-[var(--sec-muted)] hover:bg-slate-100 hover:text-[var(--sec-blue)]" aria-label="Edit entry">
+            <Pencil size={13} />
+          </button>
+        )}
+        {canEdit &&
           row.source === "manual" &&
           (confirming ? (
             <div className="flex items-center gap-1">
@@ -226,7 +338,7 @@ export default function OfficeLedgerClient({
           {expenseRows.length === 0 ? (
             <p className="px-3 py-6 text-center text-sm text-[var(--sec-muted)]">No expenses logged this month.</p>
           ) : (
-            expenseRows.map((row) => <LedgerRowItem key={row.id} row={row} canDelete={canEdit} />)
+            expenseRows.map((row) => <LedgerRowItem key={row.id} row={row} canEdit={canEdit} categorySuggestions={expenseCategorySuggestions} />)
           )}
         </div>
       </div>
@@ -245,7 +357,7 @@ export default function OfficeLedgerClient({
           {incomeRows.length === 0 ? (
             <p className="px-3 py-6 text-center text-sm text-[var(--sec-muted)]">No income logged this month.</p>
           ) : (
-            incomeRows.map((row) => <LedgerRowItem key={row.id} row={row} canDelete={canEdit} />)
+            incomeRows.map((row) => <LedgerRowItem key={row.id} row={row} canEdit={canEdit} categorySuggestions={incomeCategorySuggestions} />)
           )}
         </div>
       </div>
