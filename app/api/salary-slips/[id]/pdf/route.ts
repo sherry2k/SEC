@@ -21,7 +21,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const { id } = await params;
   const [slip] = await db
-    .select({ slipNo: salarySlips.slipNo, issueDate: salarySlips.issueDate, employeeId: salarySlips.employeeId })
+    .select({ slipNo: salarySlips.slipNo, issueDate: salarySlips.issueDate, employeeId: salarySlips.employeeId, status: salarySlips.status })
     .from(salarySlips)
     .where(eq(salarySlips.id, id))
     .limit(1);
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (!slip) {
     return NextResponse.json({ error: "Salary slip not found." }, { status: 404 });
   }
-  if (!canViewSalarySlip(user, slip.employeeId)) {
+  if (!canViewSalarySlip(user, slip.employeeId, slip.status)) {
     return NextResponse.json({ error: "You don't have access to this." }, { status: 403 });
   }
 

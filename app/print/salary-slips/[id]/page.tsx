@@ -12,9 +12,13 @@ export default async function SalarySlipPrintSourcePage({ params }: { params: Pr
   if (!user || user.status !== "approved") redirect("/login");
 
   const { id } = await params;
-  const [row] = await db.select({ employeeId: salarySlips.employeeId }).from(salarySlips).where(eq(salarySlips.id, id)).limit(1);
+  const [row] = await db
+    .select({ employeeId: salarySlips.employeeId, status: salarySlips.status })
+    .from(salarySlips)
+    .where(eq(salarySlips.id, id))
+    .limit(1);
   if (!row) notFound();
-  if (!canViewSalarySlip(user, row.employeeId)) redirect("/unauthorized");
+  if (!canViewSalarySlip(user, row.employeeId, row.status)) redirect("/unauthorized");
 
   const slip = await getSalarySlipForPrint(id);
   if (!slip) notFound();

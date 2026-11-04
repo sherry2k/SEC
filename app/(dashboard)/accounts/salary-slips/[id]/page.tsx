@@ -25,7 +25,7 @@ export default async function SalarySlipViewPage({ params }: { params: Promise<{
   const { id } = await params;
   const [slip] = await db.select().from(salarySlips).where(eq(salarySlips.id, id)).limit(1);
   if (!slip) notFound();
-  if (!canViewSalarySlip(user, slip.employeeId)) redirect("/unauthorized");
+  if (!canViewSalarySlip(user, slip.employeeId, slip.status)) redirect("/unauthorized");
 
   const items = await db
     .select()

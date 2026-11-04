@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { Download } from "lucide-react";
 import { db } from "@/db";
 import { salarySlips, salarySlipItems } from "@/db/schema";
@@ -11,13 +11,18 @@ import { payMonthLabel } from "@/components/SalarySlipPrintBody";
 // them (employeeId === their own id), so there's no role gate beyond being
 // signed in. Admin/Finance manage every slip from Accounts → Salary Slips;
 // this is just the self-service view for whoever the slip was issued to.
+//
+// Only "paid" slips show here — a draft may still be getting corrected,
+// so it stays invisible to the employee until Admin/Finance marks it
+// paid (see lib/salary-slip-access.ts, which enforces the same rule on
+// the view/PDF/print routes in case someone has the direct link).
 export default async function MyPayslipsPage() {
   const user = await requireRole();
 
   const rows = await db
     .select()
     .from(salarySlips)
-    .where(eq(salarySlips.employeeId, user.id))
+    .where(and(eq(salarySlips.employeeId, user.id), eq(salarySlips.status, "paid")))
     .orderBy(desc(salarySlips.createdAt));
 
   // One employee's worth of slips — a per-slip fetch is fine here, no
