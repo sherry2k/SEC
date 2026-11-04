@@ -4,16 +4,19 @@ import { Plus, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { db } from "@/db";
 import { salarySlips, salarySlipItems } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
+import { can } from "@/lib/permissions";
 import { calcSalarySlipTotals } from "@/lib/salary-slip-calc";
 import { shiftMonthKey } from "@/lib/office-ledger";
 import { payMonthLabel } from "@/components/SalarySlipPrintBody";
+import SalarySlipStatusControl from "@/components/SalarySlipStatusControl";
 
 function money(n: number) {
   return n.toLocaleString(undefined, { minimumFractionDigits: 2 });
 }
 
 export default async function SalarySlipsListPage({ searchParams }: { searchParams: Promise<{ month?: string }> }) {
-  await requirePermission("accounts.view");
+  const user = await requirePermission("accounts.view");
+  const canEdit = can(user.role, "accounts.edit");
 
   const { month } = await searchParams;
   // "all" shows every slip ever created, flat — the pre-filter behavior.
@@ -128,7 +131,13 @@ export default async function SalarySlipsListPage({ searchParams }: { searchPara
                   <td className="px-4 py-3 font-medium text-[var(--sec-ink)]">{s.employeeName}</td>
                   {showAll && <td className="px-4 py-3 whitespace-nowrap text-[var(--sec-muted)]">{payMonthLabel(s.payMonth)}</td>}
                   <td className="px-4 py-3 whitespace-nowrap text-[var(--sec-ink)]">AED {money(totalsByRow[i].netPay)}</td>
-                  <td className="px-4 py-3 text-[var(--sec-muted)] capitalize">{s.status}</td>
+                  <td className="px-4 py-3">
+                    {canEdit ? (
+                      <SalarySlipStatusControl slipId={s.id} status={s.status} />
+                    ) : (
+                      <span className="capitalize text-[var(--sec-muted)]">{s.status}</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 whitespace-nowrap text-[var(--sec-muted)]">{s.issueDate}</td>
                 </tr>
               ))}

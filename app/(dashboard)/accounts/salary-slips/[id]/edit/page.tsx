@@ -6,6 +6,7 @@ import { requirePermission } from "@/lib/auth";
 import SalarySlipForm from "@/components/SalarySlipForm";
 import type { SalarySlipFormValues, SalarySlipItemDraft } from "@/lib/salary-slip-defaults";
 import BackButton from "@/components/BackButton";
+import SalarySlipStatusControl from "@/components/SalarySlipStatusControl";
 
 export default async function EditSalarySlipPage({ params }: { params: Promise<{ id: string }> }) {
   await requirePermission("accounts.edit");
@@ -48,8 +49,13 @@ export default async function EditSalarySlipPage({ params }: { params: Promise<{
   return (
     <div>
       <BackButton />
-      <p className="font-mono text-xs text-[var(--sec-muted)]">{slip.slipNo}</p>
-      <h1 className="mt-1 text-2xl font-bold text-[var(--sec-ink)]">Edit salary slip</h1>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="font-mono text-xs text-[var(--sec-muted)]">{slip.slipNo}</p>
+          <h1 className="mt-1 text-2xl font-bold text-[var(--sec-ink)]">Edit salary slip</h1>
+        </div>
+        <SalarySlipStatusControl slipId={slip.id} status={slip.status} />
+      </div>
       <div className="mt-8 max-w-3xl">
         <SalarySlipForm mode="edit" slipId={slip.id} initial={initial} employees={employees} />
       </div>
