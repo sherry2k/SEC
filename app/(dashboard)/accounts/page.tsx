@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FolderKanban, Wallet, ArrowRight } from "lucide-react";
+import { FolderKanban, Wallet, ArrowRight, Receipt } from "lucide-react";
 import { db } from "@/db";
 import { quotations, quotationItems } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
@@ -113,7 +113,7 @@ export default async function AccountsIndexPage() {
         })}
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <Link
           href="/accounts/account-projects"
           className="group rounded-lg border border-[var(--sec-line)] bg-white p-6 transition-colors hover:border-[var(--sec-blue)]"
@@ -135,6 +135,18 @@ export default async function AccountsIndexPage() {
           <Wallet size={28} className="text-[var(--sec-blue)]" />
           <p className="mt-3 text-lg font-bold text-[var(--sec-ink)]">Income & Expenses</p>
           <p className="mt-1 text-sm text-[var(--sec-muted)]">Office-level bookkeeping — separate from client documents.</p>
+          <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--sec-blue)] group-hover:underline">
+            Open <ArrowRight size={14} />
+          </span>
+        </Link>
+
+        <Link
+          href="/accounts/salary-slips"
+          className="group rounded-lg border border-[var(--sec-line)] bg-white p-6 transition-colors hover:border-[var(--sec-blue)]"
+        >
+          <Receipt size={28} className="text-[var(--sec-blue)]" />
+          <p className="mt-3 text-lg font-bold text-[var(--sec-ink)]">Salary Slips</p>
+          <p className="mt-1 text-sm text-[var(--sec-muted)]">Payroll documents per employee — marking one "Paid" logs it as a Salaries expense.</p>
           <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--sec-blue)] group-hover:underline">
             Open <ArrowRight size={14} />
           </span>

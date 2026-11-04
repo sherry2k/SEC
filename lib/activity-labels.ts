@@ -29,6 +29,9 @@ export type ActivityAction =
   | "invoice_created"
   | "invoice_updated"
   | "invoice_deleted"
+  | "salary_slip_created"
+  | "salary_slip_updated"
+  | "salary_slip_deleted"
   | "attachment_added"
   | "attachment_removed"
   | "leave_request_created"
@@ -63,6 +66,9 @@ export const ACTIVITY_LABELS: Record<ActivityAction, string> = {
   invoice_created: "created invoice",
   invoice_updated: "updated invoice",
   invoice_deleted: "deleted invoice",
+  salary_slip_created: "created salary slip",
+  salary_slip_updated: "updated salary slip",
+  salary_slip_deleted: "deleted salary slip",
   attachment_added: "added an attachment to",
   attachment_removed: "removed an attachment from",
   leave_request_created: "submitted a leave request",

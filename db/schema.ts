@@ -601,6 +601,52 @@ export const officeLedgerEntries = pgTable("office_ledger_entries", {
 });
 
 // ---------------------------------------------------------------------------
+// Salary Slips — payroll documents, one per employee per month. Own SAL
+// numbering sequence (not shared with the client-document family above)
+// since payroll isn't a client-facing document. employeeId links to a
+// system user when one exists; employeeName is always set (copied from
+// the user at creation time, or typed directly) so a slip for someone
+// with no login still has a name to print, and the name survives even if
+// the linked user is later renamed. Earnings and deductions are both
+// just line items (salarySlipItems.type), the same "typed fresh each
+// month" shape as Receipt Voucher items rather than a fixed salary
+// structure stored on the user.
+// ---------------------------------------------------------------------------
+
+export const salarySlips = pgTable("salary_slips", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  slipNo: text("slip_no").notNull().unique(),
+  employeeId: integer("employee_id").references(() => users.id),
+  employeeName: text("employee_name").notNull(),
+  designation: text("designation"),
+  payMonth: text("pay_month").notNull(), // "YYYY-MM"
+  issueDate: text("issue_date").notNull(), // "DD/MM/YYYY"
+  signatoryName: text("signatory_name"),
+  showStamp: boolean("show_stamp").notNull().default(false),
+  notes: text("notes"),
+  // "draft" | "paid" — marking a slip "paid" is what makes it count as a
+  // Salaries expense in Income & Expenses (computed live, same pattern as
+  // Receipt Vouchers counting as income once "received" — see
+  // lib/office-ledger.ts).
+  status: text("status").notNull().default("draft"),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedBy: integer("updated_by").references(() => users.id),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const salarySlipItems = pgTable("salary_slip_items", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  slipId: uuid("slip_id")
+    .notNull()
+    .references(() => salarySlips.id, { onDelete: "cascade" }),
+  sortOrder: integer("sort_order").notNull().default(0),
+  type: text("type").notNull(), // "earning" | "deduction"
+  description: text("description").notNull(),
+  amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+});
+
+// ---------------------------------------------------------------------------
 // Document renewals — tracked expiries (trade license, ID cards, etc.),
 // separate from project checklist items since these aren't tied to one
 // project and recur on their own cycle.

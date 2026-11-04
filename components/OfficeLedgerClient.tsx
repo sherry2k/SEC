@@ -268,6 +268,7 @@ function LedgerRowItem({ row, canEdit, categorySuggestions }: { row: LedgerRow; 
           {row.dateLabel}
           {row.createdByName && ` · ${row.createdByName}`}
           {row.source === "receipt_voucher" && " · Receipt Voucher"}
+          {row.source === "salary_slip" && " · Salary Slip"}
         </p>
       </div>
       <div className="flex shrink-0 items-center gap-2">

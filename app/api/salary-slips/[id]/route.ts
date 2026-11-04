@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { invoices, invoiceItems } from "@/db/schema";
+import { salarySlips, salarySlipItems } from "@/db/schema";
 import { authorizePermissionApi } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
 
@@ -15,69 +15,64 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   const { id } = await params;
   const [existing] = await db
-    .select({ id: invoices.id, invoiceNo: invoices.invoiceNo, issueDate: invoices.issueDate })
-    .from(invoices)
-    .where(eq(invoices.id, id))
+    .select({ id: salarySlips.id, slipNo: salarySlips.slipNo, issueDate: salarySlips.issueDate })
+    .from(salarySlips)
+    .where(eq(salarySlips.id, id))
     .limit(1);
   if (!existing) {
-    return NextResponse.json({ error: "Invoice not found." }, { status: 404 });
+    return NextResponse.json({ error: "Salary slip not found." }, { status: 404 });
   }
 
   const body = await request.json().catch(() => null);
-  const customerName = str(body?.customerName);
+  const employeeName = str(body?.employeeName);
   const items: unknown[] = Array.isArray(body?.items) ? body.items : [];
 
-  if (!customerName) {
-    return NextResponse.json({ error: "Customer name is required." }, { status: 400 });
+  if (!employeeName) {
+    return NextResponse.json({ error: "Employee name is required." }, { status: 400 });
   }
 
   const rows = items
     .map((item, index) => {
       const record = item as Record<string, unknown>;
+      const type = record?.type === "deduction" ? "deduction" : "earning";
       const description = str(record?.description);
       const amount = Number(record?.amount);
       if (!description || !Number.isFinite(amount)) return null;
-      return {
-        invoiceId: id,
-        sortOrder: index,
-        itemDate: str(record?.itemDate) || null,
-        description,
-        amount: String(amount),
-      };
+      return { slipId: id, sortOrder: index, type, description, amount: String(amount) };
     })
     .filter((r): r is NonNullable<typeof r> => r !== null);
 
   if (rows.length === 0) {
-    return NextResponse.json({ error: "Add at least one valid line item." }, { status: 400 });
+    return NextResponse.json({ error: "Add at least one valid earning or deduction line." }, { status: 400 });
   }
 
-  const vatRatePercent = typeof body?.vatRatePercent === "number" ? body.vatRatePercent : 5;
+  const employeeIdRaw = str(body?.employeeId);
+  const employeeId = employeeIdRaw ? Number(employeeIdRaw) : null;
 
   await db
-    .update(invoices)
+    .update(salarySlips)
     .set({
+      employeeId: employeeId && Number.isFinite(employeeId) ? employeeId : null,
+      employeeName,
+      designation: str(body?.designation) || null,
+      payMonth: str(body?.payMonth) || undefined,
       issueDate: str(body?.issueDate) || existing.issueDate,
-      customerName,
-      projectId: str(body?.projectId) || null,
-      accountProjectId: str(body?.accountProjectId) || null,
-      project: str(body?.project) || null,
-      customerAddress: str(body?.customerAddress) || null,
-      vatRatePercent: String(vatRatePercent),
       signatoryName: str(body?.signatoryName) || null,
       showStamp: Boolean(body?.showStamp),
+      notes: str(body?.notes) || null,
       status: str(body?.status) || undefined,
       updatedBy: auth.user.id,
       updatedAt: new Date(),
     })
-    .where(eq(invoices.id, id));
+    .where(eq(salarySlips.id, id));
 
-  await db.delete(invoiceItems).where(eq(invoiceItems.invoiceId, id));
-  await db.insert(invoiceItems).values(rows);
+  await db.delete(salarySlipItems).where(eq(salarySlipItems.slipId, id));
+  await db.insert(salarySlipItems).values(rows);
 
   await logActivity({
     userId: auth.user.id,
-    action: "invoice_updated",
-    targetName: `${existing.invoiceNo} — ${customerName}`,
+    action: "salary_slip_updated",
+    targetName: `${existing.slipNo} — ${employeeName}`,
   });
 
   return NextResponse.json({ success: true });
@@ -88,23 +83,23 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
   if (!auth.ok) return auth.response;
 
   const { id } = await params;
-  const [invoice] = await db
-    .select({ invoiceNo: invoices.invoiceNo, customerName: invoices.customerName })
-    .from(invoices)
-    .where(eq(invoices.id, id))
+  const [slip] = await db
+    .select({ slipNo: salarySlips.slipNo, employeeName: salarySlips.employeeName })
+    .from(salarySlips)
+    .where(eq(salarySlips.id, id))
     .limit(1);
 
-  if (!invoice) {
-    return NextResponse.json({ error: "Invoice not found." }, { status: 404 });
+  if (!slip) {
+    return NextResponse.json({ error: "Salary slip not found." }, { status: 404 });
   }
 
   await logActivity({
     userId: auth.user.id,
-    action: "invoice_deleted",
-    targetName: `${invoice.invoiceNo} — ${invoice.customerName ?? ""}`,
+    action: "salary_slip_deleted",
+    targetName: `${slip.slipNo} — ${slip.employeeName}`,
   });
 
-  await db.delete(invoices).where(eq(invoices.id, id));
+  await db.delete(salarySlips).where(eq(salarySlips.id, id));
 
   return NextResponse.json({ success: true });
 }

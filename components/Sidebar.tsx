@@ -13,6 +13,7 @@ import {
   CalendarOff,
   FileClock,
   MessageCircle,
+  Receipt,
 } from "lucide-react";
 import type { CurrentUser } from "@/lib/auth";
 import { can } from "@/lib/permissions";
@@ -46,6 +47,10 @@ export default function Sidebar({
     { href: "/document-renewals", label: "Document Renewals", icon: FileClock, show: can(user.role, "document_renewals.view") },
     { href: "/attendance", label: "Attendance", icon: CalendarCheck, show: can(user.role, "attendance.view") },
     { href: "/leave-requests", label: "Leave Requests", icon: CalendarOff, show: true, badge: pendingLeaveCount },
+    // Shown to everyone, same as Leave Requests — it only ever lists slips
+    // issued to the signed-in person, regardless of role. Admin/Finance
+    // manage every slip from Accounts → Salary Slips instead.
+    { href: "/my-payslips", label: "My Payslips", icon: Receipt, show: true },
     { href: "/daily-report", label: "Daily Report", icon: ClipboardList, show: can(user.role, "daily_report.submit", false, user.canSubmitDailyReport) },
     { href: "/daily-reports", label: "Daily Reports", icon: ClipboardList, show: can(user.role, "daily_report.view_all") },
     { href: "/users", label: "User Management", icon: Users, show: can(user.role, "users.manage") },

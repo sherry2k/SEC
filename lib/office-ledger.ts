@@ -1,10 +1,12 @@
 import "server-only";
 import { and, eq, gte, lt } from "drizzle-orm";
 import { db } from "@/db";
-import { officeLedgerEntries, receiptVouchers, receiptVoucherItems, users } from "@/db/schema";
+import { officeLedgerEntries, receiptVouchers, receiptVoucherItems, salarySlips, salarySlipItems, users } from "@/db/schema";
 import { calcReceiptVoucherTotals } from "@/lib/receipt-voucher-calc";
+import { calcSalarySlipTotals } from "@/lib/salary-slip-calc";
 
 export const EXPENSE_CATEGORY_SUGGESTIONS = [
+  "Salaries",
   "Office Rental",
   "Electricity Bill",
   "Etisalat Bill",
@@ -48,7 +50,7 @@ export type LedgerRow = {
   category: string;
   description: string;
   amount: number;
-  source: "manual" | "receipt_voucher";
+  source: "manual" | "receipt_voucher" | "salary_slip";
   createdByName: string | null;
 };
 
@@ -136,8 +138,35 @@ export async function getOfficeLedgerSummary(monthKey: string): Promise<OfficeLe
     });
   }
 
+  // Salary Slips marked "paid" for this pay month count as a Salaries
+  // expense automatically — same live-computed pattern as Receipt Vouchers
+  // counting as income once "received", just on the expense side and
+  // matched by payMonth (already "YYYY-MM") instead of a parsed issue date.
+  const allSlips = await db.select().from(salarySlips);
+  const monthSlips = allSlips.filter((s) => s.status === "paid" && s.payMonth === monthKey);
+
+  const salaryRows: LedgerRow[] = [];
+  for (const s of monthSlips) {
+    const items = await db.select().from(salarySlipItems).where(eq(salarySlipItems.slipId, s.id));
+    const totals = calcSalarySlipTotals(
+      items.map((i) => ({ type: i.type as "earning" | "deduction", description: i.description, amount: Number(i.amount) }))
+    );
+    salaryRows.push({
+      id: s.id,
+      type: "expense",
+      dateLabel: s.issueDate,
+      dateValue: "", // not editable here — see LedgerRow.dateValue
+      sortKey: parseDMY(s.issueDate),
+      category: "Salaries",
+      description: `${s.slipNo} — ${s.employeeName}`,
+      amount: totals.netPay,
+      source: "salary_slip",
+      createdByName: null,
+    });
+  }
+
   const incomeRows = [...manualLedgerRows.filter((r) => r.type === "income"), ...voucherRows].sort((a, b) => b.sortKey - a.sortKey);
-  const expenseRows = manualLedgerRows.filter((r) => r.type === "expense").sort((a, b) => b.sortKey - a.sortKey);
+  const expenseRows = [...manualLedgerRows.filter((r) => r.type === "expense"), ...salaryRows].sort((a, b) => b.sortKey - a.sortKey);
 
   const incomeTotal = incomeRows.reduce((sum, r) => sum + r.amount, 0);
   const expenseTotal = expenseRows.reduce((sum, r) => sum + r.amount, 0);
