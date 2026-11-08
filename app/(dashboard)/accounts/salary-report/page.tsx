@@ -29,7 +29,9 @@ export default async function SalaryReportPage({ searchParams }: { searchParams:
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-[var(--sec-ink)]">Salary Report</h1>
-          <p className="mt-1 text-sm text-[var(--sec-muted)]">Total salaries paid, by employee — for sharing outside Accounts.</p>
+          <p className="mt-1 text-sm text-[var(--sec-muted)]">
+            Every salary slip this month, by employee — send to the GM for approval before marking them Paid.
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
@@ -70,11 +72,11 @@ export default async function SalaryReportPage({ searchParams }: { searchParams:
 
       {report.rows.length === 0 ? (
         <div className="mt-8 rounded-lg border border-dashed border-[var(--sec-line)] bg-white py-16 text-center">
-          <p className="text-sm text-[var(--sec-muted)]">No paid salary slips for {monthLabel}.</p>
+          <p className="text-sm text-[var(--sec-muted)]">No salary slips for {monthLabel}.</p>
         </div>
       ) : (
         <div className="mt-6 overflow-x-auto rounded-lg border border-[var(--sec-line)] bg-white">
-          <table className="w-full min-w-[720px] text-left text-sm">
+          <table className="w-full min-w-[760px] text-left text-sm">
             <thead>
               <tr className="border-b border-[var(--sec-line)] text-xs uppercase tracking-wide text-[var(--sec-muted)]">
                 <th className="px-4 py-3 font-medium">Employee</th>
@@ -82,6 +84,7 @@ export default async function SalaryReportPage({ searchParams }: { searchParams:
                 <th className="px-4 py-3 font-medium text-right">Gross Earnings</th>
                 <th className="px-4 py-3 font-medium text-right">Deductions</th>
                 <th className="px-4 py-3 font-medium text-right">Net Pay</th>
+                <th className="px-4 py-3 font-medium">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -96,6 +99,15 @@ export default async function SalaryReportPage({ searchParams }: { searchParams:
                   <td className="px-4 py-3 text-right text-[var(--sec-ink)]">AED {money(r.earningsTotal)}</td>
                   <td className="px-4 py-3 text-right text-[var(--sec-ink)]">AED {money(r.deductionsTotal)}</td>
                   <td className="px-4 py-3 text-right font-semibold text-[var(--sec-ink)]">AED {money(r.netPay)}</td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`rounded-full border px-2.5 py-1 text-xs font-semibold capitalize ${
+                        r.status === "paid" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-slate-50 text-slate-600"
+                      }`}
+                    >
+                      {r.status}
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -107,6 +119,7 @@ export default async function SalaryReportPage({ searchParams }: { searchParams:
                 <td className="px-4 py-3 text-right">AED {money(report.totals.earningsTotal)}</td>
                 <td className="px-4 py-3 text-right">AED {money(report.totals.deductionsTotal)}</td>
                 <td className="px-4 py-3 text-right">AED {money(report.totals.netPay)}</td>
+                <td className="px-4 py-3" />
               </tr>
             </tfoot>
           </table>

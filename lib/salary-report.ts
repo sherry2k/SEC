@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { salarySlips, salarySlipItems } from "@/db/schema";
 import { calcSalarySlipTotals } from "@/lib/salary-slip-calc";
@@ -9,6 +9,7 @@ export type SalaryReportRow = {
   slipNo: string;
   employeeName: string;
   designation: string;
+  status: string;
   earningsTotal: number;
   deductionsTotal: number;
   netPay: number;
@@ -20,15 +21,14 @@ export type SalaryReport = {
   totals: { earningsTotal: number; deductionsTotal: number; netPay: number };
 };
 
-// Only "paid" slips for the month count — same rule as the Salaries
-// expense line this report is meant to back up (see lib/office-ledger.ts):
-// a draft isn't a real commitment yet, so it stays out of the total sent
-// to the GM.
+// Every slip for the month counts, Draft or Paid — this report is meant
+// to go to the GM for approval of the amounts BEFORE anyone is marked
+// paid (the Accountant pays once the GM signs off), so filtering to
+// "paid" only would make the report empty exactly when it's needed.
+// lib/office-ledger.ts still only treats "paid" slips as a real Salaries
+// expense — that rule is unchanged and separate from this report.
 export async function getSalaryReport(monthKey: string): Promise<SalaryReport> {
-  const slips = await db
-    .select()
-    .from(salarySlips)
-    .where(and(eq(salarySlips.payMonth, monthKey), eq(salarySlips.status, "paid")));
+  const slips = await db.select().from(salarySlips).where(eq(salarySlips.payMonth, monthKey));
 
   const rows: SalaryReportRow[] = [];
   for (const s of slips) {
@@ -41,6 +41,7 @@ export async function getSalaryReport(monthKey: string): Promise<SalaryReport> {
       slipNo: s.slipNo,
       employeeName: s.employeeName,
       designation: s.designation ?? "",
+      status: s.status,
       earningsTotal: totals.earningsTotal,
       deductionsTotal: totals.deductionsTotal,
       netPay: totals.netPay,
