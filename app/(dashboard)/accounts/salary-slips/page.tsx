@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { desc } from "drizzle-orm";
-import { Plus, ArrowLeft, ChevronLeft, ChevronRight, FileBarChart, Send } from "lucide-react";
+import { Plus, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { db } from "@/db";
 import { salarySlips, salarySlipItems } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
@@ -89,20 +89,6 @@ export default async function SalarySlipsListPage({ searchParams }: { searchPara
             className="text-sm font-medium text-[var(--sec-blue)] hover:underline"
           >
             {showAll ? "Back to month view" : "All months"}
-          </Link>
-          <Link
-            href={`/accounts/salary-report?month=${monthKey}`}
-            className="flex items-center gap-1.5 rounded-md border border-[var(--sec-line)] px-3 py-1.5 text-sm font-medium text-[var(--sec-ink)] transition-colors hover:border-[var(--sec-blue)]"
-          >
-            <FileBarChart size={14} />
-            Salary Report
-          </Link>
-          <Link
-            href="/accounts/salary-requests"
-            className="flex items-center gap-1.5 rounded-md border border-[var(--sec-line)] px-3 py-1.5 text-sm font-medium text-[var(--sec-ink)] transition-colors hover:border-[var(--sec-blue)]"
-          >
-            <Send size={14} />
-            Salary Requests
           </Link>
           <Link
             href="/accounts/salary-slips/new"
