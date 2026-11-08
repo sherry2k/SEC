@@ -647,6 +647,45 @@ export const salarySlipItems = pgTable("salary_slip_items", {
 });
 
 // ---------------------------------------------------------------------------
+// Salary Requests — a quick, pre-approval ask: "here's what we want to pay
+// everyone this month", sent to the GM before any formal Salary Slip
+// exists. Deliberately lighter than a Salary Slip (one net amount per
+// employee, no earnings/deductions breakdown) since the point is speed —
+// get a number to the GM, not produce a payroll document yet. Once
+// approved, "Generate Slips" (see app/api/salary-requests/[id]/generate-slips)
+// turns each item into a real Draft Salary Slip (a single "Net Salary"
+// earning line equal to the requested amount) — generatedSlipId records
+// that link so it only ever happens once per item, and nothing here
+// feeds Income & Expenses directly; only the resulting Salary Slip does,
+// once it's marked Paid.
+// ---------------------------------------------------------------------------
+
+export const salaryRequests = pgTable("salary_requests", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  requestNo: text("request_no").notNull().unique(),
+  payMonth: text("pay_month").notNull(), // "YYYY-MM"
+  notes: text("notes"),
+  // "pending" | "generated" — "generated" once Generate Slips has been run.
+  status: text("status").notNull().default("pending"),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const salaryRequestItems = pgTable("salary_request_items", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  requestId: uuid("request_id")
+    .notNull()
+    .references(() => salaryRequests.id, { onDelete: "cascade" }),
+  sortOrder: integer("sort_order").notNull().default(0),
+  employeeId: integer("employee_id").references(() => users.id),
+  employeeName: text("employee_name").notNull(),
+  designation: text("designation"),
+  amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+  generatedSlipId: uuid("generated_slip_id").references((): AnyPgColumn => salarySlips.id),
+});
+
+// ---------------------------------------------------------------------------
 // Document renewals — tracked expiries (trade license, ID cards, etc.),
 // separate from project checklist items since these aren't tied to one
 // project and recur on their own cycle.
