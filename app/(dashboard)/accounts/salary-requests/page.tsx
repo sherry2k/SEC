@@ -10,6 +10,13 @@ function money(n: number) {
   return n.toLocaleString(undefined, { minimumFractionDigits: 2 });
 }
 
+const STATUS_BADGE: Record<string, { label: string; className: string }> = {
+  pending: { label: "Pending approval", className: "border-amber-200 bg-amber-50 text-amber-700" },
+  approved: { label: "Approved", className: "border-emerald-200 bg-emerald-50 text-emerald-700" },
+  rejected: { label: "Rejected", className: "border-red-200 bg-red-50 text-red-700" },
+  generated: { label: "Slips generated", className: "border-sky-200 bg-sky-50 text-sky-700" },
+};
+
 export default async function SalaryRequestsListPage() {
   await requirePermission("accounts.view");
 
@@ -80,14 +87,8 @@ export default async function SalaryRequestsListPage() {
                     <td className="px-4 py-3 text-[var(--sec-ink)]">{items.length}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-[var(--sec-ink)]">AED {money(total)}</td>
                     <td className="px-4 py-3">
-                      <span
-                        className={`rounded-full border px-2.5 py-1 text-xs font-semibold capitalize ${
-                          r.status === "generated"
-                            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                            : "border-amber-200 bg-amber-50 text-amber-700"
-                        }`}
-                      >
-                        {r.status === "generated" ? "Slips generated" : "Pending approval"}
+                      <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${(STATUS_BADGE[r.status] ?? STATUS_BADGE.pending).className}`}>
+                        {(STATUS_BADGE[r.status] ?? STATUS_BADGE.pending).label}
                       </span>
                     </td>
                   </tr>

@@ -47,18 +47,30 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   // Editing after slips were generated would silently detach the rows
   // from what's now been created — those links live in the Salary Slips
-  // instead at that point, so edits are blocked once generated (the
-  // Generate Slips button already hides edit once that's done; this is
-  // the server-side version of the same rule). Checked before any write.
-  if (existing.status === "generated") {
-    return NextResponse.json({ error: "This request already generated Salary Slips and can't be edited." }, { status: 409 });
+  // instead at that point, so edits are blocked once generated. Editing
+  // after GM approval would change amounts the GM already signed off
+  // on, so that's blocked too — only "pending" (never reviewed yet) and
+  // "rejected" (sent back for changes) stay editable. The UI already
+  // hides Edit in both locked states; this is the server-side version
+  // of the same rule. Checked before any write.
+  if (existing.status === "generated" || existing.status === "approved") {
+    return NextResponse.json(
+      { error: existing.status === "generated" ? "This request already generated Salary Slips and can't be edited." : "This request was already approved and can't be edited." },
+      { status: 409 }
+    );
   }
+
+  // Resubmitting a rejected request sends it back to the GM for another
+  // look — clears the old rejection note/reviewer rather than leaving a
+  // stale "rejected" trail on what is now a fresh set of numbers.
+  const wasRejected = existing.status === "rejected";
 
   await db
     .update(salaryRequests)
     .set({
       payMonth: str(body?.payMonth) || existing.payMonth,
       notes: str(body?.notes) || null,
+      ...(wasRejected ? { status: "pending", reviewedBy: null, reviewedAt: null, reviewNote: null } : {}),
       updatedAt: new Date(),
     })
     .where(eq(salaryRequests.id, id));

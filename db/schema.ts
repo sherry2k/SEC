@@ -665,8 +665,13 @@ export const salaryRequests = pgTable("salary_requests", {
   requestNo: text("request_no").notNull().unique(),
   payMonth: text("pay_month").notNull(), // "YYYY-MM"
   notes: text("notes"),
-  // "pending" | "generated" — "generated" once Generate Slips has been run.
+  // "pending" (awaiting GM review) | "approved" (GM signed off, ready to
+  // generate) | "rejected" (GM sent it back — editable again, resubmitting
+  // returns it to "pending") | "generated" (Generate Slips has been run).
   status: text("status").notNull().default("pending"),
+  reviewedBy: integer("reviewed_by").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+  reviewNote: text("review_note"), // set on reject; cleared on resubmit
   createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

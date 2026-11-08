@@ -14,11 +14,13 @@ export default async function EditSalaryRequestPage({ params }: { params: Promis
   const [reqRow] = await db.select().from(salaryRequests).where(eq(salaryRequests.id, id)).limit(1);
   if (!reqRow) notFound();
 
-  // Once slips are generated, each item is linked to its own Salary Slip —
-  // editing the amounts here would no longer mean anything, so this mirrors
-  // the API-level guard and sends the admin to the (now read-only) view
-  // instead of a form that would just fail to save.
-  if (reqRow.status === "generated") redirect(`/accounts/salary-requests/${id}`);
+  // Once slips are generated, each item is linked to its own Salary Slip,
+  // and once the GM has approved, the amounts are what they signed off
+  // on — editing either case would no longer mean anything or would
+  // silently invalidate a review, so this mirrors the API-level guard
+  // and sends the admin to the (now read-only) view instead of a form
+  // that would just fail to save. "pending" and "rejected" stay editable.
+  if (reqRow.status === "generated" || reqRow.status === "approved") redirect(`/accounts/salary-requests/${id}`);
 
   const items = await db
     .select()

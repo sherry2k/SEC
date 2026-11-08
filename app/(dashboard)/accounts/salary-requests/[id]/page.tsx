@@ -1,15 +1,17 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { eq, asc, inArray } from "drizzle-orm";
-import { ArrowLeft, Pencil, Download, FileText } from "lucide-react";
+import { ArrowLeft, Pencil, Download, FileText, Check, X } from "lucide-react";
 import { db } from "@/db";
-import { salaryRequests, salaryRequestItems, salarySlips } from "@/db/schema";
+import { salaryRequests, salaryRequestItems, salarySlips, users } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
+import { can } from "@/lib/permissions";
 import { toFilenameSafe } from "@/lib/pdf-filename";
 import { payMonthLabel } from "@/components/SalarySlipPrintBody";
 import SalaryRequestPrintBody from "@/components/SalaryRequestPrintBody";
 import DeleteSalaryRequestButton from "@/components/DeleteSalaryRequestButton";
 import GenerateSalarySlipsButton from "@/components/GenerateSalarySlipsButton";
+import SalaryRequestReviewActions from "@/components/SalaryRequestReviewActions";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -18,7 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 }
 
 export default async function SalaryRequestViewPage({ params }: { params: Promise<{ id: string }> }) {
-  await requirePermission("accounts.view");
+  const user = await requirePermission("accounts.view");
 
   const { id } = await params;
   const [reqRow] = await db.select().from(salaryRequests).where(eq(salaryRequests.id, id)).limit(1);
@@ -36,7 +38,18 @@ export default async function SalaryRequestViewPage({ params }: { params: Promis
     : [];
   const slipById = new Map(slips.map((s) => [s.id, s]));
 
-  const pending = reqRow.status === "pending";
+  let reviewer: { name: string } | null = null;
+  if (reqRow.reviewedBy) {
+    const [row] = await db.select({ name: users.name }).from(users).where(eq(users.id, reqRow.reviewedBy)).limit(1);
+    reviewer = row ?? null;
+  }
+
+  const canReview = can(user.role, "salary_requests.review");
+  const canManage = can(user.role, "accounts.edit");
+  const editable = reqRow.status === "pending" || reqRow.status === "rejected";
+  const reviewDate = reqRow.reviewedAt
+    ? new Date(reqRow.reviewedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+    : "";
 
   return (
     <div>
@@ -46,8 +59,8 @@ export default async function SalaryRequestViewPage({ params }: { params: Promis
           All salary requests
         </Link>
         <div className="flex flex-wrap items-center gap-2">
-          {pending && <GenerateSalarySlipsButton requestId={reqRow.id} />}
-          {pending && (
+          {canManage && reqRow.status === "approved" && <GenerateSalarySlipsButton requestId={reqRow.id} />}
+          {canManage && editable && (
             <Link
               href={`/accounts/salary-requests/${reqRow.id}/edit`}
               className="flex items-center gap-1.5 rounded-md border border-[var(--sec-line)] px-3 py-1.5 text-xs font-medium text-[var(--sec-ink)] transition-colors hover:border-[var(--sec-blue)]"
@@ -56,7 +69,7 @@ export default async function SalaryRequestViewPage({ params }: { params: Promis
               Edit
             </Link>
           )}
-          {pending && <DeleteSalaryRequestButton requestId={reqRow.id} />}
+          {canManage && reqRow.status !== "generated" && <DeleteSalaryRequestButton requestId={reqRow.id} />}
           <a
             href={`/api/salary-requests/${reqRow.id}/pdf`}
             className="flex items-center gap-1.5 rounded-md bg-[var(--sec-blue)] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[var(--sec-blue-deep)]"
@@ -66,6 +79,43 @@ export default async function SalaryRequestViewPage({ params }: { params: Promis
           </a>
         </div>
       </div>
+
+      {canReview && reqRow.status === "pending" && (
+        <div className="no-print mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <p className="mb-3 text-sm font-medium text-amber-900">
+            Awaiting your review — approve to let Finance generate the Salary Slips, or reject with a note to send it back.
+          </p>
+          <SalaryRequestReviewActions requestId={reqRow.id} />
+        </div>
+      )}
+
+      {!canReview && reqRow.status === "pending" && (
+        <div className="no-print mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Waiting on GM approval before Salary Slips can be generated.
+        </div>
+      )}
+
+      {reqRow.status === "approved" && (
+        <div className="no-print mb-6 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          <Check size={15} />
+          <span>
+            Approved{reviewer ? ` by ${reviewer.name}` : ""}
+            {reviewDate ? ` on ${reviewDate}` : ""} — ready to generate Salary Slips.
+          </span>
+        </div>
+      )}
+
+      {reqRow.status === "rejected" && (
+        <div className="no-print mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <p className="flex items-center gap-2 font-medium">
+            <X size={15} />
+            Rejected{reviewer ? ` by ${reviewer.name}` : ""}
+            {reviewDate ? ` on ${reviewDate}` : ""}.
+          </p>
+          {reqRow.reviewNote && <p className="mt-1 text-red-700">&ldquo;{reqRow.reviewNote}&rdquo;</p>}
+          {canManage && <p className="mt-1 text-red-700">Edit and save to send it back to the GM.</p>}
+        </div>
+      )}
 
       {reqRow.status === "generated" && (
         <div className="no-print mb-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">

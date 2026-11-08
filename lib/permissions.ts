@@ -25,6 +25,11 @@ const ALWAYS: Record<string, readonly Role[]> = {
   // restricted.
   "leave_requests.create": ["master_admin", "admin", "finance", "staff"],
   "leave_requests.review": ["master_admin", "admin"],
+  // Finance can create a Salary Request and (once approved) generate the
+  // Salary Slips, same as other accounts.edit work — but approving or
+  // rejecting the request itself is a GM-level decision, same rule as
+  // Leave Request review.
+  "salary_requests.review": ["master_admin", "admin"],
   "document_renewals.view": ["master_admin", "admin", "finance"],
   "document_renewals.edit": ["master_admin", "admin", "finance"],
   // Direct messages — every approved user can message any other, no role

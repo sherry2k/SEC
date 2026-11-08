@@ -28,6 +28,13 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: "Salary request not found." }, { status: 404 });
   }
 
+  // Slips can only come from a request the GM has actually approved —
+  // this is the server-side version of the same rule the view page uses
+  // to decide whether to show the button at all.
+  if (reqRow.status !== "approved") {
+    return NextResponse.json({ error: "This request needs GM approval before Salary Slips can be generated." }, { status: 409 });
+  }
+
   const pendingItems = await db
     .select()
     .from(salaryRequestItems)

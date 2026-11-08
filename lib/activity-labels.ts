@@ -36,6 +36,8 @@ export type ActivityAction =
   | "salary_request_updated"
   | "salary_request_deleted"
   | "salary_request_generated"
+  | "salary_request_approved"
+  | "salary_request_rejected"
   | "attachment_added"
   | "attachment_removed"
   | "leave_request_created"
@@ -77,6 +79,8 @@ export const ACTIVITY_LABELS: Record<ActivityAction, string> = {
   salary_request_updated: "updated salary request",
   salary_request_deleted: "deleted salary request",
   salary_request_generated: "generated salary slips from salary request",
+  salary_request_approved: "approved salary request",
+  salary_request_rejected: "rejected salary request",
   attachment_added: "added an attachment to",
   attachment_removed: "removed an attachment from",
   leave_request_created: "submitted a leave request",
