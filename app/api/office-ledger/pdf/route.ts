@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   const now = new Date();
   const monthKey = month && /^\d{4}-\d{2}$/.test(month) ? month : `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const monthLabel = new Date(`${monthKey}-01T00:00:00`).toLocaleDateString("en-GB", { month: "long", year: "numeric" });
-  const numMonths = range === "3" || range === "6" ? range : null;
+  const numMonths = range === "3" || range === "6" || range === "12" ? range : null;
 
   const baseUrl = request.nextUrl.origin;
   const printUrl = `${baseUrl}/print/office-ledger?month=${monthKey}${numMonths ? `&range=${numMonths}` : ""}`;

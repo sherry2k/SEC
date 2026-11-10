@@ -609,27 +609,28 @@ export const officeLedgerEntries = pgTable("office_ledger_entries", {
 });
 
 // ---------------------------------------------------------------------------
-// Portal Credentials — usernames/passwords/links for official government,
-// utility, telecom and banking portals. Admin + Master Admin only
-// (permissions.ts "credentials.manage"), tighter than every other table in
-// this file that Finance can also touch. passwordEnc is AES-256-GCM
-// encrypted at rest (lib/credentials-crypto.ts) — the one field in this
-// whole schema that's a live login secret rather than business data, so it
-// deliberately isn't a plain text column like everything else here.
+// Petty Cash — a separate, self-contained cash-box ledger for small daily
+// office spend, deliberately NOT mixed into officeLedgerEntries above (per
+// Sheraz: "fully independent — no overlap"). Two entry types: "deposit"
+// (cash going INTO the box, e.g. a top-up from the bank — not an expense,
+// just moving cash) and "expense" (cash actually spent — the real cost).
+// The running balance (all-time deposits minus all-time expenses) is
+// computed live in lib/petty-cash.ts, same live-computed pattern used
+// elsewhere in this schema rather than a stored running total that could
+// drift out of sync with the entries themselves.
 // ---------------------------------------------------------------------------
 
-export const portalCredentials = pgTable("portal_credentials", {
+export const pettyCashEntries = pgTable("petty_cash_entries", {
   id: uuid("id").primaryKey().defaultRandom(),
-  name: text("name").notNull(),
-  category: text("category").notNull(), // "Government" | "Utility" | "Telecom" | "Banking" | "Other"
-  url: text("url"),
-  username: text("username"),
-  passwordEnc: text("password_enc").notNull(),
-  notes: text("notes"),
+  type: text("type").notNull(), // "deposit" | "expense"
+  date: date("date", { mode: "date" }).notNull(),
+  // Required for "expense" (reuses office-ledger's EXPENSE_CATEGORY_SUGGESTIONS);
+  // optional for "deposit" (e.g. "Bank Transfer", "Replenishment").
+  category: text("category"),
+  description: text("description"),
+  amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
   createdBy: integer("created_by").references(() => users.id),
-  updatedBy: integer("updated_by").references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 // ---------------------------------------------------------------------------

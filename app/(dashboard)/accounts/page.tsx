@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FolderKanban, Wallet, ArrowRight, Receipt, Send } from "lucide-react";
+import { FolderKanban, Wallet, ArrowRight, Receipt, Send, Coins } from "lucide-react";
 import { db } from "@/db";
 import { quotations, quotationItems } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
@@ -113,7 +113,7 @@ export default async function AccountsIndexPage() {
         })}
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
                 <Link
           href="/accounts/account-projects"
           className="group rounded-lg border border-[var(--sec-line)] bg-white p-6 transition-colors hover:border-[var(--sec-blue)]"
@@ -160,6 +160,20 @@ export default async function AccountsIndexPage() {
           <p className="mt-3 text-lg font-bold text-[var(--sec-ink)]">Salary Requests</p>
           <p className="mt-1 text-sm text-[var(--sec-muted)]">
             Quick net-pay amounts to send the GM for approval, before any Salary Slip is created.
+          </p>
+          <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--sec-blue)] group-hover:underline">
+            Open <ArrowRight size={14} />
+          </span>
+        </Link>
+
+        <Link
+          href="/accounts/petty-cash"
+          className="group rounded-lg border border-[var(--sec-line)] bg-white p-6 transition-colors hover:border-[var(--sec-blue)]"
+        >
+          <Coins size={28} className="text-[var(--sec-blue)]" />
+          <p className="mt-3 text-lg font-bold text-[var(--sec-ink)]">Petty Cash</p>
+          <p className="mt-1 text-sm text-[var(--sec-muted)]">
+            Daily cash-box spend — fully separate from Income &amp; Expenses, with its own running balance.
           </p>
           <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--sec-blue)] group-hover:underline">
             Open <ArrowRight size={14} />

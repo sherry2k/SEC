@@ -20,6 +20,7 @@ const RANGE_OPTIONS = [
   { value: "1", label: "1 Month" },
   { value: "3", label: "3 Months" },
   { value: "6", label: "6 Months" },
+  { value: "12", label: "12 Months" },
 ];
 
 export default async function OfficeLedgerPage({ searchParams }: { searchParams: Promise<{ month?: string; range?: string }> }) {
@@ -30,7 +31,7 @@ export default async function OfficeLedgerPage({ searchParams }: { searchParams:
   const now = new Date();
   const monthKey = month && /^\d{4}-\d{2}$/.test(month) ? month : `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const monthLabel = new Date(`${monthKey}-01T00:00:00`).toLocaleDateString("en-GB", { month: "long", year: "numeric" });
-  const numMonths = range === "3" || range === "6" ? Number(range) : 1;
+  const numMonths = range === "3" || range === "6" || range === "12" ? Number(range) : 1;
 
   const rangeQuery = numMonths > 1 ? `&range=${numMonths}` : "";
 
