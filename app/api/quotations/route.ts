@@ -117,6 +117,8 @@ export async function POST(request: NextRequest) {
         exclusionsText: str(body?.exclusionsText) || null,
         acceptanceNote: str(body?.acceptanceNote) || null,
         showCommercialSummary: body?.showCommercialSummary === undefined ? true : Boolean(body?.showCommercialSummary),
+        downPaymentLabel: str(body?.downPaymentLabel) || null,
+        balanceLabel: str(body?.balanceLabel) || null,
         createdBy: auth.user.id,
         updatedBy: auth.user.id,
       })

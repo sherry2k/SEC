@@ -127,6 +127,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       exclusionsText: str(body?.exclusionsText) || null,
       acceptanceNote: str(body?.acceptanceNote) || null,
       showCommercialSummary: body?.showCommercialSummary === undefined ? true : Boolean(body?.showCommercialSummary),
+      downPaymentLabel: str(body?.downPaymentLabel) || null,
+      balanceLabel: str(body?.balanceLabel) || null,
       status: str(body?.status) || undefined,
       updatedBy: auth.user.id,
       updatedAt: new Date(),

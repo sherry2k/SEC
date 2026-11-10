@@ -4,6 +4,12 @@
 // imported elsewhere; calling one as a plain function from server code throws
 // at runtime rather than at build time, which is exactly what happened here.
 
+import {
+  DEFAULT_DOWN_PAYMENT_LABEL,
+  QUOTATION_CATEGORY_BALANCE_LABELS,
+  type QuotationCategory,
+} from "@/lib/quotation-category-constants";
+
 export type QuotationItemDraft = {
   key: string;
   description: string;
@@ -67,6 +73,11 @@ export type QuotationFormValues = {
   // Schedule table prints on category-based quotations. Same on/off pattern
   // as showStamp above, just defaulting to true instead of false.
   showCommercialSummary: boolean;
+  // That table's Down Payment / Balance row wording — category-based
+  // quotations only, pre-filled from the category's default (see
+  // QUOTATION_CATEGORY_BALANCE_LABELS) but freely editable per document.
+  downPaymentLabel: string;
+  balanceLabel: string;
 };
 
 const DEFAULT_INTRO =
@@ -117,6 +128,8 @@ export function defaultQuotationValues(): QuotationFormValues {
     mandatoryFees: [],
     optionalServices: [],
     showCommercialSummary: true,
+    downPaymentLabel: "",
+    balanceLabel: "",
   };
 }
 
@@ -165,6 +178,9 @@ export function categoryQuotationValues(template: {
     mandatoryFees: toFeeItems(template.mandatoryFeeItems),
     optionalServices: toFeeItems(template.optionalServiceItems),
     showCommercialSummary: true,
+    downPaymentLabel: DEFAULT_DOWN_PAYMENT_LABEL,
+    balanceLabel:
+      QUOTATION_CATEGORY_BALANCE_LABELS[template.category as QuotationCategory] ?? QUOTATION_CATEGORY_BALANCE_LABELS.permit,
   };
 }
 

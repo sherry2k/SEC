@@ -9,6 +9,7 @@ import QuotationForm from "@/components/QuotationForm";
 import QuotationCategoryForm from "@/components/QuotationCategoryForm";
 import type { QuotationFormValues, QuotationItemDraft, FeeItemDraft } from "@/lib/quotation-defaults";
 import { QUOTATION_CATEGORY_LABELS, type QuotationCategory } from "@/lib/quotation-category";
+import { DEFAULT_DOWN_PAYMENT_LABEL, QUOTATION_CATEGORY_BALANCE_LABELS } from "@/lib/quotation-category-constants";
 
 export default async function EditQuotationPage({ params }: { params: Promise<{ id: string }> }) {
   await requirePermission("accounts.edit");
@@ -77,6 +78,14 @@ export default async function EditQuotationPage({ params }: { params: Promise<{ 
     mandatoryFees: items.filter((i) => i.section === "mandatory").map(toFeeDraft),
     optionalServices: items.filter((i) => i.section === "optional").map(toFeeDraft),
     showCommercialSummary: quotation.showCommercialSummary,
+    // "" in the DB (quotation saved before these fields existed) falls
+    // back to the category default here too, so the form never shows
+    // blank for wording the printed document is already showing.
+    downPaymentLabel: quotation.downPaymentLabel ?? DEFAULT_DOWN_PAYMENT_LABEL,
+    balanceLabel:
+      quotation.balanceLabel ??
+      QUOTATION_CATEGORY_BALANCE_LABELS[(quotation.category as QuotationCategory) ?? "permit"] ??
+      QUOTATION_CATEGORY_BALANCE_LABELS.permit,
   };
 
   const backHref = accountProject ? `/accounts/account-projects/${accountProject.id}` : "/accounts/quotations";

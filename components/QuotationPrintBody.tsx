@@ -49,6 +49,11 @@ export type PrintableQuotation = {
   // Summary and Payment Schedule) — set from the form's "Commercial
   // Summary preview" toggle.
   showCommercialSummary: boolean;
+  // Row wording for that same section's Down Payment / Balance rows —
+  // "" falls back to the category's standing default in
+  // QuotationCategoryPrintBody. Category-based quotations only.
+  downPaymentLabel: string;
+  balanceLabel: string;
 };
 
 function money(n: number) {

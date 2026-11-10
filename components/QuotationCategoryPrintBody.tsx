@@ -1,5 +1,10 @@
 import { BANK_DETAILS } from "@/lib/company";
 import type { PrintableQuotation } from "@/components/QuotationPrintBody";
+import {
+  DEFAULT_DOWN_PAYMENT_LABEL,
+  QUOTATION_CATEGORY_BALANCE_LABELS,
+  type QuotationCategory,
+} from "@/lib/quotation-category-constants";
 
 function Blank({ width = "w-48" }: { width?: string }) {
   return <span className={`inline-block border-b border-[var(--sec-ink)] ${width}`}>&nbsp;</span>;
@@ -59,22 +64,18 @@ export default function QuotationCategoryPrintBody({ quotation }: { quotation: P
   const balance = scopeFee - downPayment;
   const createdDateLabel = quotation.createdAt.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
 
-  // The 2nd payment's trigger wording is category-specific — "Upon
-  // Building Permit" only actually describes the Permit category; BOC/CBC/
-  // Work Permit/Legalization each close out on a different authority
-  // deliverable, so each needs its own label here rather than sharing one.
-  const BALANCE_LABEL: Record<string, string> = {
-    permit: "Consultancy Balance - Upon Building Permit",
-    boc: "2nd Payment after obtaining Building Occupancy Certificate (BOC)",
-    cbc: "2nd Payment after issue of Certify Building Condition",
-    work_permit: "2nd Payment after issue of Work Permit",
-    legalization: "2nd Payment after Legalization is issued",
-  };
-  const balanceLabel = BALANCE_LABEL[quotation.category] ?? "Consultancy Balance - Upon Building Permit";
+  // Row wording is editable per document (downPaymentLabel/balanceLabel on
+  // the quotation itself) — falls back to the category's standing default
+  // for any quotation saved before these fields existed, or left blank.
+  const downPaymentLabel = quotation.downPaymentLabel || DEFAULT_DOWN_PAYMENT_LABEL;
+  const balanceLabel =
+    quotation.balanceLabel ||
+    QUOTATION_CATEGORY_BALANCE_LABELS[quotation.category as QuotationCategory] ||
+    QUOTATION_CATEGORY_BALANCE_LABELS.permit;
 
   type SummaryRow = { label: string; type: "Required" | "Optional"; feeExclVat: number };
   const summaryRows: SummaryRow[] = [
-    { label: "Consultancy Down Payment - Upon Appointment", type: "Required", feeExclVat: downPayment },
+    { label: downPaymentLabel, type: "Required", feeExclVat: downPayment },
     ...quotation.mandatoryFees.map((f) => ({ label: f.name, type: "Required" as const, feeExclVat: f.price })),
     { label: balanceLabel, type: "Required" as const, feeExclVat: balance },
   ];

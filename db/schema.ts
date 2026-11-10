@@ -247,6 +247,14 @@ export const quotations = pgTable("quotations", {
   scopeFeeExclVat: numeric("scope_fee_excl_vat", { precision: 12, scale: 2 }),
   exclusionsText: text("exclusions_text"),
   acceptanceNote: text("acceptance_note"),
+  // Commercial Summary and Payment Schedule row wording — pre-filled from
+  // the category's default trigger text (see
+  // QUOTATION_CATEGORY_PAYMENT_LABELS in quotation-category-constants.ts)
+  // but freely editable per document, same pattern as scopeItemsText etc.
+  // above. Amounts stay auto-calculated (50/50 split + fee prices) — only
+  // the row labels are stored here.
+  downPaymentLabel: text("down_payment_label"),
+  balanceLabel: text("balance_label"),
   // Toggle, on by default — the Commercial Summary and Payment Schedule
   // table (category-format quotations only) can be switched off per
   // document for a client who only wants the itemized sections. Same

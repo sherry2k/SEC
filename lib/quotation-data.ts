@@ -74,5 +74,7 @@ export async function getQuotationForPrint(id: string): Promise<PrintableQuotati
     // component always received undefined (falsy) and could never key off
     // the real saved value.
     showCommercialSummary: quotation.showCommercialSummary ?? true,
+    downPaymentLabel: quotation.downPaymentLabel ?? "",
+    balanceLabel: quotation.balanceLabel ?? "",
   };
 }

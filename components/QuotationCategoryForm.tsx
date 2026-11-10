@@ -240,6 +240,20 @@ export default function QuotationCategoryForm({
         </p>
         {values.showCommercialSummary && (
           <>
+            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label className={labelClass}>Down Payment row wording</label>
+                <input
+                  value={values.downPaymentLabel}
+                  onChange={(e) => set("downPaymentLabel", e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>2nd payment (Balance) row wording</label>
+                <input value={values.balanceLabel} onChange={(e) => set("balanceLabel", e.target.value)} className={inputClass} />
+              </div>
+            </div>
             <div className="mt-3 flex justify-between">
               <span className="text-[var(--sec-muted)]">Total Required Payments</span>
               <span>AED {requiredTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
