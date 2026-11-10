@@ -13,7 +13,7 @@ export default async function PortalCredentialsPage() {
         <h1 className="text-2xl font-bold text-[var(--sec-ink)]">Portal Credentials</h1>
         <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800">
           <Lock size={12} />
-          Admin &amp; Master Admin only
+          Admin only
         </span>
       </div>
       <p className="mt-1 max-w-xl text-sm text-[var(--sec-muted)]">
