@@ -59,11 +59,24 @@ export default function QuotationCategoryPrintBody({ quotation }: { quotation: P
   const balance = scopeFee - downPayment;
   const createdDateLabel = quotation.createdAt.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
 
+  // The 2nd payment's trigger wording is category-specific — "Upon
+  // Building Permit" only actually describes the Permit category; BOC/CBC/
+  // Work Permit/Legalization each close out on a different authority
+  // deliverable, so each needs its own label here rather than sharing one.
+  const BALANCE_LABEL: Record<string, string> = {
+    permit: "Consultancy Balance - Upon Building Permit",
+    boc: "2nd Payment after obtaining Building Occupancy Certificate (BOC)",
+    cbc: "2nd Payment after issue of Certify Building Condition",
+    work_permit: "2nd Payment after issue of Work Permit",
+    legalization: "2nd Payment after Legalization is issued",
+  };
+  const balanceLabel = BALANCE_LABEL[quotation.category] ?? "Consultancy Balance - Upon Building Permit";
+
   type SummaryRow = { label: string; type: "Required" | "Optional"; feeExclVat: number };
   const summaryRows: SummaryRow[] = [
     { label: "Consultancy Down Payment - Upon Appointment", type: "Required", feeExclVat: downPayment },
     ...quotation.mandatoryFees.map((f) => ({ label: f.name, type: "Required" as const, feeExclVat: f.price })),
-    { label: "Consultancy Balance - Upon Building Permit", type: "Required" as const, feeExclVat: balance },
+    { label: balanceLabel, type: "Required" as const, feeExclVat: balance },
   ];
   const requiredTotal = summaryRows.reduce((sum, r) => sum + r.feeExclVat, 0);
   const optionalRows: SummaryRow[] = quotation.optionalServices.map((f) => ({ label: f.name, type: "Optional" as const, feeExclVat: f.price }));
