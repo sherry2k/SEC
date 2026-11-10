@@ -14,6 +14,7 @@ import {
   FileClock,
   MessageCircle,
   Receipt,
+  KeyRound,
 } from "lucide-react";
 import type { CurrentUser } from "@/lib/auth";
 import { can } from "@/lib/permissions";
@@ -54,6 +55,10 @@ export default function Sidebar({
     { href: "/daily-report", label: "Daily Report", icon: ClipboardList, show: can(user.role, "daily_report.submit", false, user.canSubmitDailyReport) },
     { href: "/daily-reports", label: "Daily Reports", icon: ClipboardList, show: can(user.role, "daily_report.view_all") },
     { href: "/users", label: "User Management", icon: Users, show: can(user.role, "users.manage") },
+    // Own top-level nav item, not nested under Accounts — Accounts is
+    // visible to Finance too (accounts.view), but this is Admin + Master
+    // Admin only (credentials.manage), so it needs its own gated entry.
+    { href: "/portal-credentials", label: "Portal Credentials", icon: KeyRound, show: can(user.role, "credentials.manage") },
     { href: "/settings", label: "Settings", icon: Settings, show: can(user.role, "settings.manage") },
   ];
 

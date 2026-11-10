@@ -43,7 +43,10 @@ export type ActivityAction =
   | "leave_request_created"
   | "leave_request_approved"
   | "leave_request_rejected"
-  | "leave_request_cancelled";
+  | "leave_request_cancelled"
+  | "credential_created"
+  | "credential_updated"
+  | "credential_deleted";
 
 export const ACTIVITY_LABELS: Record<ActivityAction, string> = {
   project_created: "created",
@@ -87,4 +90,7 @@ export const ACTIVITY_LABELS: Record<ActivityAction, string> = {
   leave_request_approved: "approved a leave request",
   leave_request_rejected: "rejected a leave request",
   leave_request_cancelled: "cancelled a leave request",
+  credential_created: "added a portal credential for",
+  credential_updated: "updated the portal credential for",
+  credential_deleted: "deleted the portal credential for",
 };

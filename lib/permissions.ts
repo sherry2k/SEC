@@ -30,6 +30,12 @@ const ALWAYS: Record<string, readonly Role[]> = {
   // rejecting the request itself is a GM-level decision, same rule as
   // Leave Request review.
   "salary_requests.review": ["master_admin", "admin"],
+  // Portal Credentials (usernames/passwords/links for official portals) —
+  // Admin + Master Admin only, tighter than accounts.view/accounts.edit:
+  // Finance never sees this one, since it's login secrets rather than
+  // bookkeeping. One permission covers both viewing and editing — there's
+  // no "view only" tier for this like there is for Accounts.
+  "credentials.manage": ["master_admin", "admin"],
   "document_renewals.view": ["master_admin", "admin", "finance"],
   "document_renewals.edit": ["master_admin", "admin", "finance"],
   // Direct messages — every approved user can message any other, no role

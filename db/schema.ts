@@ -609,6 +609,30 @@ export const officeLedgerEntries = pgTable("office_ledger_entries", {
 });
 
 // ---------------------------------------------------------------------------
+// Portal Credentials — usernames/passwords/links for official government,
+// utility, telecom and banking portals. Admin + Master Admin only
+// (permissions.ts "credentials.manage"), tighter than every other table in
+// this file that Finance can also touch. passwordEnc is AES-256-GCM
+// encrypted at rest (lib/credentials-crypto.ts) — the one field in this
+// whole schema that's a live login secret rather than business data, so it
+// deliberately isn't a plain text column like everything else here.
+// ---------------------------------------------------------------------------
+
+export const portalCredentials = pgTable("portal_credentials", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  category: text("category").notNull(), // "Government" | "Utility" | "Telecom" | "Banking" | "Other"
+  url: text("url"),
+  username: text("username"),
+  passwordEnc: text("password_enc").notNull(),
+  notes: text("notes"),
+  createdBy: integer("created_by").references(() => users.id),
+  updatedBy: integer("updated_by").references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ---------------------------------------------------------------------------
 // Salary Slips — payroll documents, one per employee per month. Own SAL
 // numbering sequence (not shared with the client-document family above)
 // since payroll isn't a client-facing document. employeeId links to a
