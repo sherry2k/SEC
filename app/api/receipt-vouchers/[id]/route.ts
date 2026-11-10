@@ -53,6 +53,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       issueDate: str(body?.issueDate) || existing.issueDate,
       toName,
       projectId: str(body?.projectId) || null,
+      // Same fix as the create route — was never persisted here either.
+      accountProjectId: str(body?.accountProjectId) || null,
       project: str(body?.project) || null,
       location: str(body?.location) || null,
       vatRatePercent: String(vatRatePercent),

@@ -46,6 +46,12 @@ export async function POST(request: NextRequest) {
         issueDate: str(body?.issueDate) || new Date().toLocaleDateString("en-GB"),
         toName,
         projectId: str(body?.projectId) || null,
+        // Was missing — the form has carried this through from the "New
+        // receipt voucher" link's ?accountProjectId= since that feature was
+        // built, but it was never actually read here, so every voucher
+        // created from an Account Project page silently lost the link
+        // (invisible on that project's page, excluded from Total Received).
+        accountProjectId: str(body?.accountProjectId) || null,
         project: str(body?.project) || null,
         location: str(body?.location) || null,
         vatRatePercent: String(vatRatePercent),
