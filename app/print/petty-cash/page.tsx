@@ -1,6 +1,7 @@
 import { requirePermission } from "@/lib/auth";
 import { getPettyCashSummary, getPettyCashRangeSummary, getPettyCashBalance } from "@/lib/petty-cash";
 import { PettyCashSingleMonthPrintBody, PettyCashRangePrintBody } from "@/components/PettyCashPrintBody";
+import { arabicFont } from "@/lib/fonts";
 
 export default async function PettyCashPrintSourcePage({
   searchParams,
@@ -18,7 +19,10 @@ export default async function PettyCashPrintSourcePage({
   const balance = await getPettyCashBalance();
 
   return (
-    <div className="mx-auto max-w-[780px] px-2 text-[13px] leading-normal text-[var(--sec-ink)]">
+    <div
+      className={`mx-auto max-w-[780px] px-2 text-[13px] leading-normal text-[var(--sec-ink)] ${arabicFont.variable}`}
+      style={{ fontFamily: "Arial, Helvetica, var(--font-arabic), sans-serif" }}
+    >
       {numMonths === 1 ? (
         <PettyCashSingleMonthPrintBody summary={await getPettyCashSummary(monthKey)} monthLabel={monthLabel} balance={balance} />
       ) : (

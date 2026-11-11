@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { salaryRequests, salaryRequestItems } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import SalaryRequestPrintBody from "@/components/SalaryRequestPrintBody";
+import { arabicFont } from "@/lib/fonts";
 
 export default async function SalaryRequestPrintSourcePage({ params }: { params: Promise<{ id: string }> }) {
   await requirePermission("accounts.view");
@@ -19,7 +20,10 @@ export default async function SalaryRequestPrintSourcePage({ params }: { params:
     .orderBy(asc(salaryRequestItems.sortOrder));
 
   return (
-    <div className="mx-auto max-w-[780px] px-2 text-[13px] leading-relaxed text-[var(--sec-ink)]">
+    <div
+      className={`mx-auto max-w-[780px] px-2 text-[13px] leading-relaxed text-[var(--sec-ink)] ${arabicFont.variable}`}
+      style={{ fontFamily: "Arial, Helvetica, var(--font-arabic), sans-serif" }}
+    >
       <SalaryRequestPrintBody
         request={{
           requestNo: reqRow.requestNo,

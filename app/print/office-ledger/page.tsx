@@ -1,6 +1,7 @@
 import { requirePermission } from "@/lib/auth";
 import { getOfficeLedgerSummary, getOfficeLedgerRangeSummary } from "@/lib/office-ledger";
 import { OfficeLedgerSingleMonthPrintBody, OfficeLedgerRangePrintBody } from "@/components/OfficeLedgerPrintBody";
+import { arabicFont } from "@/lib/fonts";
 
 export default async function OfficeLedgerPrintSourcePage({
   searchParams,
@@ -16,7 +17,10 @@ export default async function OfficeLedgerPrintSourcePage({
   const numMonths = range === "3" || range === "6" || range === "12" ? Number(range) : 1;
 
   return (
-    <div className="mx-auto max-w-[780px] px-2 text-[13px] leading-normal text-[var(--sec-ink)]">
+    <div
+      className={`mx-auto max-w-[780px] px-2 text-[13px] leading-normal text-[var(--sec-ink)] ${arabicFont.variable}`}
+      style={{ fontFamily: "Arial, Helvetica, var(--font-arabic), sans-serif" }}
+    >
       {numMonths === 1 ? (
         <OfficeLedgerSingleMonthPrintBody summary={await getOfficeLedgerSummary(monthKey)} monthLabel={monthLabel} />
       ) : (

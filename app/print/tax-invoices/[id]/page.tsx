@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { requirePermission } from "@/lib/auth";
 import { getTaxInvoiceForPrint } from "@/lib/tax-invoice-data";
 import TaxInvoicePrintBody from "@/components/TaxInvoicePrintBody";
+import { arabicFont } from "@/lib/fonts";
 
 export default async function TaxInvoicePrintSourcePage({ params }: { params: Promise<{ id: string }> }) {
   await requirePermission("accounts.view");
@@ -10,7 +11,10 @@ export default async function TaxInvoicePrintSourcePage({ params }: { params: Pr
   if (!invoice) notFound();
 
   return (
-    <div className="mx-auto max-w-[780px] px-2 text-[13px] leading-normal text-[var(--sec-ink)]">
+    <div
+      className={`mx-auto max-w-[780px] px-2 text-[13px] leading-normal text-[var(--sec-ink)] ${arabicFont.variable}`}
+      style={{ fontFamily: "Arial, Helvetica, var(--font-arabic), sans-serif" }}
+    >
       <TaxInvoicePrintBody invoice={invoice} />
     </div>
   );

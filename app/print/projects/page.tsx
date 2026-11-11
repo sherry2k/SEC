@@ -2,6 +2,7 @@ import { requirePermission } from "@/lib/auth";
 import { getProjectsForPrint } from "@/lib/projects-print-data";
 import ProjectsListPrintBody from "@/components/ProjectsListPrintBody";
 import { PROJECT_CATEGORIES, CATEGORY_LABELS, type ProjectCategory } from "@/lib/checklist";
+import { arabicFont } from "@/lib/fonts";
 
 export default async function ProjectsListPrintSourcePage({ searchParams }: { searchParams: Promise<{ category?: string }> }) {
   await requirePermission("projects.view");
@@ -10,7 +11,10 @@ export default async function ProjectsListPrintSourcePage({ searchParams }: { se
   const rows = await getProjectsForPrint(categoryFilter);
 
   return (
-    <div className="mx-auto max-w-[780px] px-2 text-[13px] leading-normal text-[var(--sec-ink)]">
+    <div
+      className={`mx-auto max-w-[780px] px-2 text-[13px] leading-normal text-[var(--sec-ink)] ${arabicFont.variable}`}
+      style={{ fontFamily: "Arial, Helvetica, var(--font-arabic), sans-serif" }}
+    >
       <ProjectsListPrintBody rows={rows} categoryLabel={categoryFilter ? CATEGORY_LABELS[categoryFilter] : null} />
     </div>
   );

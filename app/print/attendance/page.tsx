@@ -5,6 +5,7 @@ import { requirePermission } from "@/lib/auth";
 import { uaeDateKey } from "@/lib/attendance";
 import { getAttendanceSummary, weekRangeFor, monthRangeFor } from "@/lib/attendance-report";
 import AttendancePrintBody from "@/components/AttendancePrintBody";
+import { arabicFont } from "@/lib/fonts";
 
 export default async function AttendancePrintSourcePage({
   searchParams,
@@ -26,7 +27,10 @@ export default async function AttendancePrintSourcePage({
   const rows = await getAttendanceSummary(staff, start, end);
 
   return (
-    <div className="mx-auto max-w-[780px] px-2 text-[13px] leading-normal text-[var(--sec-ink)]">
+    <div
+      className={`mx-auto max-w-[780px] px-2 text-[13px] leading-normal text-[var(--sec-ink)] ${arabicFont.variable}`}
+      style={{ fontFamily: "Arial, Helvetica, var(--font-arabic), sans-serif" }}
+    >
       <AttendancePrintBody rows={rows} periodLabel={label} rangeLabel={range === "week" ? "Weekly" : "Monthly"} />
     </div>
   );

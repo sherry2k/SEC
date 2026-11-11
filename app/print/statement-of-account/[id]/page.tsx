@@ -5,6 +5,7 @@ import { projects } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import { getProjectFinancials } from "@/lib/project-finance";
 import StatementOfAccountPrintBody from "@/components/StatementOfAccountPrintBody";
+import { arabicFont } from "@/lib/fonts";
 
 // Loaded only by the server-side PDF generator (Puppeteer), never linked
 // to directly — no letterhead/footer here, since those come from
@@ -21,7 +22,10 @@ export default async function StatementOfAccountPrintSourcePage({ params }: { pa
   const financials = await getProjectFinancials(id);
 
   return (
-    <div className="mx-auto max-w-[780px] px-2 text-[13px] leading-relaxed text-[var(--sec-ink)]">
+    <div
+      className={`mx-auto max-w-[780px] px-2 text-[13px] leading-relaxed text-[var(--sec-ink)] ${arabicFont.variable}`}
+      style={{ fontFamily: "Arial, Helvetica, var(--font-arabic), sans-serif" }}
+    >
       <StatementOfAccountPrintBody
         data={{
           projectRef: project.municipalityNo || project.projectCode,

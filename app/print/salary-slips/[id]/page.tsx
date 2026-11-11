@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { canViewSalarySlip } from "@/lib/salary-slip-access";
 import { getSalarySlipForPrint } from "@/lib/salary-slip-data";
 import SalarySlipPrintBody from "@/components/SalarySlipPrintBody";
+import { arabicFont } from "@/lib/fonts";
 
 export default async function SalarySlipPrintSourcePage({ params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
@@ -24,7 +25,10 @@ export default async function SalarySlipPrintSourcePage({ params }: { params: Pr
   if (!slip) notFound();
 
   return (
-    <div className="mx-auto max-w-[780px] px-2 text-[13px] leading-relaxed text-[var(--sec-ink)]">
+    <div
+      className={`mx-auto max-w-[780px] px-2 text-[13px] leading-relaxed text-[var(--sec-ink)] ${arabicFont.variable}`}
+      style={{ fontFamily: "Arial, Helvetica, var(--font-arabic), sans-serif" }}
+    >
       <SalarySlipPrintBody slip={slip} />
     </div>
   );
