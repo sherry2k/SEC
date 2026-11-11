@@ -34,7 +34,12 @@ export default function Sidebar({
   unreadMessageCount = 0,
 }: {
   user: CurrentUser;
-  todayAttendance: { checkInAt: string | null; checkOutAt: string | null } | null;
+  todayAttendance: {
+    checkInAt: string | null;
+    lunchOutAt: string | null;
+    lunchInAt: string | null;
+    checkOutAt: string | null;
+  } | null;
   pendingLeaveCount?: number;
   unreadMessageCount?: number;
 }) {
@@ -117,7 +122,12 @@ export default function Sidebar({
 
       {can(user.role, "attendance.checkin") && todayAttendance && (
         <div className="relative border-t border-white/10 px-3 py-3">
-          <AttendanceWidget initialCheckInAt={todayAttendance.checkInAt} initialCheckOutAt={todayAttendance.checkOutAt} />
+          <AttendanceWidget
+            initialCheckInAt={todayAttendance.checkInAt}
+            initialLunchOutAt={todayAttendance.lunchOutAt}
+            initialLunchInAt={todayAttendance.lunchInAt}
+            initialCheckOutAt={todayAttendance.checkOutAt}
+          />
         </div>
       )}
 

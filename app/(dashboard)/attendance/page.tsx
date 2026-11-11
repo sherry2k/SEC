@@ -7,6 +7,9 @@ import {
   uaeDateKey,
   isWorkingDay,
   isLateCheckIn,
+  isOverLunchCap,
+  lunchDurationMs,
+  netWorkedMs,
   formatUaeTime,
   formatDuration,
 } from "@/lib/attendance";
@@ -84,8 +87,10 @@ async function DayView({ dateKey, staff }: { dateKey: string; staff: { id: numbe
     .map((person) => {
       const record = recordByUserId.get(person.id);
       const checkInAt = record?.checkInAt ?? null;
+      const lunchOutAt = record?.lunchOutAt ?? null;
+      const lunchInAt = record?.lunchInAt ?? null;
       const checkOutAt = record?.checkOutAt ?? null;
-      return { ...person, checkInAt, checkOutAt };
+      return { ...person, checkInAt, lunchOutAt, lunchInAt, checkOutAt };
     })
     .sort((a, b) => a.name.localeCompare(b.name));
 
@@ -101,6 +106,7 @@ async function DayView({ dateKey, staff }: { dateKey: string; staff: { id: numbe
             <tr className="border-b border-[var(--sec-line)] text-xs uppercase tracking-wide text-[var(--sec-muted)]">
               <th className="px-4 py-3 font-medium">Name</th>
               <th className="px-4 py-3 font-medium">Check In</th>
+              <th className="px-4 py-3 font-medium">Lunch</th>
               <th className="px-4 py-3 font-medium">Check Out</th>
               <th className="px-4 py-3 font-medium">Hours</th>
               <th className="px-4 py-3 font-medium">Status</th>
@@ -110,7 +116,24 @@ async function DayView({ dateKey, staff }: { dateKey: string; staff: { id: numbe
           <tbody>
             {rows.map((r) => {
               const late = r.checkInAt ? isLateCheckIn(r.checkInAt) : false;
-              const hours = r.checkInAt && r.checkOutAt ? formatDuration(r.checkInAt.getTime(), r.checkOutAt.getTime()) : "—";
+              const hours =
+                r.checkInAt && r.checkOutAt
+                  ? formatDuration(0, netWorkedMs(r.checkInAt, r.checkOutAt, r.lunchOutAt, r.lunchInAt))
+                  : "—";
+
+              const overLunch = r.lunchOutAt && r.lunchInAt ? isOverLunchCap(r.lunchOutAt, r.lunchInAt) : false;
+              let lunchDisplay: React.ReactNode = "—";
+              if (r.lunchOutAt && r.lunchInAt) {
+                const durationLabel = formatDuration(0, lunchDurationMs(r.lunchOutAt, r.lunchInAt));
+                lunchDisplay = (
+                  <span className={overLunch ? "text-amber-600" : undefined}>
+                    {formatUaeTime(r.lunchOutAt)} – {formatUaeTime(r.lunchInAt)} ({durationLabel}
+                    {overLunch ? ", over by " + formatDuration(0, lunchDurationMs(r.lunchOutAt, r.lunchInAt) - 60 * 60 * 1000) : ""})
+                  </span>
+                );
+              } else if (r.lunchOutAt) {
+                lunchDisplay = <span className="text-[var(--sec-muted)]">On lunch since {formatUaeTime(r.lunchOutAt)}</span>;
+              }
 
               let statusLabel = "—";
               let statusClass = "text-[var(--sec-muted)]";
@@ -133,6 +156,7 @@ async function DayView({ dateKey, staff }: { dateKey: string; staff: { id: numbe
                 <tr key={r.id} className="border-b border-[var(--sec-line)] last:border-0">
                   <td className="px-4 py-3 font-medium text-[var(--sec-ink)]">{r.name}</td>
                   <td className="px-4 py-3 text-[var(--sec-muted)]">{r.checkInAt ? formatUaeTime(r.checkInAt) : "—"}</td>
+                  <td className="px-4 py-3 text-[var(--sec-muted)]">{lunchDisplay}</td>
                   <td className="px-4 py-3 text-[var(--sec-muted)]">{r.checkOutAt ? formatUaeTime(r.checkOutAt) : "—"}</td>
                   <td className="px-4 py-3 text-[var(--sec-muted)]">
                     {hours}
@@ -144,6 +168,8 @@ async function DayView({ dateKey, staff }: { dateKey: string; staff: { id: numbe
                       userId={r.id}
                       dateKey={dateKey}
                       initialCheckIn={toTimeInput(r.checkInAt)}
+                      initialLunchOut={toTimeInput(r.lunchOutAt)}
+                      initialLunchIn={toTimeInput(r.lunchInAt)}
                       initialCheckOut={toTimeInput(r.checkOutAt)}
                     />
                   </td>

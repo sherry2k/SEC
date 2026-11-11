@@ -50,6 +50,31 @@ export function formatUaeTime(d: Date): string {
   return `${hours12}:${minutes} ${period}`;
 }
 
+// The lunch break is flexible — no fixed slot — but still capped at 1 hour;
+// a break longer than this is flagged (amber), same "Late" treatment as a
+// late check-in, purely informational.
+export const LUNCH_CAP_MINUTES = 60;
+
+export function lunchDurationMs(lunchOutAt: Date, lunchInAt: Date): number {
+  return Math.max(0, lunchInAt.getTime() - lunchOutAt.getTime());
+}
+
+export function isOverLunchCap(lunchOutAt: Date, lunchInAt: Date): boolean {
+  return lunchDurationMs(lunchOutAt, lunchInAt) > LUNCH_CAP_MINUTES * 60 * 1000;
+}
+
+// Net worked time for a day: checkout - checkin, minus the lunch break ONLY
+// when one was actually recorded (both lunchOutAt and lunchInAt present). A
+// day with no lunch tapped at all keeps its full checkin->checkout span —
+// explicit call: don't silently assume a lunch nobody recorded.
+export function netWorkedMs(checkInAt: Date, checkOutAt: Date, lunchOutAt: Date | null, lunchInAt: Date | null): number {
+  const total = checkOutAt.getTime() - checkInAt.getTime();
+  if (lunchOutAt && lunchInAt) {
+    return Math.max(0, total - lunchDurationMs(lunchOutAt, lunchInAt));
+  }
+  return total;
+}
+
 export function formatDuration(startMs: number, endMs: number): string {
   const totalMinutes = Math.max(0, Math.round((endMs - startMs) / 60000));
   const hours = Math.floor(totalMinutes / 60);

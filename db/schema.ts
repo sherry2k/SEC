@@ -409,6 +409,12 @@ export const attendanceRecords = pgTable(
     date: date("date", { mode: "date" }).notNull(),
     checkInAt: timestamp("check_in_at", { withTimezone: true }),
     checkOutAt: timestamp("check_out_at", { withTimezone: true }),
+    // Flexible 1-hour lunch break — no fixed slot, staff tap "Start Lunch"
+    // whenever they actually leave and "End Lunch" when back. Both null
+    // until used; a day with neither set keeps its full checkin->checkout
+    // span (lib/attendance.ts's netWorkedMs), same as before this existed.
+    lunchOutAt: timestamp("lunch_out_at", { withTimezone: true }),
+    lunchInAt: timestamp("lunch_in_at", { withTimezone: true }),
     // Who created/last touched this row — a self check-in, or an Admin's
     // manual correction for a day someone forgot to check in.
     createdBy: integer("created_by").references(() => users.id),

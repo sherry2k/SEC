@@ -2,7 +2,7 @@ import "server-only";
 import { and, gte, lte, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { attendanceRecords } from "@/db/schema";
-import { WORKING_WEEKDAYS, STANDARD_HOURS_PER_WORKING_DAY, isWorkingDay, formatDuration } from "@/lib/attendance";
+import { WORKING_WEEKDAYS, STANDARD_HOURS_PER_WORKING_DAY, isWorkingDay, formatDuration, netWorkedMs } from "@/lib/attendance";
 
 export type StaffSummaryRow = {
   userId: number;
@@ -87,9 +87,12 @@ export async function getAttendanceSummary(
       const daysPresent = userRecords.filter((r) => r.checkInAt).length;
       const daysAbsent = Math.max(0, expectedWorkingDays - daysPresent);
 
+      // Net of lunch when one was actually recorded for that day — a day
+      // with no lunch tapped at all still counts its full checkin->checkout
+      // span, same as before this feature existed.
       let totalMs = 0;
       for (const r of userRecords) {
-        if (r.checkInAt && r.checkOutAt) totalMs += r.checkOutAt.getTime() - r.checkInAt.getTime();
+        if (r.checkInAt && r.checkOutAt) totalMs += netWorkedMs(r.checkInAt, r.checkOutAt, r.lunchOutAt, r.lunchInAt);
       }
       const totalHoursLabel = totalMs > 0 ? formatDuration(0, totalMs) : "0h 0m";
 
