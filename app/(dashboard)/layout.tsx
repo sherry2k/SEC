@@ -5,9 +5,11 @@ import { leaveRequests } from "@/db/schema";
 import { requireRole } from "@/lib/auth";
 import { can } from "@/lib/permissions";
 import { getTotalUnreadCount } from "@/lib/messages";
+import { getLatestUnreadAnnouncement, getUnreadAnnouncementCount } from "@/lib/announcements";
 import Sidebar from "@/components/Sidebar";
 import MobileShell from "@/components/MobileShell";
 import DashboardTopbar from "@/components/DashboardTopbar";
+import AnnouncementBanner from "@/components/AnnouncementBanner";
 import { getTodayAttendance } from "@/lib/attendance-data";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -33,6 +35,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
   // which only Admin/Master admin need).
   const unreadMessageCount = await getTotalUnreadCount(user.id);
 
+  // The newest announcement this user hasn't opened yet (null once they've
+  // seen everything) drives the dashboard banner; the count drives the
+  // Sidebar's badge, same pattern as Messages/Leave Requests above.
+  const [latestUnreadAnnouncement, unreadAnnouncementCount] = await Promise.all([
+    getLatestUnreadAnnouncement(user.id),
+    getUnreadAnnouncementCount(user.id),
+  ]);
+
   return (
     <div className="dashboard-shell flex h-screen flex-col overflow-hidden bg-[var(--sec-bg)] lg:flex-row">
       <MobileShell>
@@ -41,11 +51,21 @@ export default async function DashboardLayout({ children }: { children: React.Re
           todayAttendance={todayAttendance}
           pendingLeaveCount={pendingLeaveCount}
           unreadMessageCount={unreadMessageCount}
+          unreadAnnouncementCount={unreadAnnouncementCount}
         />
       </MobileShell>
       <main className="flex-1 overflow-y-auto">
         <DashboardTopbar user={user} />
-        <div className="dashboard-content-wrap w-full px-4 py-6 sm:px-8 sm:py-8">{children}</div>
+        <div className="dashboard-content-wrap w-full px-4 py-6 sm:px-8 sm:py-8">
+          <AnnouncementBanner
+            announcement={
+              latestUnreadAnnouncement
+                ? { ...latestUnreadAnnouncement, createdAt: latestUnreadAnnouncement.createdAt.toISOString() }
+                : null
+            }
+          />
+          {children}
+        </div>
       </main>
     </div>
   );

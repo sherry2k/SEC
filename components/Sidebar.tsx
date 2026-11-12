@@ -15,6 +15,7 @@ import {
   MessageCircle,
   Receipt,
   KeyRound,
+  Megaphone,
 } from "lucide-react";
 import type { CurrentUser } from "@/lib/auth";
 import { can } from "@/lib/permissions";
@@ -32,6 +33,7 @@ export default function Sidebar({
   todayAttendance,
   pendingLeaveCount = 0,
   unreadMessageCount = 0,
+  unreadAnnouncementCount = 0,
 }: {
   user: CurrentUser;
   todayAttendance: {
@@ -42,12 +44,14 @@ export default function Sidebar({
   } | null;
   pendingLeaveCount?: number;
   unreadMessageCount?: number;
+  unreadAnnouncementCount?: number;
 }) {
   const pathname = usePathname();
 
   const navItems = [
     { href: "/dashboard", label: "Overview", icon: LayoutGrid, show: true },
     { href: "/messages", label: "Messages", icon: MessageCircle, show: true, badge: unreadMessageCount },
+    { href: "/announcements", label: "Announcements", icon: Megaphone, show: true, badge: unreadAnnouncementCount },
     { href: "/projects", label: "Projects", icon: FolderKanban, show: can(user.role, "projects.view") },
     { href: "/accounts", label: "Accounts", icon: Wallet, show: can(user.role, "accounts.view") },
     { href: "/document-renewals", label: "Document Renewals", icon: FileClock, show: can(user.role, "document_renewals.view") },

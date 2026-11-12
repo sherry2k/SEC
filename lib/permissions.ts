@@ -36,6 +36,11 @@ const ALWAYS: Record<string, readonly Role[]> = {
   // bookkeeping. One permission covers both viewing and editing — there's
   // no "view only" tier for this like there is for Accounts.
   "credentials.manage": ["master_admin", "admin"],
+  // Announcements — anyone approved can read (no entry here at all; the
+  // list/API route just checks authorizeApi() with no role list), but only
+  // Admin + Master Admin can post one, same tier as Portal Credentials and
+  // Leave Request review.
+  "announcements.manage": ["master_admin", "admin"],
   "document_renewals.view": ["master_admin", "admin", "finance"],
   "document_renewals.edit": ["master_admin", "admin", "finance"],
   // Direct messages — every approved user can message any other, no role

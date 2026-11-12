@@ -664,6 +664,40 @@ export const portalCredentials = pgTable("portal_credentials", {
 });
 
 // ---------------------------------------------------------------------------
+// Announcements — Admin/Master Admin post, everyone reads (lib/permissions.ts
+// "announcements.manage" gates posting only; reading has no permission gate,
+// same as the Activity feed). announcementReads is a per-user join table
+// (composite PK, one row per user per announcement they've opened) used for
+// exact unread tracking — unlike the Activity feed's "since last login"
+// approximation, since a banner that's still showing needs to know
+// precisely which announcement a given user has or hasn't seen yet.
+// ---------------------------------------------------------------------------
+
+export const announcements = pgTable("announcements", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const announcementReads = pgTable(
+  "announcement_reads",
+  {
+    announcementId: uuid("announcement_id")
+      .notNull()
+      .references(() => announcements.id, { onDelete: "cascade" }),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id),
+    readAt: timestamp("read_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.announcementId, table.userId] }),
+  })
+);
+
+// ---------------------------------------------------------------------------
 // Salary Slips — payroll documents, one per employee per month. Own SAL
 // numbering sequence (not shared with the client-document family above)
 // since payroll isn't a client-facing document. employeeId links to a
