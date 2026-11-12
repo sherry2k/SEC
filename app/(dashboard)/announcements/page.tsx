@@ -2,8 +2,9 @@
 import { Megaphone } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { can } from "@/lib/permissions";
-import { getAllAnnouncementsForUser, markAllAnnouncementsRead } from "@/lib/announcements";
+import { getAllAnnouncementsForUser } from "@/lib/announcements";
 import AnnouncementComposer from "@/components/AnnouncementComposer";
+import MarkAnnouncementsRead from "@/components/MarkAnnouncementsRead";
 
 function formatDate(d: Date): string {
   return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) + ", " + d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
@@ -13,13 +14,18 @@ export default async function AnnouncementsPage() {
   const user = await requireRole();
   const canManage = can(user.role, "announcements.manage");
 
-  // Unread state is read BEFORE marking everything read, so the "New"
-  // badges below still reflect what was unread when this page was opened.
+  // "New" badges below reflect what's unread right now. Marking it all read
+  // happens client-side (see MarkAnnouncementsRead) rather than here — a
+  // server component's render can run from a background prefetch (the
+  // Sidebar link, or this page's own Link elsewhere) with nobody actually
+  // looking at the page, so a write in the render path marks things read
+  // that nobody has seen yet. A real visit only happens once this component
+  // mounts in the browser.
   const rows = await getAllAnnouncementsForUser(user.id);
-  await markAllAnnouncementsRead(user.id);
 
   return (
     <div>
+      <MarkAnnouncementsRead />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-[var(--sec-ink)]">Announcements</h1>
