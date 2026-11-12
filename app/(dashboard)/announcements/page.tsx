@@ -4,6 +4,7 @@ import { requireRole } from "@/lib/auth";
 import { can } from "@/lib/permissions";
 import { getAllAnnouncementsForUser } from "@/lib/announcements";
 import AnnouncementComposer from "@/components/AnnouncementComposer";
+import AnnouncementRow from "@/components/AnnouncementRow";
 import MarkAnnouncementsRead from "@/components/MarkAnnouncementsRead";
 
 function formatDate(d: Date): string {
@@ -44,27 +45,18 @@ export default async function AnnouncementsPage() {
       ) : (
         <div className="mt-2 flex flex-col gap-3">
           {rows.map((a) => (
-            <div key={a.id} className="rounded-lg border border-[var(--sec-line)] bg-white p-5">
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-700">
-                  <Megaphone size={16} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="text-[15px] font-bold text-[var(--sec-ink)]">{a.title}</p>
-                    {a.isUnread && (
-                      <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-700">
-                        New
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-1.5 whitespace-pre-line text-sm leading-relaxed text-[var(--sec-ink)]">{a.body}</p>
-                  <p className="mt-2.5 text-xs text-[var(--sec-muted)]">
-                    Posted by {a.postedByLabel} · {formatDate(a.createdAt)}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <AnnouncementRow
+              key={a.id}
+              canManage={canManage}
+              announcement={{
+                id: a.id,
+                title: a.title,
+                body: a.body,
+                postedByLabel: a.postedByLabel,
+                createdAtLabel: formatDate(a.createdAt),
+                isUnread: a.isUnread,
+              }}
+            />
           ))}
         </div>
       )}

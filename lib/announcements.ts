@@ -114,6 +114,16 @@ export async function getAllAnnouncementsForUser(userId: number): Promise<Announ
   }));
 }
 
+export async function updateAnnouncement(id: string, params: { title: string; body: string }): Promise<void> {
+  await db.update(announcements).set({ title: params.title, body: params.body }).where(eq(announcements.id, id));
+}
+
+export async function deleteAnnouncement(id: string): Promise<void> {
+  // announcement_reads has ON DELETE CASCADE on this FK, so its rows for
+  // this announcement go with it — no separate cleanup needed.
+  await db.delete(announcements).where(eq(announcements.id, id));
+}
+
 export async function markAnnouncementRead(announcementId: string, userId: number): Promise<void> {
   await db
     .insert(announcementReads)

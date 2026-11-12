@@ -47,7 +47,9 @@ export type ActivityAction =
   | "credential_created"
   | "credential_updated"
   | "credential_deleted"
-  | "announcement_created";
+  | "announcement_created"
+  | "announcement_updated"
+  | "announcement_deleted";
 
 export const ACTIVITY_LABELS: Record<ActivityAction, string> = {
   project_created: "created",
@@ -95,4 +97,6 @@ export const ACTIVITY_LABELS: Record<ActivityAction, string> = {
   credential_updated: "updated the portal credential for",
   credential_deleted: "deleted the portal credential for",
   announcement_created: "posted an announcement:",
+  announcement_updated: "edited the announcement:",
+  announcement_deleted: "deleted",
 };
