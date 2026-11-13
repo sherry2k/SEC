@@ -46,6 +46,11 @@ export type LinkedDocument = {
   sortKey: number;
   amount: number;
   status: string;
+  // Only set on a "receipt_voucher" row whose voucher is linked to a Tax
+  // Invoice/Invoice — the linked document's own display ref (e.g.
+  // "Tax invoice SEC/TAXINV/2026/0011"), so the Documents table can show
+  // which charge this payment is collected against.
+  linkedToLabel?: string;
 };
 
 export type AccountProjectFinancials = {
@@ -189,6 +194,13 @@ export async function getAccountProjectFinancials(accountProjectId: string): Pro
   }
 
   // --- Receipt vouchers ---
+  // Ref lookup for whichever Tax Invoice/Invoice a voucher below might be
+  // linked to — both were already fetched above for their own totals, so
+  // this just indexes what's already in hand rather than re-querying.
+  const refById = new Map<string, string>();
+  for (const inv of linkedTaxInvoices) refById.set(inv.id, `Tax invoice ${inv.invoiceNo}`);
+  for (const inv of linkedInvoices) refById.set(inv.id, `Invoice ${inv.invoiceNo}`);
+
   const linkedVouchers = await db.select().from(receiptVouchers).where(eq(receiptVouchers.accountProjectId, accountProjectId));
   let paidTotal = 0;
   for (const v of linkedVouchers) {
@@ -206,6 +218,7 @@ export async function getAccountProjectFinancials(accountProjectId: string): Pro
       sortKey: parseDMY(v.issueDate),
       amount: total,
       status: v.status,
+      linkedToLabel: v.linkedDocumentId ? refById.get(v.linkedDocumentId) : undefined,
     });
   }
 

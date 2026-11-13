@@ -23,6 +23,11 @@ export type LedgerEntry = {
   ref: string;
   description: string;
   amount: number;
+  // Only set on a "payment" entry whose Receipt Voucher is linked to a
+  // specific charge — matches that charge entry's own `id` (the Tax
+  // Invoice/Invoice's id). Lets the Statement of Account credit this
+  // payment to that exact charge instead of the general FIFO pool.
+  linkedChargeId?: string;
 };
 
 // Parses "DD/MM/YYYY" (how every document's issue date is stored) into a
@@ -107,6 +112,7 @@ export async function getProjectFinancials(projectId: string): Promise<ProjectFi
       ref: v.voucherNo,
       description: `Receipt Voucher No: ${v.voucherNo}`,
       amount: totals.total,
+      linkedChargeId: v.linkedDocumentId ?? undefined,
     });
   }
 

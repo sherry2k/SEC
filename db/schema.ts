@@ -454,6 +454,15 @@ export const receiptVouchers = pgTable("receipt_vouchers", {
   toName: text("to_name"),
   project: text("project"),
   location: text("location"),
+  // Optional link to the specific Tax Invoice or Invoice this voucher's
+  // amount is being collected against — "tax_invoice" | "invoice", or
+  // null when not linked. No DB-level FK since it can point into either
+  // table depending on linkedDocumentType; validated in the API routes
+  // instead. One invoice per voucher (a voucher never fans out to more
+  // than one), but one invoice can have several vouchers against it
+  // (partial payments), same as real-world collection.
+  linkedDocumentType: text("linked_document_type"),
+  linkedDocumentId: uuid("linked_document_id"),
   vatRatePercent: numeric("vat_rate_percent", { precision: 5, scale: 2 }).notNull().default("5"),
   signatoryName: text("signatory_name"),
   // Toggle, off by default — the stamp only appears on the printed page

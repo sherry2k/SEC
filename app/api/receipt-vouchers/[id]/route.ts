@@ -4,9 +4,29 @@ import { db } from "@/db";
 import { receiptVouchers, receiptVoucherItems } from "@/db/schema";
 import { authorizePermissionApi } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
+import { isValidLinkTarget, type LinkableDocumentType } from "@/lib/invoice-link-options";
 
 function str(v: unknown): string {
   return typeof v === "string" ? v.trim() : "";
+}
+
+// Same resolver as the create route (app/api/receipt-vouchers/route.ts) —
+// kept duplicated rather than shared, since this file already duplicates
+// most of create's body-parsing and the two intentionally stay in lockstep.
+async function resolveLink(
+  body: unknown,
+  projectId: string | null,
+  accountProjectId: string | null
+): Promise<{ linkedDocumentType: string | null; linkedDocumentId: string | null }> {
+  const record = body as Record<string, unknown>;
+  const type = str(record?.linkedDocumentType);
+  const id = str(record?.linkedDocumentId);
+  if (!type || !id) return { linkedDocumentType: null, linkedDocumentId: null };
+  if (type !== "tax_invoice" && type !== "invoice") return { linkedDocumentType: null, linkedDocumentId: null };
+
+  const valid = await isValidLinkTarget({ type: type as LinkableDocumentType, id, projectId, accountProjectId });
+  if (!valid) return { linkedDocumentType: null, linkedDocumentId: null };
+  return { linkedDocumentType: type, linkedDocumentId: id };
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -47,14 +67,24 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   const vatRatePercent = typeof body?.vatRatePercent === "number" ? body.vatRatePercent : 5;
 
+  const projectId = str(body?.projectId) || null;
+  const accountProjectId = str(body?.accountProjectId) || null;
+  const link = await resolveLink(body, projectId, accountProjectId);
+
   await db
     .update(receiptVouchers)
     .set({
       issueDate: str(body?.issueDate) || existing.issueDate,
       toName,
-      projectId: str(body?.projectId) || null,
+      projectId,
       // Same fix as the create route — was never persisted here either.
-      accountProjectId: str(body?.accountProjectId) || null,
+      accountProjectId,
+      // Always set (even to null to unlink) rather than merged — this
+      // PATCH overwrites the whole row from the body every time, same as
+      // every other field here, so the form must always send its current
+      // value or an unrelated edit would silently drop the link.
+      linkedDocumentType: link.linkedDocumentType,
+      linkedDocumentId: link.linkedDocumentId,
       project: str(body?.project) || null,
       location: str(body?.location) || null,
       vatRatePercent: String(vatRatePercent),

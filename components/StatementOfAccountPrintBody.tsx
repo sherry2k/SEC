@@ -35,20 +35,41 @@ export default function StatementOfAccountPrintBody({ data }: { data: StatementO
   });
   const balanceDue = rows.length > 0 ? rows[rows.length - 1].runningBalance : data.totalAmount;
 
-  // Remarks are a separate pass from the running balance above: total
-  // payments received are allocated against charges in order (FIFO) — the
-  // earliest charge absorbs money first — so a charge shows PAID once it,
-  // and everything before it, is fully covered by payments received so
-  // far. (Checking the running balance at a charge's own row, as this used
-  // to, meant it was evaluated before any later payment existed, so it
-  // could never show PAID for a normal invoice-then-payment sequence.)
-  let paymentPool = data.ledger.filter((e) => e.kind === "payment").reduce((sum, e) => sum + e.amount, 0);
-  const isCharged = new Map<string, boolean>();
+  // Remarks are a separate pass from the running balance above, and a
+  // charge's status is now resolved in two stages:
+  //   1. Direct coverage — a Receipt Voucher explicitly linked (via the
+  //      "Linked invoice" field on the voucher) to this exact charge
+  //      counts toward it first, however much of it there is.
+  //   2. Whatever the charge still needs beyond that falls back to the
+  //      old FIFO pool of every UNLINKED payment, consumed in
+  //      chronological ledger order — same reasoning as before: the
+  //      earliest charge absorbs leftover, undirected money first.
+  // A charge is PAID once direct + pool coverage meets its full amount,
+  // PARTIALLY PAID once some but not all of it is covered, and NOT PAID
+  // otherwise.
+  type ChargeStatus = "paid" | "partial" | "unpaid";
+  const EPSILON = 0.01;
+
+  const directPaidByCharge = new Map<string, number>();
+  for (const entry of data.ledger) {
+    if (entry.kind === "payment" && entry.linkedChargeId) {
+      directPaidByCharge.set(entry.linkedChargeId, (directPaidByCharge.get(entry.linkedChargeId) ?? 0) + entry.amount);
+    }
+  }
+
+  let unlinkedPool = data.ledger
+    .filter((e) => e.kind === "payment" && !e.linkedChargeId)
+    .reduce((sum, e) => sum + e.amount, 0);
+
+  const chargeStatus = new Map<string, ChargeStatus>();
   for (const entry of data.ledger) {
     if (entry.kind !== "charge") continue;
-    const covered = paymentPool >= entry.amount;
-    isCharged.set(entry.id, covered);
-    paymentPool -= Math.min(paymentPool, entry.amount);
+    const direct = Math.min(directPaidByCharge.get(entry.id) ?? 0, entry.amount);
+    const remaining = entry.amount - direct;
+    const fromPool = Math.min(unlinkedPool, remaining);
+    unlinkedPool -= fromPool;
+    const covered = direct + fromPool;
+    chargeStatus.set(entry.id, covered >= entry.amount - EPSILON ? "paid" : covered > EPSILON ? "partial" : "unpaid");
   }
 
   return (
@@ -105,7 +126,7 @@ export default function StatementOfAccountPrintBody({ data }: { data: StatementO
             <td className="border border-[var(--sec-line)] px-2 py-2 align-top" />
           </tr>
           {rows.map(({ entry, runningBalance }) => {
-            const paid = isCharged.get(entry.id);
+            const status = chargeStatus.get(entry.id);
             return (
               <tr key={entry.id}>
                 <td className="border border-[var(--sec-line)] px-2 py-2 align-top">{entry.dateLabel}</td>
@@ -120,8 +141,16 @@ export default function StatementOfAccountPrintBody({ data }: { data: StatementO
                 <td className="border border-[var(--sec-line)] px-2 py-2 text-right align-top">AED {money(runningBalance)}</td>
                 <td className="border border-[var(--sec-line)] px-2 py-2 align-top">
                   {entry.kind === "charge" && (
-                    <span className={paid ? "font-semibold text-emerald-600" : "font-semibold text-red-600"}>
-                      {paid ? "PAID" : "NOT PAID"}
+                    <span
+                      className={
+                        status === "paid"
+                          ? "font-semibold text-emerald-600"
+                          : status === "partial"
+                            ? "font-semibold text-amber-600"
+                            : "font-semibold text-red-600"
+                      }
+                    >
+                      {status === "paid" ? "PAID" : status === "partial" ? "PARTIALLY PAID" : "NOT PAID"}
                     </span>
                   )}
                 </td>

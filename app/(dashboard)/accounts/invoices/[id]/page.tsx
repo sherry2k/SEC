@@ -7,7 +7,10 @@ import { invoices, accountProjects } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import { toFilenameSafe } from "@/lib/pdf-filename";
 import { getInvoiceForPrint } from "@/lib/invoice-data";
+import { calcInvoiceTotals } from "@/lib/invoice-calc";
+import { getLinkedPayments } from "@/lib/invoice-link-options";
 import InvoicePrintView from "@/components/InvoicePrintView";
+import LinkedPaymentsCard from "@/components/LinkedPaymentsCard";
 import DeleteInvoiceButton from "@/components/DeleteInvoiceButton";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -40,6 +43,9 @@ export default async function InvoiceViewPage({ params }: { params: Promise<{ id
   const backHref = accountProject ? `/accounts/account-projects/${accountProject.id}` : "/accounts/invoices";
   const backLabel = accountProject ? `Back to ${accountProject.clientName}` : "All invoices";
 
+  const payments = await getLinkedPayments("invoice", id);
+  const { total } = calcInvoiceTotals(invoice.items, invoice.vatRatePercent);
+
   return (
     <div>
       <div className="no-print mb-6 flex items-center justify-between">
@@ -67,6 +73,7 @@ export default async function InvoiceViewPage({ params }: { params: Promise<{ id
       </div>
 
       <InvoicePrintView invoice={invoice} />
+      <LinkedPaymentsCard payments={payments} invoiceTotal={total} />
     </div>
   );
 }

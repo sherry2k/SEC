@@ -10,16 +10,22 @@ import {
   type ReceiptVoucherFormValues,
   type ReceiptVoucherItemDraft,
 } from "@/lib/receipt-voucher-defaults";
+import type { InvoiceLinkOption } from "@/lib/invoice-link-options";
 import StampToggle from "@/components/StampToggle";
 
 export default function ReceiptVoucherForm({
   mode,
   voucherId,
   initial,
+  invoiceOptions = [],
 }: {
   mode: "create" | "edit";
   voucherId?: string;
   initial: ReceiptVoucherFormValues;
+  // Tax Invoices/Invoices on the same project this voucher can be linked
+  // to — empty when the voucher isn't attached to any project (there's
+  // nothing to offer) or none exist yet.
+  invoiceOptions?: InvoiceLinkOption[];
 }) {
   const router = useRouter();
   const [values, setValues] = useState<ReceiptVoucherFormValues>(initial);
@@ -107,6 +113,37 @@ export default function ReceiptVoucherForm({
           <input value={values.location} onChange={(e) => set("location", e.target.value)} className={inputClass} />
         </div>
       </div>
+
+      {invoiceOptions.length > 0 && (
+        <div>
+          <label className={labelClass}>Linked invoice (optional)</label>
+          <select
+            value={values.linkedDocumentType && values.linkedDocumentId ? `${values.linkedDocumentType}:${values.linkedDocumentId}` : ""}
+            onChange={(e) => {
+              const v = e.target.value;
+              if (!v) {
+                set("linkedDocumentType", "");
+                set("linkedDocumentId", "");
+                return;
+              }
+              const [type, id] = v.split(":");
+              set("linkedDocumentType", type as "tax_invoice" | "invoice");
+              set("linkedDocumentId", id);
+            }}
+            className={inputClass}
+          >
+            <option value="">Not linked</option>
+            {invoiceOptions.map((opt) => (
+              <option key={`${opt.type}:${opt.id}`} value={`${opt.type}:${opt.id}`}>
+                {opt.label} — Remaining AED {opt.remaining.toLocaleString(undefined, { minimumFractionDigits: 2 })} of {opt.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-[var(--sec-muted)]">
+            Link this voucher to the invoice it's paying so the Statement of Account can show an exact Paid/Partially Paid status.
+          </p>
+        </div>
+      )}
 
       <div>
         <div className="mb-2 flex items-center justify-between">

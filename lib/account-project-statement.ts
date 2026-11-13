@@ -91,6 +91,7 @@ export async function getAccountProjectStatementData(accountProjectId: string): 
       ref: v.voucherNo,
       description: `Receipt Voucher No: ${v.voucherNo}`,
       amount: totals.total,
+      linkedChargeId: v.linkedDocumentId ?? undefined,
     });
   }
 

@@ -4,9 +4,30 @@ import { receiptVouchers, receiptVoucherItems } from "@/db/schema";
 import { authorizePermissionApi } from "@/lib/auth";
 import { nextDocumentCode } from "@/lib/sequences";
 import { logActivity } from "@/lib/activity";
+import { isValidLinkTarget, type LinkableDocumentType } from "@/lib/invoice-link-options";
 
 function str(v: unknown): string {
   return typeof v === "string" ? v.trim() : "";
+}
+
+// Resolves the optional "Linked invoice" fields from the request body
+// into a validated (type, id) pair, or null if not linked / the target
+// doesn't actually belong to the same project. Shared by POST and PATCH
+// so the two routes can't drift on what counts as a valid link.
+async function resolveLink(
+  body: unknown,
+  projectId: string | null,
+  accountProjectId: string | null
+): Promise<{ linkedDocumentType: string | null; linkedDocumentId: string | null }> {
+  const record = body as Record<string, unknown>;
+  const type = str(record?.linkedDocumentType);
+  const id = str(record?.linkedDocumentId);
+  if (!type || !id) return { linkedDocumentType: null, linkedDocumentId: null };
+  if (type !== "tax_invoice" && type !== "invoice") return { linkedDocumentType: null, linkedDocumentId: null };
+
+  const valid = await isValidLinkTarget({ type: type as LinkableDocumentType, id, projectId, accountProjectId });
+  if (!valid) return { linkedDocumentType: null, linkedDocumentId: null };
+  return { linkedDocumentType: type, linkedDocumentId: id };
 }
 
 export async function POST(request: NextRequest) {
@@ -39,19 +60,25 @@ export async function POST(request: NextRequest) {
     const vatRatePercent = typeof body?.vatRatePercent === "number" ? body.vatRatePercent : 5;
     const voucherNo = await nextDocumentCode("INV");
 
+    const projectId = str(body?.projectId) || null;
+    const accountProjectId = str(body?.accountProjectId) || null;
+    const link = await resolveLink(body, projectId, accountProjectId);
+
     const [voucher] = await db
       .insert(receiptVouchers)
       .values({
         voucherNo,
         issueDate: str(body?.issueDate) || new Date().toLocaleDateString("en-GB"),
         toName,
-        projectId: str(body?.projectId) || null,
+        projectId,
         // Was missing — the form has carried this through from the "New
         // receipt voucher" link's ?accountProjectId= since that feature was
         // built, but it was never actually read here, so every voucher
         // created from an Account Project page silently lost the link
         // (invisible on that project's page, excluded from Total Received).
-        accountProjectId: str(body?.accountProjectId) || null,
+        accountProjectId,
+        linkedDocumentType: link.linkedDocumentType,
+        linkedDocumentId: link.linkedDocumentId,
         project: str(body?.project) || null,
         location: str(body?.location) || null,
         vatRatePercent: String(vatRatePercent),

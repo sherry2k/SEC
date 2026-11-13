@@ -273,6 +273,7 @@ export default async function AccountProjectDetailPage({ params }: { params: Pro
                         ) : (
                           <span className="text-[var(--sec-muted)]">{d.ref}</span>
                         )}
+                        {d.linkedToLabel && <p className="mt-0.5 font-sans text-[var(--sec-muted)]">→ {d.linkedToLabel}</p>}
                       </td>
                       <td className="px-4 py-3 text-[var(--sec-muted)]">{d.dateLabel}</td>
                       <td className="px-4 py-3 text-right">AED {money(d.amount)}</td>

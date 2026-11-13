@@ -7,7 +7,10 @@ import { taxInvoices, accountProjects } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import { toFilenameSafe } from "@/lib/pdf-filename";
 import { getTaxInvoiceForPrint } from "@/lib/tax-invoice-data";
+import { calcTaxInvoiceTotals } from "@/lib/tax-invoice-calc";
+import { getLinkedPayments } from "@/lib/invoice-link-options";
 import TaxInvoicePrintView from "@/components/TaxInvoicePrintView";
+import LinkedPaymentsCard from "@/components/LinkedPaymentsCard";
 import DeleteTaxInvoiceButton from "@/components/DeleteTaxInvoiceButton";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -35,6 +38,9 @@ export default async function TaxInvoiceViewPage({ params }: { params: Promise<{
 
   const backHref = linked?.accountProjectId ? `/accounts/account-projects/${linked.accountProjectId}` : "/accounts/tax-invoices";
   const backLabel = linked?.accountProjectId ? linked.clientName || "Back to project" : "All tax invoices";
+
+  const payments = await getLinkedPayments("tax_invoice", id);
+  const { total } = calcTaxInvoiceTotals(invoice.items, invoice.vatRatePercent);
 
   return (
     <div>
@@ -64,6 +70,7 @@ export default async function TaxInvoiceViewPage({ params }: { params: Promise<{
       </div>
 
       <TaxInvoicePrintView invoice={invoice} />
+      <LinkedPaymentsCard payments={payments} invoiceTotal={total} />
     </div>
   );
 }

@@ -25,6 +25,13 @@ export type ReceiptVoucherFormValues = {
   // manually in the form, just carried through from the "New receipt
   // voucher" link's ?accountProjectId= query param.
   accountProjectId: string;
+  // Which Tax Invoice/Invoice (on the same project) this voucher's amount
+  // is being collected against — "" = not linked. Kept as two plain
+  // strings rather than a nullable object so they round-trip through the
+  // form's JSON body (and back out of it on PATCH) the same way every
+  // other field here does.
+  linkedDocumentType: "" | "tax_invoice" | "invoice";
+  linkedDocumentId: string;
   vatRatePercent: number;
   signatoryName: string;
   showStamp: boolean;
@@ -47,6 +54,8 @@ export function defaultReceiptVoucherValues(): ReceiptVoucherFormValues {
     location: "Abu Dhabi - UAE",
     projectId: "",
     accountProjectId: "",
+    linkedDocumentType: "",
+    linkedDocumentId: "",
     vatRatePercent: 5,
     signatoryName: "Eng. Mohammad Abu Eisa",
     showStamp: false,
