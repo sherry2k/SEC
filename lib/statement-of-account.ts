@@ -1,7 +1,7 @@
 import "server-only";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { projects } from "@/db/schema";
+import { projects, accountProjects } from "@/db/schema";
 import { nextDocumentCode } from "@/lib/sequences";
 
 // The Statement of Account has no saved row of its own (it's generated
@@ -16,5 +16,22 @@ export async function getOrAssignSoaNo(projectId: string): Promise<string> {
 
   const soaNo = await nextDocumentCode("SOA");
   await db.update(projects).set({ soaNo }).where(eq(projects.id, projectId));
+  return soaNo;
+}
+
+// Same thing, for an Account Project's Statement of Account
+// (lib/account-project-statement.ts) — a separate table, but sharing the
+// same "SOA" sequence above so the numbers stay unique app-wide no matter
+// which kind of project a given statement was generated from.
+export async function getOrAssignAccountProjectSoaNo(accountProjectId: string): Promise<string> {
+  const [accountProject] = await db
+    .select({ soaNo: accountProjects.soaNo })
+    .from(accountProjects)
+    .where(eq(accountProjects.id, accountProjectId))
+    .limit(1);
+  if (accountProject?.soaNo) return accountProject.soaNo;
+
+  const soaNo = await nextDocumentCode("SOA");
+  await db.update(accountProjects).set({ soaNo }).where(eq(accountProjects.id, accountProjectId));
   return soaNo;
 }

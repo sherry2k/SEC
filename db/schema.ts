@@ -216,6 +216,12 @@ export const accountProjects = pgTable("account_projects", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedBy: integer("updated_by").references(() => users.id),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  // Same lazy-assigned document number as projects.soaNo — Account
+  // Projects get their own Statement of Account (lib/account-project-statement.ts),
+  // which shares the "SOA" sequence (lib/sequences.ts) with the legacy
+  // Projects one, so numbers stay unique app-wide regardless of which
+  // table a given statement came from.
+  soaNo: text("soa_no"),
 });
 
 

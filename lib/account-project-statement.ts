@@ -6,6 +6,7 @@ import { calcTaxInvoiceTotals } from "@/lib/tax-invoice-calc";
 import { calcInvoiceTotals } from "@/lib/invoice-calc";
 import { calcReceiptVoucherTotals } from "@/lib/receipt-voucher-calc";
 import { getAccountProjectFinancials } from "@/lib/account-project-finance";
+import { getOrAssignAccountProjectSoaNo } from "@/lib/statement-of-account";
 import type { LedgerEntry } from "@/lib/project-finance";
 import type { StatementOfAccountData } from "@/components/StatementOfAccountPrintBody";
 
@@ -95,11 +96,10 @@ export async function getAccountProjectStatementData(accountProjectId: string): 
 
   ledger.sort((a, b) => a.sortKey - b.sortKey);
 
+  const soaNo = await getOrAssignAccountProjectSoaNo(accountProjectId);
+
   return {
-    // Account Projects have no separate project-code field like the legacy
-    // `projects` table does, so the project description (falling back to
-    // the client name) stands in as the reference line.
-    projectRef: accountProject.projectDetails || accountProject.clientName,
+    projectRef: soaNo,
     printedDate: new Date().toLocaleDateString("en-GB"),
     clientName: accountProject.clientName ?? "",
     clientAddress: accountProject.location ?? "",

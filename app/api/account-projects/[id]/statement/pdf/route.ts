@@ -6,6 +6,7 @@ import { authorizePermissionApi } from "@/lib/auth";
 import { generatePdf } from "@/lib/pdf";
 import { buildHeaderTemplate, buildFooterTemplate } from "@/lib/pdf-templates";
 import { toFilenameSafe } from "@/lib/pdf-filename";
+import { getOrAssignAccountProjectSoaNo } from "@/lib/statement-of-account";
 
 // Same reasoning as the other document PDF routes — Puppeteer needs more
 // than the default serverless timeout to launch a real browser.
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const { id } = await params;
   const [accountProject] = await db
-    .select({ clientName: accountProjects.clientName, projectDetails: accountProjects.projectDetails })
+    .select({ clientName: accountProjects.clientName })
     .from(accountProjects)
     .where(eq(accountProjects.id, id))
     .limit(1);
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const cookieHeader = request.headers.get("cookie") ?? "";
   const sourceUrl = new URL(`/print/account-project-statement/${id}`, request.nextUrl.origin).toString();
 
-  const ref = accountProject.projectDetails || accountProject.clientName;
+  const ref = await getOrAssignAccountProjectSoaNo(id);
   const headerTemplate = buildHeaderTemplate({
     dateLabel: "Date",
     dateValue: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" }),
