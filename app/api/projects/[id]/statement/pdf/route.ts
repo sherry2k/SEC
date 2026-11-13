@@ -6,6 +6,7 @@ import { authorizePermissionApi } from "@/lib/auth";
 import { generatePdf } from "@/lib/pdf";
 import { buildHeaderTemplate, buildFooterTemplate } from "@/lib/pdf-templates";
 import { toFilenameSafe } from "@/lib/pdf-filename";
+import { getOrAssignSoaNo } from "@/lib/statement-of-account";
 
 // Same reasoning as the other document PDF routes — Puppeteer needs more
 // than the default serverless timeout to launch a real browser.
@@ -16,11 +17,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (!auth.ok) return auth.response;
 
   const { id } = await params;
-  const [project] = await db
-    .select({ projectCode: projects.projectCode, municipalityNo: projects.municipalityNo })
-    .from(projects)
-    .where(eq(projects.id, id))
-    .limit(1);
+  const [project] = await db.select({ projectCode: projects.projectCode }).from(projects).where(eq(projects.id, id)).limit(1);
 
   if (!project) {
     return NextResponse.json({ error: "Project not found." }, { status: 404 });
@@ -29,7 +26,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const cookieHeader = request.headers.get("cookie") ?? "";
   const sourceUrl = new URL(`/print/statement-of-account/${id}`, request.nextUrl.origin).toString();
 
-  const ref = project.municipalityNo || project.projectCode;
+  const ref = await getOrAssignSoaNo(id);
   const headerTemplate = buildHeaderTemplate({
     dateLabel: "Date",
     dateValue: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" }),
@@ -44,7 +41,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return new NextResponse(new Uint8Array(pdfBuffer), {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${toFilenameSafe(project.projectCode)}-Statement.pdf"`,
+        "Content-Disposition": `attachment; filename="${toFilenameSafe(ref)}-Statement.pdf"`,
       },
     });
   } catch (error) {

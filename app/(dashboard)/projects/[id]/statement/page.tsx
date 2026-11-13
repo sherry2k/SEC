@@ -10,6 +10,7 @@ import StatementStampToggle from "@/components/StatementStampToggle";
 import PrintButton from "@/components/PrintButton";
 import DownloadPdfButton from "@/components/DownloadPdfButton";
 import { toFilenameSafe } from "@/lib/pdf-filename";
+import { getOrAssignSoaNo } from "@/lib/statement-of-account";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -25,6 +26,7 @@ export default async function StatementOfAccountPage({ params }: { params: Promi
   if (!project) notFound();
 
   const financials = await getProjectFinancials(id);
+  const soaNo = await getOrAssignSoaNo(id);
 
   return (
     <div>
@@ -46,7 +48,7 @@ export default async function StatementOfAccountPage({ params }: { params: Promi
 
       <StatementOfAccountPrintView
         data={{
-          projectRef: project.municipalityNo || project.projectCode,
+          projectRef: soaNo,
           printedDate: new Date().toLocaleDateString("en-GB"),
           clientName: project.clientName ?? "",
           clientAddress: project.location ?? "",

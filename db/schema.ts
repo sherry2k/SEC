@@ -96,6 +96,14 @@ export const projects = pgTable("projects", {
   // fresh each time rather than saved as its own row — there's nowhere
   // else for this toggle's state to live.
   statementShowStamp: boolean("statement_show_stamp").notNull().default(false),
+  // The Statement of Account's own document number (SEC/SOA/<year>/<nnnn>),
+  // assigned once via nextDocumentCode("SOA") the first time the statement
+  // is viewed/printed for this project, then reused every time after —
+  // same "nowhere else to live" reasoning as statementShowStamp above,
+  // since there's no separate saved row for a Statement of Account. Not to
+  // be confused with municipalityNo, which is a real-world approval
+  // reference entered by staff, unrelated to this document numbering.
+  soaNo: text("soa_no"),
   // The project's quoted value, entered directly on the project (separate
   // from any linked Quotation document) — what the Dashboard's "Quoted
   // value" figure sums across every project.

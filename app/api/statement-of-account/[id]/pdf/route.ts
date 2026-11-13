@@ -6,6 +6,7 @@ import { authorizePermissionApi } from "@/lib/auth";
 import { generatePdf } from "@/lib/pdf";
 import { buildHeaderTemplate, buildFooterTemplate } from "@/lib/pdf-templates";
 import { toFilenameSafe } from "@/lib/pdf-filename";
+import { getOrAssignSoaNo } from "@/lib/statement-of-account";
 
 export const maxDuration = 60;
 
@@ -14,17 +15,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (!auth.ok) return auth.response;
 
   const { id } = await params;
-  const [project] = await db
-    .select({ projectCode: projects.projectCode, municipalityNo: projects.municipalityNo })
-    .from(projects)
-    .where(eq(projects.id, id))
-    .limit(1);
+  const [project] = await db.select({ projectCode: projects.projectCode }).from(projects).where(eq(projects.id, id)).limit(1);
 
   if (!project) {
     return NextResponse.json({ error: "Project not found." }, { status: 404 });
   }
 
-  const ref = project.municipalityNo || project.projectCode;
+  const ref = await getOrAssignSoaNo(id);
   const cookieHeader = request.headers.get("cookie") ?? "";
   const sourceUrl = new URL(`/print/statement-of-account/${id}`, request.nextUrl.origin).toString();
 

@@ -6,6 +6,7 @@ import { requirePermission } from "@/lib/auth";
 import { getProjectFinancials } from "@/lib/project-finance";
 import StatementOfAccountPrintBody from "@/components/StatementOfAccountPrintBody";
 import { arabicFont } from "@/lib/fonts";
+import { getOrAssignSoaNo } from "@/lib/statement-of-account";
 
 // Loaded only by the server-side PDF generator (Puppeteer), never linked
 // to directly — no letterhead/footer here, since those come from
@@ -20,6 +21,7 @@ export default async function StatementOfAccountPrintSourcePage({ params }: { pa
   if (!project) notFound();
 
   const financials = await getProjectFinancials(id);
+  const soaNo = await getOrAssignSoaNo(id);
 
   return (
     <div
@@ -28,7 +30,7 @@ export default async function StatementOfAccountPrintSourcePage({ params }: { pa
     >
       <StatementOfAccountPrintBody
         data={{
-          projectRef: project.municipalityNo || project.projectCode,
+          projectRef: soaNo,
           printedDate: new Date().toLocaleDateString("en-GB"),
           clientName: project.clientName ?? "",
           clientAddress: project.location ?? "",
