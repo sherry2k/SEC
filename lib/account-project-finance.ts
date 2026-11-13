@@ -46,11 +46,14 @@ export type LinkedDocument = {
   sortKey: number;
   amount: number;
   status: string;
-  // Only set on a "receipt_voucher" row whose voucher is linked to a Tax
-  // Invoice/Invoice — the linked document's own display ref (e.g.
-  // "Tax invoice SEC/TAXINV/2026/0011"), so the Documents table can show
-  // which charge this payment is collected against.
-  linkedToLabel?: string;
+  // Only set on a "tax_invoice"/"invoice" row — every Receipt Voucher
+  // linked to it, sorted by date, rendered as indented sub-rows directly
+  // beneath that invoice in the Documents table rather than wherever its
+  // own date would otherwise place it in the flat list. A voucher with no
+  // link, or one whose linked invoice wasn't found (e.g. deleted), still
+  // appears as its own top-level row further down — nothing is ever
+  // silently dropped.
+  payments?: LinkedDocument[];
 };
 
 export type AccountProjectFinancials = {
@@ -194,12 +197,14 @@ export async function getAccountProjectFinancials(accountProjectId: string): Pro
   }
 
   // --- Receipt vouchers ---
-  // Ref lookup for whichever Tax Invoice/Invoice a voucher below might be
-  // linked to — both were already fetched above for their own totals, so
-  // this just indexes what's already in hand rather than re-querying.
-  const refById = new Map<string, string>();
-  for (const inv of linkedTaxInvoices) refById.set(inv.id, `Tax invoice ${inv.invoiceNo}`);
-  for (const inv of linkedInvoices) refById.set(inv.id, `Invoice ${inv.invoiceNo}`);
+  // Lookup for whichever Tax Invoice/Invoice a voucher below is linked
+  // to — both were already fetched above and pushed into `documents`, so
+  // this indexes the LinkedDocument rows already in hand rather than
+  // re-querying or re-building them.
+  const invoiceDocById = new Map<string, LinkedDocument>();
+  for (const d of documents) {
+    if (d.kind === "tax_invoice" || d.kind === "invoice") invoiceDocById.set(d.id, d);
+  }
 
   const linkedVouchers = await db.select().from(receiptVouchers).where(eq(receiptVouchers.accountProjectId, accountProjectId));
   let paidTotal = 0;
@@ -209,7 +214,8 @@ export async function getAccountProjectFinancials(accountProjectId: string): Pro
     // Only a voucher marked "received" is confirmed money in hand — a
     // Draft is just a prepared record and shouldn't inflate Total Received.
     if (v.status === "received") paidTotal += total;
-    documents.push({
+
+    const voucherDoc: LinkedDocument = {
       id: v.id,
       kind: "receipt_voucher",
       label: "Receipt voucher",
@@ -218,11 +224,25 @@ export async function getAccountProjectFinancials(accountProjectId: string): Pro
       sortKey: parseDMY(v.issueDate),
       amount: total,
       status: v.status,
-      linkedToLabel: v.linkedDocumentId ? refById.get(v.linkedDocumentId) : undefined,
-    });
+    };
+
+    // Linked to an invoice that's actually on this project → nest it
+    // under that invoice instead of giving it its own top-level row.
+    // Unlinked, or linked to something not found here (e.g. the invoice
+    // was deleted) → falls back to a normal top-level row, same as
+    // before, so nothing silently disappears.
+    const parent = v.linkedDocumentId ? invoiceDocById.get(v.linkedDocumentId) : undefined;
+    if (parent) {
+      (parent.payments ??= []).push(voucherDoc);
+    } else {
+      documents.push(voucherDoc);
+    }
   }
 
   documents.sort((a, b) => a.sortKey - b.sortKey);
+  for (const d of documents) {
+    d.payments?.sort((a, b) => a.sortKey - b.sortKey);
+  }
 
   return {
     acceptedQuotations,

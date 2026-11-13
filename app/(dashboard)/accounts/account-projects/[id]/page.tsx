@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
@@ -5,7 +6,7 @@ import { ArrowLeft, Plus, Pencil, FileText } from "lucide-react";
 import { db } from "@/db";
 import { accountProjects } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
-import { getAccountProjectFinancials } from "@/lib/account-project-finance";
+import { getAccountProjectFinancials, type LinkedDocument } from "@/lib/account-project-finance";
 import DeleteAccountProjectButton from "@/components/DeleteAccountProjectButton";
 import DeleteQuotationButton from "@/components/DeleteQuotationButton";
 import DeleteTaxInvoiceButton from "@/components/DeleteTaxInvoiceButton";
@@ -35,6 +36,86 @@ const DOC_ROUTES: Record<string, { base: string }> = {
   performa_invoice: { base: "/accounts/performa-invoices" },
   receipt_voucher: { base: "/accounts/receipt-vouchers" },
 };
+
+// One document's row, plus — only for a tax_invoice/invoice that has
+// linked receipt vouchers — an indented sub-row right underneath for
+// each one, instead of leaving them to land wherever their own date
+// would otherwise sort them in the flat list.
+function DocumentRows({
+  d,
+  renderDelete,
+}: {
+  d: LinkedDocument;
+  renderDelete: (kind: string, id: string) => ReactNode;
+}) {
+  return (
+    <>
+      <DocumentRow d={d} renderDelete={renderDelete} />
+      {d.payments?.map((p) => (
+        <DocumentRow key={`${p.kind}-${p.id}`} d={p} renderDelete={renderDelete} indented />
+      ))}
+    </>
+  );
+}
+
+function DocumentRow({
+  d,
+  renderDelete,
+  indented = false,
+}: {
+  d: LinkedDocument;
+  renderDelete: (kind: string, id: string) => ReactNode;
+  indented?: boolean;
+}) {
+  const routes = DOC_ROUTES[d.kind];
+  const viewHref = routes ? `${routes.base}/${d.id}` : undefined;
+  const editHref = routes ? `${routes.base}/${d.id}/edit` : undefined;
+
+  return (
+    <tr className={`border-b border-[var(--sec-line)] last:border-0 hover:bg-slate-50 ${indented ? "bg-slate-50/60" : ""}`}>
+      <td className="px-4 py-3">
+        <div className={indented ? "flex items-center gap-2 pl-6" : ""}>
+          {indented && <span className="text-[var(--sec-line)]">↳</span>}
+          <span className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-semibold ${DOC_BADGE[d.kind]}`}>{d.label}</span>
+        </div>
+      </td>
+      <td className="px-4 py-3 font-mono text-xs">
+        {viewHref ? (
+          <Link href={viewHref} className="text-[var(--sec-blue)] hover:underline">
+            {d.ref}
+          </Link>
+        ) : (
+          <span className="text-[var(--sec-muted)]">{d.ref}</span>
+        )}
+      </td>
+      <td className="px-4 py-3 text-[var(--sec-muted)]">{d.dateLabel}</td>
+      <td className="px-4 py-3 text-right">AED {money(d.amount)}</td>
+      <td className="px-4 py-3 capitalize text-[var(--sec-muted)]">{d.status}</td>
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-2">
+          {viewHref && (
+            <Link
+              href={viewHref}
+              className="rounded-md border border-[var(--sec-line)] px-3 py-1.5 text-xs font-medium text-[var(--sec-muted)] transition-colors hover:border-[var(--sec-blue)] hover:bg-blue-50 hover:text-[var(--sec-blue)]"
+            >
+              View
+            </Link>
+          )}
+          {editHref && (
+            <Link
+              href={editHref}
+              className="flex items-center gap-1.5 rounded-md border border-[var(--sec-line)] px-3 py-1.5 text-xs font-medium text-[var(--sec-muted)] transition-colors hover:border-[var(--sec-blue)] hover:bg-blue-50 hover:text-[var(--sec-blue)]"
+            >
+              <Pencil size={13} />
+              Edit
+            </Link>
+          )}
+          {renderDelete(d.kind, d.id)}
+        </div>
+      </td>
+    </tr>
+  );
+}
 
 export default async function AccountProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await requirePermission("accounts.view");
@@ -256,53 +337,9 @@ export default async function AccountProjectDetailPage({ params }: { params: Pro
                 </tr>
               </thead>
               <tbody>
-                {fin.documents.map((d) => {
-                  const routes = DOC_ROUTES[d.kind];
-                  const viewHref = routes ? `${routes.base}/${d.id}` : undefined;
-                  const editHref = routes ? `${routes.base}/${d.id}/edit` : undefined;
-                  return (
-                    <tr key={`${d.kind}-${d.id}`} className="border-b border-[var(--sec-line)] last:border-0 hover:bg-slate-50">
-                      <td className="px-4 py-3">
-                        <span className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-semibold ${DOC_BADGE[d.kind]}`}>{d.label}</span>
-                      </td>
-                      <td className="px-4 py-3 font-mono text-xs">
-                        {viewHref ? (
-                          <Link href={viewHref} className="text-[var(--sec-blue)] hover:underline">
-                            {d.ref}
-                          </Link>
-                        ) : (
-                          <span className="text-[var(--sec-muted)]">{d.ref}</span>
-                        )}
-                        {d.linkedToLabel && <p className="mt-0.5 font-sans text-[var(--sec-muted)]">→ {d.linkedToLabel}</p>}
-                      </td>
-                      <td className="px-4 py-3 text-[var(--sec-muted)]">{d.dateLabel}</td>
-                      <td className="px-4 py-3 text-right">AED {money(d.amount)}</td>
-                      <td className="px-4 py-3 capitalize text-[var(--sec-muted)]">{d.status}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          {viewHref && (
-                            <Link
-                              href={viewHref}
-                              className="rounded-md border border-[var(--sec-line)] px-3 py-1.5 text-xs font-medium text-[var(--sec-muted)] transition-colors hover:border-[var(--sec-blue)] hover:bg-blue-50 hover:text-[var(--sec-blue)]"
-                            >
-                              View
-                            </Link>
-                          )}
-                          {editHref && (
-                            <Link
-                              href={editHref}
-                              className="flex items-center gap-1.5 rounded-md border border-[var(--sec-line)] px-3 py-1.5 text-xs font-medium text-[var(--sec-muted)] transition-colors hover:border-[var(--sec-blue)] hover:bg-blue-50 hover:text-[var(--sec-blue)]"
-                            >
-                              <Pencil size={13} />
-                              Edit
-                            </Link>
-                          )}
-                          {renderDelete(d.kind, d.id)}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {fin.documents.map((d) => (
+                  <DocumentRows key={`${d.kind}-${d.id}`} d={d} renderDelete={renderDelete} />
+                ))}
               </tbody>
             </table>
           </div>
