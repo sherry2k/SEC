@@ -102,8 +102,9 @@ export async function getAccountProjectStatementData(accountProjectId: string): 
   return {
     projectRef: soaNo,
     printedDate: new Date().toLocaleDateString("en-GB"),
-    clientName: accountProject.clientName ?? "",
-    clientAddress: accountProject.location ?? "",
+    clientName: accountProject.statementClientName ?? accountProject.clientName ?? "",
+    clientAddress: accountProject.statementClientAddress ?? accountProject.location ?? "",
+    clientTrn: accountProject.statementClientTrn ?? "",
     totalAmount: fin.totalQuoted,
     invoicedTotal: fin.invoicedTotal,
     paidTotal: fin.paidTotal,

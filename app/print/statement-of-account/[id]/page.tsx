@@ -32,8 +32,9 @@ export default async function StatementOfAccountPrintSourcePage({ params }: { pa
         data={{
           projectRef: soaNo,
           printedDate: new Date().toLocaleDateString("en-GB"),
-          clientName: project.clientName ?? "",
-          clientAddress: project.location ?? "",
+          clientName: project.statementClientName ?? project.clientName ?? "",
+          clientAddress: project.statementClientAddress ?? project.location ?? "",
+          clientTrn: project.statementClientTrn ?? "",
           totalAmount: project.totalAmount ? Number(project.totalAmount) : 0,
           invoicedTotal: financials.invoicedTotal,
           paidTotal: financials.paidTotal,

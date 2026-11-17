@@ -7,6 +7,7 @@ import { requirePermission } from "@/lib/auth";
 import { getProjectFinancials } from "@/lib/project-finance";
 import StatementOfAccountPrintView from "@/components/StatementOfAccountPrintView";
 import StatementStampToggle from "@/components/StatementStampToggle";
+import StatementClientDetailsEditor from "@/components/StatementClientDetailsEditor";
 import PrintButton from "@/components/PrintButton";
 import DownloadPdfButton from "@/components/DownloadPdfButton";
 import { toFilenameSafe } from "@/lib/pdf-filename";
@@ -46,12 +47,25 @@ export default async function StatementOfAccountPage({ params }: { params: Promi
         </div>
       </div>
 
+      <div className="no-print mb-4">
+        <StatementClientDetailsEditor
+          kind="project"
+          id={project.id}
+          initial={{
+            clientName: project.statementClientName ?? project.clientName ?? "",
+            clientAddress: project.statementClientAddress ?? project.location ?? "",
+            clientTrn: project.statementClientTrn ?? "",
+          }}
+        />
+      </div>
+
       <StatementOfAccountPrintView
         data={{
           projectRef: soaNo,
           printedDate: new Date().toLocaleDateString("en-GB"),
-          clientName: project.clientName ?? "",
-          clientAddress: project.location ?? "",
+          clientName: project.statementClientName ?? project.clientName ?? "",
+          clientAddress: project.statementClientAddress ?? project.location ?? "",
+          clientTrn: project.statementClientTrn ?? "",
           totalAmount: project.totalAmount ? Number(project.totalAmount) : 0,
           invoicedTotal: financials.invoicedTotal,
           paidTotal: financials.paidTotal,

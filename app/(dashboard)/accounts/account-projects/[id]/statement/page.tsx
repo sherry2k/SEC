@@ -7,6 +7,7 @@ import { accountProjects } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import { getAccountProjectStatementData } from "@/lib/account-project-statement";
 import AccountProjectStatementView from "@/components/AccountProjectStatementView";
+import StatementClientDetailsEditor from "@/components/StatementClientDetailsEditor";
 import PrintButton from "@/components/PrintButton";
 import DownloadPdfButton from "@/components/DownloadPdfButton";
 import { toFilenameSafe } from "@/lib/pdf-filename";
@@ -42,6 +43,18 @@ export default async function AccountProjectStatementPage({ params }: { params: 
           <DownloadPdfButton href={`/api/account-projects/${id}/statement/pdf`} />
           <PrintButton />
         </div>
+      </div>
+
+      <div className="no-print mb-4">
+        <StatementClientDetailsEditor
+          kind="account-project"
+          id={id}
+          initial={{
+            clientName: data.clientName,
+            clientAddress: data.clientAddress,
+            clientTrn: data.clientTrn,
+          }}
+        />
       </div>
 
       <AccountProjectStatementView data={data} />

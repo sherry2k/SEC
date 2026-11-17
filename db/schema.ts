@@ -96,6 +96,15 @@ export const projects = pgTable("projects", {
   // fresh each time rather than saved as its own row — there's nowhere
   // else for this toggle's state to live.
   statementShowStamp: boolean("statement_show_stamp").notNull().default(false),
+  // The Statement of Account's "Client Details" block — same idea as Tax
+  // Invoice's own clientName/clientAddress/clientTrn (db/schema.ts's
+  // taxInvoices table): editable specifically for this document, falling
+  // back to clientName/location above when not set, so correcting how a
+  // client's name/address/TRN reads on the SOA never touches the
+  // project's own record or any other document issued against it.
+  statementClientName: text("statement_client_name"),
+  statementClientAddress: text("statement_client_address"),
+  statementClientTrn: text("statement_client_trn"),
   // The Statement of Account's own document number (SEC/SOA/<year>/<nnnn>),
   // assigned once via nextDocumentCode("SOA") the first time the statement
   // is viewed/printed for this project, then reused every time after —
@@ -222,6 +231,11 @@ export const accountProjects = pgTable("account_projects", {
   // Projects one, so numbers stay unique app-wide regardless of which
   // table a given statement came from.
   soaNo: text("soa_no"),
+  // Same Statement of Account "Client Details" override as projects.
+  // statementClientName/Address/Trn — see that comment.
+  statementClientName: text("statement_client_name"),
+  statementClientAddress: text("statement_client_address"),
+  statementClientTrn: text("statement_client_trn"),
 });
 
 

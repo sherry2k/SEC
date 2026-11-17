@@ -1,4 +1,5 @@
 import type { LedgerEntry } from "@/lib/project-finance";
+import { COMPANY } from "@/lib/company";
 
 function money(n: number) {
   return n.toLocaleString(undefined, { minimumFractionDigits: 2 });
@@ -9,6 +10,9 @@ export type StatementOfAccountData = {
   printedDate: string;
   clientName: string;
   clientAddress: string;
+  // Same per-document override as Tax Invoice's own clientTrn
+  // (TaxInvoicePrintBody.tsx) — "" when not set, same as clientAddress.
+  clientTrn: string;
   totalAmount: number;
   invoicedTotal: number;
   paidTotal: number;
@@ -78,9 +82,14 @@ export default function StatementOfAccountPrintBody({ data }: { data: StatementO
 
       <div className="mt-5 flex flex-wrap items-start justify-between gap-6 text-sm">
         <div>
-          <p className="font-semibold">To:</p>
-          <p>{data.clientName || "-"}</p>
+          <p className="font-bold">{COMPANY.legalName}</p>
+          <p>Address: {COMPANY.address}</p>
+          <p>TRN No: {COMPANY.trn}</p>
+
+          <p className="mt-2 font-bold">Client Details</p>
+          <p className="mt-1">{data.clientName || "-"}</p>
           {data.clientAddress && <p>Address: {data.clientAddress}</p>}
+          {data.clientTrn && <p>Client TRN No: {data.clientTrn}</p>}
         </div>
         <table className="border-collapse text-sm">
           <tbody>

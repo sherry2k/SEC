@@ -14,8 +14,9 @@ export async function getStatementOfAccountData(id: string): Promise<StatementOf
   return {
     projectRef: project.municipalityNo || project.projectCode,
     printedDate: new Date().toLocaleDateString("en-GB"),
-    clientName: project.clientName ?? "",
-    clientAddress: project.location ?? "",
+    clientName: project.statementClientName ?? project.clientName ?? "",
+    clientAddress: project.statementClientAddress ?? project.location ?? "",
+    clientTrn: project.statementClientTrn ?? "",
     totalAmount: financials.totalAmount,
     invoicedTotal: financials.invoicedTotal,
     paidTotal: financials.paidTotal,
