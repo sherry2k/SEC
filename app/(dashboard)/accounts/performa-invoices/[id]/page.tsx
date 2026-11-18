@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { eq } from "drizzle-orm";
-import { Pencil, Download } from "lucide-react";
+import { ArrowLeft, Pencil, Download } from "lucide-react";
 import { db } from "@/db";
-import { performaInvoices } from "@/db/schema";
+import { performaInvoices, accountProjects } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import { toFilenameSafe } from "@/lib/pdf-filename";
 import { getPerformaInvoiceForPrint } from "@/lib/performa-invoice-data";
@@ -23,11 +23,33 @@ export default async function PerformaInvoiceViewPage({ params }: { params: Prom
   const invoice = await getPerformaInvoiceForPrint(id);
   if (!invoice) notFound();
 
+  const [row] = await db
+    .select({ accountProjectId: performaInvoices.accountProjectId })
+    .from(performaInvoices)
+    .where(eq(performaInvoices.id, id))
+    .limit(1);
+
+  // Same "back goes to where it was created" rule as Invoice/Tax Invoice
+  // view pages: when this performa invoice belongs to an Account Project,
+  // back should return there rather than the flat performa invoices list.
+  let accountProject: { id: string; clientName: string } | null = null;
+  if (row?.accountProjectId) {
+    const [p] = await db
+      .select({ id: accountProjects.id, clientName: accountProjects.clientName })
+      .from(accountProjects)
+      .where(eq(accountProjects.id, row.accountProjectId))
+      .limit(1);
+    accountProject = p ?? null;
+  }
+  const backHref = accountProject ? `/accounts/account-projects/${accountProject.id}` : "/accounts/performa-invoices";
+  const backLabel = accountProject ? `Back to ${accountProject.clientName}` : "All performa invoices";
+
   return (
     <div>
       <div className="no-print mb-6 flex items-center justify-between">
-        <Link href="/accounts/performa-invoices" className="text-sm font-medium text-[var(--sec-blue)] hover:underline">
-          ← All performa invoices
+        <Link href={backHref} className="flex items-center gap-1 text-sm font-medium text-[var(--sec-blue)] hover:underline">
+          <ArrowLeft size={14} />
+          {backLabel}
         </Link>
         <div className="flex items-center gap-2">
           <Link
@@ -37,7 +59,7 @@ export default async function PerformaInvoiceViewPage({ params }: { params: Prom
             <Pencil size={13} />
             Edit
           </Link>
-          <DeletePerformaInvoiceButton invoiceId={id} />
+          <DeletePerformaInvoiceButton invoiceId={id} redirectTo={backHref} />
           <a
             href={`/api/performa-invoices/${id}/pdf`}
             className="flex items-center gap-1.5 rounded-md bg-[var(--sec-blue)] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[var(--sec-blue-deep)]"
