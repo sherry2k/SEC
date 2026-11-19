@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { desc } from "drizzle-orm";
+import { asc, desc } from "drizzle-orm";
 import { Plus, ArrowLeft, Pencil } from "lucide-react";
 import { db } from "@/db";
 import { accountProjects } from "@/db/schema";
@@ -15,12 +15,26 @@ function formatDateTime(d: Date): string {
   );
 }
 
-export default async function AccountProjectsListPage() {
+const SORT_OPTIONS = [
+  { key: "newest", label: "Newest" },
+  { key: "name_asc", label: "Client name A–Z" },
+  { key: "name_desc", label: "Client name Z–A" },
+] as const;
+type SortKey = (typeof SORT_OPTIONS)[number]["key"];
+
+export default async function AccountProjectsListPage({ searchParams }: { searchParams: Promise<{ sort?: string }> }) {
   await requirePermission("accounts.view");
 
-  // Newest first — the project someone just created is the one they're
-  // most likely looking for next, not buried at the bottom of the list.
-  const rows = await db.select().from(accountProjects).orderBy(desc(accountProjects.createdAt));
+  const { sort } = await searchParams;
+  const sortKey: SortKey = SORT_OPTIONS.some((o) => o.key === sort) ? (sort as SortKey) : "newest";
+
+  // "Newest" stays the default (the project someone just created is the
+  // one they're most likely looking for next) — the client-name sorts are
+  // an explicit, link-driven choice, same query-param pattern already used
+  // by Salary Slips' month filter.
+  const orderBy =
+    sortKey === "name_asc" ? asc(accountProjects.clientName) : sortKey === "name_desc" ? desc(accountProjects.clientName) : desc(accountProjects.createdAt);
+  const rows = await db.select().from(accountProjects).orderBy(orderBy);
 
   return (
     <div>
@@ -43,6 +57,23 @@ export default async function AccountProjectsListPage() {
           <Plus size={16} />
           New project
         </Link>
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <span className="text-xs font-medium uppercase tracking-wide text-[var(--sec-muted)]">Sort by</span>
+        {SORT_OPTIONS.map((o) => (
+          <Link
+            key={o.key}
+            href={o.key === "newest" ? "/accounts/account-projects" : `/accounts/account-projects?sort=${o.key}`}
+            className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+              sortKey === o.key
+                ? "border-[var(--sec-blue)] bg-blue-50 text-[var(--sec-blue)]"
+                : "border-[var(--sec-line)] text-[var(--sec-muted)] hover:border-[var(--sec-blue)] hover:text-[var(--sec-blue)]"
+            }`}
+          >
+            {o.label}
+          </Link>
+        ))}
       </div>
 
       {rows.length === 0 ? (
