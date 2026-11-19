@@ -1,7 +1,7 @@
 import "server-only";
 import { and, eq, gte, lt } from "drizzle-orm";
 import { db } from "@/db";
-import { officeLedgerEntries, receiptVouchers, receiptVoucherItems, salarySlips, salarySlipItems, users } from "@/db/schema";
+import { officeLedgerEntries, receiptVouchers, receiptVoucherItems, salarySlips, salarySlipItems, vendorPayments, vendors, users } from "@/db/schema";
 import { calcReceiptVoucherTotals } from "@/lib/receipt-voucher-calc";
 import { calcSalarySlipTotals } from "@/lib/salary-slip-calc";
 
@@ -16,6 +16,7 @@ export const EXPENSE_CATEGORY_SUGGESTIONS = [
   "Maintenance",
   "Insurance",
   "Government Fees",
+  "Third-Party Expenses",
   "Miscellaneous",
 ];
 
@@ -50,7 +51,7 @@ export type LedgerRow = {
   category: string;
   description: string;
   amount: number;
-  source: "manual" | "receipt_voucher" | "salary_slip";
+  source: "manual" | "receipt_voucher" | "salary_slip" | "vendor_payment";
   createdByName: string | null;
 };
 
@@ -165,8 +166,39 @@ export async function getOfficeLedgerSummary(monthKey: string): Promise<OfficeLe
     });
   }
 
+  // Vendor Payments marked "paid" count as a Third-Party Expenses expense
+  // automatically — same live-computed pattern as Salary Slips above, just
+  // matched against the payment's own paymentDate ("DD/MM/YYYY") instead
+  // of a "YYYY-MM" pay month.
+  const allVendorPayments = await db.select().from(vendorPayments);
+  const monthVendorPayments = allVendorPayments.filter((p) => {
+    if (p.status !== "paid") return false;
+    const t = parseDMY(p.paymentDate);
+    return t >= start.getTime() && t < end.getTime();
+  });
+
+  const vendorRows: LedgerRow[] = [];
+  if (monthVendorPayments.length > 0) {
+    const allVendors = await db.select({ id: vendors.id, name: vendors.name }).from(vendors);
+    const vendorNameById = new Map(allVendors.map((v) => [v.id, v.name]));
+    for (const p of monthVendorPayments) {
+      vendorRows.push({
+        id: p.id,
+        type: "expense",
+        dateLabel: p.paymentDate,
+        dateValue: "", // not editable here — see LedgerRow.dateValue
+        sortKey: parseDMY(p.paymentDate),
+        category: "Third-Party Expenses",
+        description: `${vendorNameById.get(p.vendorId) ?? "Vendor"}${p.description ? ` — ${p.description}` : ""}`,
+        amount: Number(p.amount),
+        source: "vendor_payment",
+        createdByName: null,
+      });
+    }
+  }
+
   const incomeRows = [...manualLedgerRows.filter((r) => r.type === "income"), ...voucherRows].sort((a, b) => b.sortKey - a.sortKey);
-  const expenseRows = [...manualLedgerRows.filter((r) => r.type === "expense"), ...salaryRows].sort((a, b) => b.sortKey - a.sortKey);
+  const expenseRows = [...manualLedgerRows.filter((r) => r.type === "expense"), ...salaryRows, ...vendorRows].sort((a, b) => b.sortKey - a.sortKey);
 
   const incomeTotal = incomeRows.reduce((sum, r) => sum + r.amount, 0);
   const expenseTotal = expenseRows.reduce((sum, r) => sum + r.amount, 0);

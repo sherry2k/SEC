@@ -14,6 +14,12 @@ export type ActivityAction =
   | "account_project_created"
   | "account_project_updated"
   | "account_project_deleted"
+  | "vendor_created"
+  | "vendor_updated"
+  | "vendor_deleted"
+  | "vendor_payment_created"
+  | "vendor_payment_updated"
+  | "vendor_payment_deleted"
   | "quotation_created"
   | "quotation_updated"
   | "quotation_deleted"
@@ -63,6 +69,12 @@ export const ACTIVITY_LABELS: Record<ActivityAction, string> = {
   account_project_created: "created account project",
   account_project_updated: "updated account project",
   account_project_deleted: "deleted account project",
+  vendor_created: "added vendor",
+  vendor_updated: "updated vendor",
+  vendor_deleted: "deleted vendor",
+  vendor_payment_created: "logged a vendor payment of",
+  vendor_payment_updated: "updated a vendor payment of",
+  vendor_payment_deleted: "deleted a vendor payment of",
   quotation_created: "created quotation",
   quotation_updated: "updated quotation",
   quotation_deleted: "deleted quotation",

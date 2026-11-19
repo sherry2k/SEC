@@ -682,6 +682,46 @@ export const pettyCashEntries = pgTable("petty_cash_entries", {
 });
 
 // ---------------------------------------------------------------------------
+// Vendors — third-party/subcontractor accounts (soil labs, survey
+// companies, freelance work) and the payments made to them. This is
+// "Option B" from the Third-Party Expenses design: each vendor keeps its
+// own running payment history, and a payment can optionally be tagged to
+// the Account Project it was paid for, rather than the expense being
+// logged on the project directly.
+// ---------------------------------------------------------------------------
+
+export const vendors = pgTable("vendors", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  // Free-text, not an enum — e.g. "Soil Lab", "Survey", "Freelancer".
+  category: text("category"),
+  contactInfo: text("contact_info"),
+  notes: text("notes"),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const vendorPayments = pgTable("vendor_payments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  vendorId: uuid("vendor_id")
+    .notNull()
+    .references(() => vendors.id, { onDelete: "cascade" }),
+  // Optional — which job this payment is for. Deliberately accountProjectId,
+  // not the legacy projectId — SEC has fully shifted to Account Projects.
+  accountProjectId: uuid("account_project_id").references(() => accountProjects.id),
+  amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+  paymentDate: text("payment_date").notNull(),
+  description: text("description"),
+  // "pending" | "paid" — same two-stage pattern as Salary Slips: only a
+  // "paid" payment counts as an Office Ledger expense for its month,
+  // matched against paymentDate the same way Salary Slips match payMonth
+  // against issueDate (see lib/office-ledger.ts).
+  status: text("status").notNull().default("pending"),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ---------------------------------------------------------------------------
 // Portal Credentials — usernames/passwords/links for official government,
 // utility, telecom and banking portals. Admin + Master Admin only
 // (permissions.ts "credentials.manage"), tighter than every other table in
