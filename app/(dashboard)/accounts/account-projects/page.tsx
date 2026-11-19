@@ -1,15 +1,26 @@
 import Link from "next/link";
-import { asc } from "drizzle-orm";
+import { desc } from "drizzle-orm";
 import { Plus, ArrowLeft, Pencil } from "lucide-react";
 import { db } from "@/db";
 import { accountProjects } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import DeleteAccountProjectButton from "@/components/DeleteAccountProjectButton";
 
+// Same date+time format as app/(dashboard)/announcements/page.tsx's formatDate.
+function formatDateTime(d: Date): string {
+  return (
+    d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) +
+    ", " +
+    d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
+  );
+}
+
 export default async function AccountProjectsListPage() {
   await requirePermission("accounts.view");
 
-  const rows = await db.select().from(accountProjects).orderBy(asc(accountProjects.createdAt));
+  // Newest first — the project someone just created is the one they're
+  // most likely looking for next, not buried at the bottom of the list.
+  const rows = await db.select().from(accountProjects).orderBy(desc(accountProjects.createdAt));
 
   return (
     <div>
@@ -43,13 +54,14 @@ export default async function AccountProjectsListPage() {
         </div>
       ) : (
         <div className="mt-6 overflow-x-auto rounded-lg border border-[var(--sec-line)] bg-white">
-          <table className="w-full min-w-[760px] text-left text-sm">
+          <table className="w-full min-w-[900px] text-left text-sm">
             <thead>
               <tr className="border-b border-[var(--sec-line)] text-xs uppercase tracking-wide text-[var(--sec-muted)]">
                 <th className="px-4 py-3 font-medium">S. No.</th>
                 <th className="px-4 py-3 font-medium">Client name</th>
                 <th className="px-4 py-3 font-medium">Location</th>
                 <th className="px-4 py-3 font-medium">Project details</th>
+                <th className="px-4 py-3 font-medium">Created</th>
                 <th className="px-4 py-3 font-medium">Actions</th>
               </tr>
             </thead>
@@ -64,6 +76,7 @@ export default async function AccountProjectsListPage() {
                   </td>
                   <td className="px-4 py-3 text-[var(--sec-muted)]">{p.location || "—"}</td>
                   <td className="px-4 py-3 text-[var(--sec-muted)]">{p.projectDetails || "—"}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-[var(--sec-muted)]">{formatDateTime(p.createdAt)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <Link
