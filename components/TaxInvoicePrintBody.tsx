@@ -9,6 +9,7 @@ export type PrintableTaxInvoice = {
   invoiceNo: string;
   issueDate: string;
   clientName: string;
+  project: string;
   clientAddress: string;
   clientTrn: string;
   vatRatePercent: number;
@@ -43,6 +44,7 @@ export default function TaxInvoicePrintBody({ invoice }: { invoice: PrintableTax
       <div className="mt-1 border-t border-dashed border-[var(--sec-line)] pt-1 text-sm">
         <p className="font-bold">Client Details</p>
         <p className="mt-1">{invoice.clientName}</p>
+        {invoice.project && <p>Project: {invoice.project}</p>}
         {invoice.clientAddress && <p>Address: {invoice.clientAddress}</p>}
         {invoice.clientTrn && <p>Client TRN No: {invoice.clientTrn}</p>}
       </div>

@@ -36,6 +36,7 @@ export default async function EditTaxInvoicePage({ params }: { params: Promise<{
     accountProjectId: invoice.accountProjectId ?? "",
     issueDate: invoice.issueDate,
     clientName: invoice.clientName ?? "",
+    project: invoice.project ?? "",
     clientAddress: invoice.clientAddress ?? "",
     clientTrn: invoice.clientTrn ?? "",
     vatRatePercent: Number(invoice.vatRatePercent),

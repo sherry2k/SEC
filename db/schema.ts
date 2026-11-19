@@ -394,6 +394,11 @@ export const taxInvoices = pgTable("tax_invoices", {
   invoiceNo: text("invoice_no").notNull().unique(),
   issueDate: text("issue_date").notNull(),
   clientName: text("client_name"),
+  // Same free-text "Project" field as Invoice/Performa Invoice/Receipt
+  // Voucher (their own `project` column) — a one-line note of which job
+  // this tax invoice is for, independent of the linked Account Project's
+  // own name/details.
+  project: text("project"),
   clientAddress: text("client_address"),
   clientTrn: text("client_trn"),
   vatRatePercent: numeric("vat_rate_percent", { precision: 5, scale: 2 }).notNull().default("5"),

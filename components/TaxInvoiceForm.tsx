@@ -95,6 +95,10 @@ export default function TaxInvoiceForm({
           <input value={values.clientName} onChange={(e) => set("clientName", e.target.value)} required className={inputClass} />
         </div>
         <div>
+          <label className={labelClass}>Project</label>
+          <input value={values.project} onChange={(e) => set("project", e.target.value)} className={inputClass} />
+        </div>
+        <div>
           <label className={labelClass}>Client address</label>
           <input value={values.clientAddress} onChange={(e) => set("clientAddress", e.target.value)} className={inputClass} />
         </div>

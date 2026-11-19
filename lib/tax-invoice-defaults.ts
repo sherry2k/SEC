@@ -21,6 +21,7 @@ export function emptyTaxItem(): TaxInvoiceItemDraft {
 export type TaxInvoiceFormValues = {
   issueDate: string;
   clientName: string;
+  project: string;
   clientAddress: string;
   clientTrn: string;
   projectId: string; // "" = not linked to a (legacy) project — kept for backward compatibility, no longer editable in the form
@@ -43,6 +44,7 @@ export function defaultTaxInvoiceValues(): TaxInvoiceFormValues {
   return {
     issueDate: todayFormatted(),
     clientName: "",
+    project: "",
     clientAddress: "Abu Dhabi - UAE",
     clientTrn: "",
     projectId: "",

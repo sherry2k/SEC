@@ -18,6 +18,7 @@ export async function getTaxInvoiceForPrint(id: string): Promise<PrintableTaxInv
     invoiceNo: invoice.invoiceNo,
     issueDate: invoice.issueDate,
     clientName: invoice.clientName ?? "",
+    project: invoice.project ?? "",
     clientAddress: invoice.clientAddress ?? "",
     clientTrn: invoice.clientTrn ?? "",
     vatRatePercent: Number(invoice.vatRatePercent),
