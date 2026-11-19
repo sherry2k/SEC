@@ -140,11 +140,11 @@ export default async function AccountsIndexPage() {
               <Link
                 key={d.label}
                 href={d.href}
-                className="group flex items-center gap-3 rounded-lg border border-[var(--sec-line)] bg-white p-3 transition-colors hover:border-[var(--sec-blue)]"
+                className="group flex items-center gap-3 rounded-lg border border-blue-100 bg-blue-50/60 p-3 transition-colors hover:border-[var(--sec-blue)] hover:bg-blue-50"
               >
                 <Icon size={20} className="shrink-0 text-[var(--sec-blue)]" />
                 <div className="min-w-0">
-                  <p className="text-lg font-bold leading-tight text-[var(--sec-ink)]">{d.count}</p>
+                  <p className="text-lg font-bold leading-tight text-[var(--sec-blue-deep)]">{d.count}</p>
                   <p className="truncate text-xs text-[var(--sec-muted)] group-hover:text-[var(--sec-blue)]">{d.label}</p>
                 </div>
               </Link>
