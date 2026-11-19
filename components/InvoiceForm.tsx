@@ -126,7 +126,7 @@ export default function InvoiceForm({
           <table className="w-full min-w-[640px] text-left text-sm">
             <thead>
               <tr className="border-b border-[var(--sec-line)] bg-slate-50 text-xs uppercase tracking-wide text-[var(--sec-muted)]">
-                <th className="px-3 py-2 font-medium">Description</th>
+                <th className="min-w-[280px] px-3 py-2 font-medium">Description</th>
                 <th className="w-28 px-3 py-2 font-medium">Amount</th>
                 <th className="w-24 px-3 py-2 font-medium">VAT</th>
                 <th className="w-28 px-3 py-2 font-medium">Total Incl. VAT</th>
@@ -140,11 +140,12 @@ export default function InvoiceForm({
                 return (
                   <tr key={item.key} className="border-b border-[var(--sec-line)] last:border-0">
                     <td className="px-3 py-2">
-                      <input
+                      <textarea
                         value={item.description}
                         onChange={(e) => updateItem(item.key, { description: e.target.value })}
                         placeholder="e.g. Site Visit – Supervision for 1 Visit Fees."
-                        className={smallInput}
+                        rows={2}
+                        className={`${smallInput} resize-y leading-snug`}
                       />
                     </td>
                     <td className="px-3 py-2">

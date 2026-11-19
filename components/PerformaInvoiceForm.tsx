@@ -111,11 +111,12 @@ export default function PerformaInvoiceForm({
         <div className="space-y-2">
           {values.items.map((item) => (
             <div key={item.key} className="flex flex-wrap items-start gap-2 rounded-md border border-[var(--sec-line)] p-3">
-              <input
+              <textarea
                 value={item.description}
                 onChange={(e) => updateItem(item.key, { description: e.target.value })}
                 placeholder="Description"
-                className={`${inputClass} min-w-[200px] flex-1`}
+                rows={2}
+                className={`${inputClass} min-w-[200px] flex-1 resize-y leading-snug`}
               />
               <div className="flex items-center gap-1">
                 <span className="text-sm text-[var(--sec-muted)]">AED</span>

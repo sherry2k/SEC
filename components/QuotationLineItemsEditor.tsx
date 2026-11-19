@@ -36,7 +36,7 @@ export default function QuotationLineItemsEditor({
           <thead>
             <tr className="border-b border-[var(--sec-line)] bg-slate-50 text-xs uppercase tracking-wide text-[var(--sec-muted)]">
               <th className="w-10 px-3 py-2 font-medium">No.</th>
-              <th className="px-3 py-2 font-medium">Service</th>
+              <th className="min-w-[280px] px-3 py-2 font-medium">Service</th>
               <th className="w-40 px-3 py-2 font-medium">Classification</th>
               <th className="w-32 px-3 py-2 font-medium">Fee Excl. VAT</th>
               <th className="w-28 px-3 py-2 font-medium">VAT</th>
@@ -54,11 +54,12 @@ export default function QuotationLineItemsEditor({
                   <tr className="border-b border-[var(--sec-line)] align-top">
                     <td className="px-3 py-2 text-[var(--sec-muted)]">{index + 1}</td>
                     <td className="px-3 py-2">
-                      <input
+                      <textarea
                         value={item.description}
                         onChange={(e) => update(item.key, { description: e.target.value })}
                         placeholder="e.g. Building Occupancy Certificate BOC"
-                        className={inputClass}
+                        rows={2}
+                        className={`${inputClass} resize-y leading-snug`}
                       />
                       <button
                         type="button"

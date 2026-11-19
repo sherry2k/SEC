@@ -132,7 +132,7 @@ export default function TaxInvoiceForm({
             <thead>
               <tr className="border-b border-[var(--sec-line)] bg-slate-50 text-xs uppercase tracking-wide text-[var(--sec-muted)]">
                 <th className="w-32 px-3 py-2 font-medium">Date</th>
-                <th className="px-3 py-2 font-medium">Description</th>
+                <th className="min-w-[280px] px-3 py-2 font-medium">Description</th>
                 <th className="w-28 px-3 py-2 font-medium">Amount</th>
                 <th className="w-24 px-3 py-2 font-medium">VAT</th>
                 <th className="w-28 px-3 py-2 font-medium">Total Incl. VAT</th>
@@ -154,11 +154,12 @@ export default function TaxInvoiceForm({
                       />
                     </td>
                     <td className="px-3 py-2">
-                      <input
+                      <textarea
                         value={item.description}
                         onChange={(e) => updateItem(item.key, { description: e.target.value })}
                         placeholder="e.g. Payment for Consultant Fees Against Contract Ref. [...]"
-                        className={smallInput}
+                        rows={2}
+                        className={`${smallInput} resize-y leading-snug`}
                       />
                     </td>
                     <td className="px-3 py-2">
