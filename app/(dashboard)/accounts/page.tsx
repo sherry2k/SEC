@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { FolderKanban, Wallet, ArrowRight, Receipt, Send, Coins } from "lucide-react";
+import { FolderKanban, Wallet, ArrowRight, Receipt, Send, Coins, FileText, FileCheck2, FileSpreadsheet, ClipboardList } from "lucide-react";
 import { db } from "@/db";
-import { quotations, quotationItems } from "@/db/schema";
+import { quotations, quotationItems, taxInvoices, invoices, performaInvoices, receiptVouchers } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import { getOfficeLedgerSummary } from "@/lib/office-ledger";
 import { inArray } from "drizzle-orm";
@@ -63,6 +63,24 @@ export default async function AccountsIndexPage() {
   const ledgerSummary = await getOfficeLedgerSummary(monthKey);
   const { incomeTotal, expenseTotal, net } = ledgerSummary;
 
+  // Quick-access document counts (all-time) — one row-count query per
+  // document type, used only for the small "Documents" card row below.
+  const [quotationCount, taxInvoiceCount, invoiceCount, performaInvoiceCount, receiptVoucherCount] = await Promise.all([
+    db.select({ id: quotations.id }).from(quotations).then((r) => r.length),
+    db.select({ id: taxInvoices.id }).from(taxInvoices).then((r) => r.length),
+    db.select({ id: invoices.id }).from(invoices).then((r) => r.length),
+    db.select({ id: performaInvoices.id }).from(performaInvoices).then((r) => r.length),
+    db.select({ id: receiptVouchers.id }).from(receiptVouchers).then((r) => r.length),
+  ]);
+
+  const documentCards = [
+    { label: "Quotations", count: quotationCount, href: "/accounts/quotations", icon: FileText },
+    { label: "Tax Invoices", count: taxInvoiceCount, href: "/accounts/tax-invoices", icon: FileCheck2 },
+    { label: "Invoices", count: invoiceCount, href: "/accounts/invoices", icon: FileSpreadsheet },
+    { label: "Performa Invoices", count: performaInvoiceCount, href: "/accounts/performa-invoices", icon: ClipboardList },
+    { label: "Receipt Vouchers", count: receiptVoucherCount, href: "/accounts/receipt-vouchers", icon: Receipt },
+  ];
+
   const stats: { label: string; value: string; sub?: string; valueClass?: string; href?: string }[] = [
     { label: "Quotations this month", value: `${monthQuotations.length}`, sub: `AED ${money(quotationValue)}` },
     { label: "Income this month", value: `AED ${money(incomeTotal)}`, valueClass: "text-emerald-600", href: "/accounts/office-ledger#income-entries" },
@@ -113,7 +131,29 @@ export default async function AccountsIndexPage() {
         })}
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="mt-6">
+        <p className="text-xs font-medium uppercase tracking-wide text-[var(--sec-muted)]">Documents — all time</p>
+        <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-5">
+          {documentCards.map((d) => {
+            const Icon = d.icon;
+            return (
+              <Link
+                key={d.label}
+                href={d.href}
+                className="group flex items-center gap-3 rounded-lg border border-[var(--sec-line)] bg-white p-3 transition-colors hover:border-[var(--sec-blue)]"
+              >
+                <Icon size={20} className="shrink-0 text-[var(--sec-blue)]" />
+                <div className="min-w-0">
+                  <p className="text-lg font-bold leading-tight text-[var(--sec-ink)]">{d.count}</p>
+                  <p className="truncate text-xs text-[var(--sec-muted)] group-hover:text-[var(--sec-blue)]">{d.label}</p>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
                 <Link
           href="/accounts/account-projects"
           className="group rounded-lg border border-[var(--sec-line)] bg-white p-6 transition-colors hover:border-[var(--sec-blue)]"

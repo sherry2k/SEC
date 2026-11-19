@@ -6,11 +6,16 @@ import { quotations, quotationItems } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import { calcGrandTotals } from "@/lib/quotation-calc";
 import DeleteQuotationButton from "@/components/DeleteQuotationButton";
+import { PERIOD_OPTIONS, resolvePeriodKey, isInPeriod } from "@/lib/period-filter";
 
-export default async function QuotationsListPage() {
+export default async function QuotationsListPage({ searchParams }: { searchParams: Promise<{ period?: string }> }) {
   await requirePermission("accounts.view");
 
-  const rows = await db.select().from(quotations).orderBy(desc(quotations.createdAt));
+  const { period } = await searchParams;
+  const periodKey = resolvePeriodKey(period);
+
+  const allRows = await db.select().from(quotations).orderBy(desc(quotations.createdAt));
+  const rows = allRows.filter((q) => isInPeriod(q.createdAt, periodKey));
   const allItems = await db.select().from(quotationItems);
 
   const itemsByQuotation = new Map<string, typeof allItems>();
@@ -43,9 +48,26 @@ export default async function QuotationsListPage() {
         </Link>
       </div>
 
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <span className="text-xs font-medium uppercase tracking-wide text-[var(--sec-muted)]">Period</span>
+        {PERIOD_OPTIONS.map((o) => (
+          <Link
+            key={o.key}
+            href={o.key === "all" ? "/accounts/quotations" : `/accounts/quotations?period=${o.key}`}
+            className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+              periodKey === o.key
+                ? "border-[var(--sec-blue)] bg-blue-50 text-[var(--sec-blue)]"
+                : "border-[var(--sec-line)] text-[var(--sec-muted)] hover:border-[var(--sec-blue)] hover:text-[var(--sec-blue)]"
+            }`}
+          >
+            {o.label}
+          </Link>
+        ))}
+      </div>
+
       {rows.length === 0 ? (
         <div className="mt-8 rounded-lg border border-dashed border-[var(--sec-line)] bg-white py-16 text-center">
-          <p className="text-sm text-[var(--sec-muted)]">No quotations yet.</p>
+          <p className="text-sm text-[var(--sec-muted)]">{periodKey === "all" ? "No quotations yet." : "No quotations for this period."}</p>
           <Link href="/accounts/quotations/new" className="mt-3 inline-block text-sm font-medium text-[var(--sec-blue)] hover:underline">
             Create the first one
           </Link>

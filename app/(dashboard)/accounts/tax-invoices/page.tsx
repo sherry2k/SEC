@@ -5,11 +5,16 @@ import { db } from "@/db";
 import { taxInvoices, taxInvoiceItems, projects } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import { calcTaxInvoiceTotals } from "@/lib/tax-invoice-calc";
+import { PERIOD_OPTIONS, resolvePeriodKey, isInPeriod } from "@/lib/period-filter";
 
-export default async function TaxInvoicesListPage() {
+export default async function TaxInvoicesListPage({ searchParams }: { searchParams: Promise<{ period?: string }> }) {
   await requirePermission("accounts.view");
 
-  const rows = await db.select().from(taxInvoices).orderBy(desc(taxInvoices.createdAt));
+  const { period } = await searchParams;
+  const periodKey = resolvePeriodKey(period);
+
+  const allRows = await db.select().from(taxInvoices).orderBy(desc(taxInvoices.createdAt));
+  const rows = allRows.filter((inv) => isInPeriod(inv.createdAt, periodKey));
   const allItems = await db.select().from(taxInvoiceItems);
 
   // Fetched once for the whole list rather than per row — a simple id→name
@@ -47,9 +52,26 @@ export default async function TaxInvoicesListPage() {
         </Link>
       </div>
 
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <span className="text-xs font-medium uppercase tracking-wide text-[var(--sec-muted)]">Period</span>
+        {PERIOD_OPTIONS.map((o) => (
+          <Link
+            key={o.key}
+            href={o.key === "all" ? "/accounts/tax-invoices" : `/accounts/tax-invoices?period=${o.key}`}
+            className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+              periodKey === o.key
+                ? "border-[var(--sec-blue)] bg-blue-50 text-[var(--sec-blue)]"
+                : "border-[var(--sec-line)] text-[var(--sec-muted)] hover:border-[var(--sec-blue)] hover:text-[var(--sec-blue)]"
+            }`}
+          >
+            {o.label}
+          </Link>
+        ))}
+      </div>
+
       {rows.length === 0 ? (
         <div className="mt-8 rounded-lg border border-dashed border-[var(--sec-line)] bg-white py-16 text-center">
-          <p className="text-sm text-[var(--sec-muted)]">No tax invoices yet.</p>
+          <p className="text-sm text-[var(--sec-muted)]">{periodKey === "all" ? "No tax invoices yet." : "No tax invoices for this period."}</p>
           <Link href="/accounts/tax-invoices/new" className="mt-3 inline-block text-sm font-medium text-[var(--sec-blue)] hover:underline">
             Create the first one
           </Link>
