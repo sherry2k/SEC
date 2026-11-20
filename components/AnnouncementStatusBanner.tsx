@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Megaphone } from "lucide-react";
+import { Megaphone, X } from "lucide-react";
 
 function relativeTime(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -46,6 +46,29 @@ export default function AnnouncementStatusBanner({
   const [confirming, setConfirming] = useState(false);
   const [confirmedCount, setConfirmedCount] = useState(initialConfirmedCount);
   const [pendingNames, setPendingNames] = useState(initialPendingNames);
+  // Dismissing is purely a per-viewer convenience (not confirming, not
+  // read-tracking) — it just stops this one admin from having this row
+  // parked on their own screen forever once they've seen where things
+  // stand. Remembered per browser via localStorage, keyed to this
+  // announcement, so a new announcement always shows again.
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(`dismissed-announcement-status:${announcementId}`) === "1") setDismissed(true);
+    } catch {
+      // no-op — banner just stays visible
+    }
+  }, [announcementId]);
+
+  const handleDismiss = () => {
+    setDismissed(true);
+    try {
+      localStorage.setItem(`dismissed-announcement-status:${announcementId}`, "1");
+    } catch {
+      // no-op — dismissal just won't survive a reload
+    }
+  };
 
   const handleConfirm = async () => {
     setConfirming(true);
@@ -66,8 +89,17 @@ export default function AnnouncementStatusBanner({
     }
   };
 
+  if (dismissed) return null;
+
   return (
-    <div className="mb-6 flex flex-wrap items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3.5 sm:px-5">
+    <div className="relative mb-6 flex flex-wrap items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3.5 pr-10 sm:px-5 sm:pr-11">
+      <button
+        onClick={handleDismiss}
+        aria-label="Dismiss"
+        className="absolute right-3 top-3 rounded-md p-1 text-blue-400 transition-colors hover:bg-blue-100 hover:text-blue-600"
+      >
+        <X size={15} />
+      </button>
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700">
         <Megaphone size={17} />
       </div>

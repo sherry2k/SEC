@@ -1,6 +1,7 @@
 import NotificationBell from "@/components/NotificationBell";
 import GlobalProjectSearch from "@/components/GlobalProjectSearch";
 import AccountMenu from "@/components/AccountMenu";
+import DashboardClock from "@/components/DashboardClock";
 import type { CurrentUser } from "@/lib/auth";
 
 // Sits above the page content, on every screen size (unlike MobileShell's
@@ -9,7 +10,9 @@ export default function DashboardTopbar({ user }: { user: CurrentUser }) {
   return (
     <div className="no-print sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-[var(--sec-line)] bg-white px-4 py-2 sm:px-8">
       <GlobalProjectSearch />
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
+        <DashboardClock />
+        <div className="hidden h-8 w-px bg-[var(--sec-line)] sm:block" />
         <NotificationBell />
         <AccountMenu name={user.name} role={user.role} />
       </div>

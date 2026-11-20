@@ -2,7 +2,6 @@ import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
 import { Plus, AlertTriangle, AlertCircle, Clock, Loader2, CheckCircle2 } from "lucide-react";
 import DownloadPdfButton from "@/components/DownloadPdfButton";
-import DashboardClock from "@/components/DashboardClock";
 import UnconfirmedAnnouncementBanner from "@/components/UnconfirmedAnnouncementBanner";
 import AnnouncementStatusBanner from "@/components/AnnouncementStatusBanner";
 import { db } from "@/db";
@@ -236,7 +235,6 @@ export default async function DashboardHome() {
             Welcome back, {user.name.split(" ")[0]}
           </h1>
         </div>
-        <DashboardClock />
         <div className="flex flex-wrap gap-2">
           <DownloadPdfButton href="/api/dashboard/pdf" />
           {canCreateProject && (

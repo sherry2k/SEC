@@ -15,14 +15,14 @@ export default function DashboardClock() {
     return () => clearInterval(interval);
   }, []);
 
-  if (!now) return <div className="h-[38px]" />;
+  if (!now) return <div className="hidden h-[34px] sm:block" />;
 
   const dateLabel = now.toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" });
   const dayLabel = now.toLocaleDateString(undefined, { weekday: "long" });
   const timeLabel = now.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 
   return (
-    <div className="text-right">
+    <div className="hidden text-right leading-tight sm:block">
       <p className="text-sm font-bold text-[var(--sec-ink)]">{dateLabel}</p>
       <p className="mt-0.5 text-xs text-[var(--sec-muted)]">
         {dayLabel} · {timeLabel}
