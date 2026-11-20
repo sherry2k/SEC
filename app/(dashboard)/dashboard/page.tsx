@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
-import { Plus, AlertTriangle, AlertCircle, Clock, Loader2, CheckCircle2, Megaphone } from "lucide-react";
+import { Plus, AlertTriangle, AlertCircle, Clock, Loader2, CheckCircle2 } from "lucide-react";
 import DownloadPdfButton from "@/components/DownloadPdfButton";
 import DashboardClock from "@/components/DashboardClock";
 import UnconfirmedAnnouncementBanner from "@/components/UnconfirmedAnnouncementBanner";
+import AnnouncementStatusBanner from "@/components/AnnouncementStatusBanner";
 import { db } from "@/db";
 import {
   projects,
@@ -171,25 +172,43 @@ export default async function DashboardHome() {
   ).length;
 
   // Announcements — the explicit confirmation prompt (separate from the
-  // passive dismiss-banner every page already shows via the layout), plus,
-  // for Admin/Master Admin, how the latest announcement's confirmations
-  // are tracking across the team.
-  const unconfirmedAnnouncement = await getLatestUnconfirmedAnnouncement(user.id);
+  // passive dismiss-banner every page already shows via the layout).
+  // Admin/Master Admin get ONE combined row (their own confirm prompt plus
+  // the team-wide "X of Y confirmed" status) rather than two stacked
+  // banners that otherwise show at the same time and read as duplicated.
+  // Regular staff, who have no oversight to show, just get the plain
+  // confirm prompt.
   const canManageAnnouncements = can(user.role, "announcements.manage");
-  let latestAnnouncementSummary: { title: string; confirmedCount: number; totalStaff: number; pendingNames: string[] } | null = null;
+  let unconfirmedAnnouncement: Awaited<ReturnType<typeof getLatestUnconfirmedAnnouncement>> = null;
+  let announcementStatus: {
+    id: string;
+    title: string;
+    postedByLabel: string;
+    createdAt: Date;
+    isConfirmedByMe: boolean;
+    confirmedCount: number;
+    totalStaff: number;
+    pendingNames: string[];
+  } | null = null;
   if (canManageAnnouncements) {
     const allAnnouncements = await getAllAnnouncementsForUser(user.id);
     const latest = allAnnouncements[0];
     if (latest) {
       const rosters = await getAnnouncementConfirmationRosters([latest.id]);
       const pendingNames = (rosters[latest.id] ?? []).filter((r) => !r.confirmed).map((r) => r.name);
-      latestAnnouncementSummary = {
+      announcementStatus = {
+        id: latest.id,
         title: latest.title,
+        postedByLabel: latest.postedByLabel,
+        createdAt: latest.createdAt,
+        isConfirmedByMe: latest.isConfirmedByMe,
         confirmedCount: latest.confirmedCount,
         totalStaff: latest.totalStaff,
         pendingNames,
       };
     }
+  } else {
+    unconfirmedAnnouncement = await getLatestUnconfirmedAnnouncement(user.id);
   }
 
   // Recent activity — same feed the notification bell shows, just as an
@@ -232,35 +251,30 @@ export default async function DashboardHome() {
         </div>
       </div>
 
-      <div className="mt-4">
-        <UnconfirmedAnnouncementBanner
-          announcement={
-            unconfirmedAnnouncement
-              ? { ...unconfirmedAnnouncement, createdAt: unconfirmedAnnouncement.createdAt.toISOString() }
-              : null
-          }
-        />
-      </div>
-
-      {latestAnnouncementSummary && (
-        <Link
-          href="/announcements"
-          className="mb-6 flex flex-wrap items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3.5 transition-colors hover:bg-blue-100"
-        >
-          <Megaphone size={17} className="shrink-0 text-blue-700" />
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-blue-900">
-              &quot;{latestAnnouncementSummary.title}&quot; — {latestAnnouncementSummary.confirmedCount} of{" "}
-              {latestAnnouncementSummary.totalStaff} staff confirmed
-            </p>
-            {latestAnnouncementSummary.pendingNames.length > 0 ? (
-              <p className="mt-0.5 text-xs text-blue-700">Pending: {latestAnnouncementSummary.pendingNames.join(", ")}</p>
-            ) : (
-              <p className="mt-0.5 text-xs text-blue-700">Everyone has confirmed.</p>
-            )}
-          </div>
-          <span className="shrink-0 text-xs font-semibold text-blue-700">View announcement →</span>
-        </Link>
+      {announcementStatus ? (
+        <div className="mt-4">
+          <AnnouncementStatusBanner
+            announcementId={announcementStatus.id}
+            title={announcementStatus.title}
+            postedByLabel={announcementStatus.postedByLabel}
+            createdAt={announcementStatus.createdAt.toISOString()}
+            myName={user.name}
+            initialConfirmedByMe={announcementStatus.isConfirmedByMe}
+            initialConfirmedCount={announcementStatus.confirmedCount}
+            totalStaff={announcementStatus.totalStaff}
+            initialPendingNames={announcementStatus.pendingNames}
+          />
+        </div>
+      ) : (
+        <div className="mt-4">
+          <UnconfirmedAnnouncementBanner
+            announcement={
+              unconfirmedAnnouncement
+                ? { ...unconfirmedAnnouncement, createdAt: unconfirmedAnnouncement.createdAt.toISOString() }
+                : null
+            }
+          />
+        </div>
       )}
 
       {myOpenTasks.length > 0 && (
