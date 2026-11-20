@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
-import { Plus, AlertTriangle } from "lucide-react";
+import { Plus, AlertTriangle, AlertCircle, Clock, Loader2, CheckCircle2, Megaphone } from "lucide-react";
 import DownloadPdfButton from "@/components/DownloadPdfButton";
+import DashboardClock from "@/components/DashboardClock";
+import UnconfirmedAnnouncementBanner from "@/components/UnconfirmedAnnouncementBanner";
 import { db } from "@/db";
 import {
   projects,
@@ -15,17 +17,39 @@ import { ROLE_LABELS } from "@/lib/roles";
 import { can } from "@/lib/permissions";
 import { financeCanEditProjects } from "@/lib/settings";
 import { getExpiringAlerts } from "@/lib/document-renewals";
+import { getRecentActivity } from "@/lib/activity";
+import { ACTIVITY_LABELS, type ActivityAction } from "@/lib/activity-labels";
+import {
+  getLatestUnconfirmedAnnouncement,
+  getAllAnnouncementsForUser,
+  getAnnouncementConfirmationRosters,
+} from "@/lib/announcements";
+import { classifyTask, daysInCurrentStatus } from "@/lib/task-urgency";
 import {
   PROJECT_CATEGORIES,
   CATEGORY_LABELS,
   CATEGORY_BADGE_STYLES,
   PROJECT_STATUS_LABELS,
   ITEM_STATUS_LABELS,
-  ITEM_STATUS_STYLES,
   type ProjectCategory,
 } from "@/lib/checklist";
 
 const STALE_DAYS = 14;
+// Same "this has been sitting a while" cutoff as Accounts' Pending
+// Payments list (lib/pending-payments.ts) — one round number reused rather
+// than inventing a different threshold per page.
+const ATTENTION_OVERDUE_DAYS = 14;
+
+function relativeTime(d: Date): string {
+  const diffMs = Date.now() - d.getTime();
+  const minutes = Math.round(diffMs / 60000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.round(hours / 24);
+  return `${days}d ago`;
+}
 
 export default async function DashboardHome() {
   const user = await requireRole();
@@ -41,6 +65,8 @@ export default async function DashboardHome() {
       projectId: projectChecklistItems.projectId,
       customName: projectChecklistItems.customName,
       templateName: checklistTemplates.name,
+      dueDate: projectChecklistItems.dueDate,
+      updatedAt: projectChecklistItems.updatedAt,
     })
     .from(projectChecklistItems)
     .leftJoin(checklistTemplates, eq(projectChecklistItems.templateId, checklistTemplates.id));
@@ -76,19 +102,39 @@ export default async function DashboardHome() {
   ];
 
   // Needs attention: items stuck in rejected/resubmission, and projects
-  // nobody has touched in a while.
+  // nobody has touched in a while — combined into one list and sorted by
+  // how long it's been stuck, oldest first, same instinct as Accounts'
+  // Pending Payments list (lib/pending-payments.ts).
   const projectsById = new Map(allProjects.map((p) => [p.id, p]));
-  const stuckItems = checklistRows
+  const stuckItemRows = checklistRows
     .filter((i) => i.status === "rejected" || i.status === "resubmission")
     .map((i) => ({ ...i, project: projectsById.get(i.projectId) }))
-    .filter((i) => i.project)
-    .slice(0, 5);
+    .filter((i) => i.project);
 
   const staleCutoff = new Date(Date.now() - STALE_DAYS * 24 * 60 * 60 * 1000);
-  const staleProjects = allProjects
-    .filter((p) => p.status === "active" && p.updatedAt < staleCutoff)
-    .sort((a, b) => a.updatedAt.getTime() - b.updatedAt.getTime())
-    .slice(0, 5);
+  const staleProjectRows = allProjects.filter((p) => p.status === "active" && p.updatedAt < staleCutoff);
+
+  type AttentionRow = { key: string; href: string; primary: string; secondary: string; badge: string; days: number };
+  const attentionRows: AttentionRow[] = [
+    ...stuckItemRows.map((item, i) => ({
+      key: `stuck-${i}`,
+      href: `/projects/${item.project!.id}`,
+      primary: item.customName ?? item.templateName ?? "Untitled item",
+      secondary: item.project!.name,
+      badge: ITEM_STATUS_LABELS[item.status],
+      days: daysInCurrentStatus(item.updatedAt),
+    })),
+    ...staleProjectRows.map((p) => ({
+      key: `stale-${p.id}`,
+      href: `/projects/${p.id}`,
+      primary: p.name,
+      secondary: `No update since ${p.updatedAt.toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}`,
+      badge: "Stale",
+      days: daysInCurrentStatus(p.updatedAt),
+    })),
+  ]
+    .sort((a, b) => b.days - a.days)
+    .slice(0, 6);
 
   // Team workload: how many projects each person is Responsible for.
   const responsibleUsers = await db.select({ id: users.id, name: users.name }).from(users);
@@ -104,6 +150,52 @@ export default async function DashboardHome() {
     workloadCounts.set(name, (workloadCounts.get(name) ?? 0) + 1);
   }
   const workload = [...workloadCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
+  // Flagged only when the gap is both proportionally and numerically large
+  // — avoids flagging a trivial 3-vs-2 split as an "imbalance".
+  const workloadImbalanced =
+    workload.length >= 2 && workload[0][1] >= workload[1][1] * 1.5 && workload[0][1] - workload[1][1] >= 10;
+
+  // My tasks — every open checklist item (not yet Approved/Not applicable)
+  // on a project this user is personally Responsible for. Mirrors
+  // app/(dashboard)/projects/page.tsx's own My Tasks chips exactly, so the
+  // two never disagree; only shown here when it's non-empty for this user.
+  const myProjectIds = new Set(allProjects.filter((p) => p.responsibleId === user.id).map((p) => p.id));
+  const myOpenTasks = checklistRows.filter((i) => myProjectIds.has(i.projectId) && classifyTask(i.dueDate, i.status) !== null);
+  const myOverdueCount = myOpenTasks.filter((i) => classifyTask(i.dueDate, i.status) === "overdue").length;
+  const myDueTodayCount = myOpenTasks.filter((i) => classifyTask(i.dueDate, i.status) === "due_today").length;
+  const myInProgressCount = myOpenTasks.filter((i) => classifyTask(i.dueDate, i.status) === "in_progress").length;
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  const myCompletedThisWeekCount = checklistRows.filter(
+    (i) => myProjectIds.has(i.projectId) && i.status === "approved" && i.updatedAt >= weekAgo
+  ).length;
+
+  // Announcements — the explicit confirmation prompt (separate from the
+  // passive dismiss-banner every page already shows via the layout), plus,
+  // for Admin/Master Admin, how the latest announcement's confirmations
+  // are tracking across the team.
+  const unconfirmedAnnouncement = await getLatestUnconfirmedAnnouncement(user.id);
+  const canManageAnnouncements = can(user.role, "announcements.manage");
+  let latestAnnouncementSummary: { title: string; confirmedCount: number; totalStaff: number; pendingNames: string[] } | null = null;
+  if (canManageAnnouncements) {
+    const allAnnouncements = await getAllAnnouncementsForUser(user.id);
+    const latest = allAnnouncements[0];
+    if (latest) {
+      const rosters = await getAnnouncementConfirmationRosters([latest.id]);
+      const pendingNames = (rosters[latest.id] ?? []).filter((r) => !r.confirmed).map((r) => r.name);
+      latestAnnouncementSummary = {
+        title: latest.title,
+        confirmedCount: latest.confirmedCount,
+        totalStaff: latest.totalStaff,
+        pendingNames,
+      };
+    }
+  }
+
+  // Recent activity — same feed the notification bell shows, just as an
+  // always-visible card on the page itself rather than tucked behind a
+  // click.
+  const recentActivity = await getRecentActivity(user.role, 6);
 
   // Finance snapshot removed — it summed each project's legacy
   // `totalAmount` field (set manually in the old per-project Financial
@@ -125,6 +217,7 @@ export default async function DashboardHome() {
             Welcome back, {user.name.split(" ")[0]}
           </h1>
         </div>
+        <DashboardClock />
         <div className="flex flex-wrap gap-2">
           <DownloadPdfButton href="/api/dashboard/pdf" />
           {canCreateProject && (
@@ -138,6 +231,72 @@ export default async function DashboardHome() {
           )}
         </div>
       </div>
+
+      <div className="mt-4">
+        <UnconfirmedAnnouncementBanner
+          announcement={
+            unconfirmedAnnouncement
+              ? { ...unconfirmedAnnouncement, createdAt: unconfirmedAnnouncement.createdAt.toISOString() }
+              : null
+          }
+        />
+      </div>
+
+      {latestAnnouncementSummary && (
+        <Link
+          href="/announcements"
+          className="mb-6 flex flex-wrap items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3.5 transition-colors hover:bg-blue-100"
+        >
+          <Megaphone size={17} className="shrink-0 text-blue-700" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-blue-900">
+              &quot;{latestAnnouncementSummary.title}&quot; — {latestAnnouncementSummary.confirmedCount} of{" "}
+              {latestAnnouncementSummary.totalStaff} staff confirmed
+            </p>
+            {latestAnnouncementSummary.pendingNames.length > 0 ? (
+              <p className="mt-0.5 text-xs text-blue-700">Pending: {latestAnnouncementSummary.pendingNames.join(", ")}</p>
+            ) : (
+              <p className="mt-0.5 text-xs text-blue-700">Everyone has confirmed.</p>
+            )}
+          </div>
+          <span className="shrink-0 text-xs font-semibold text-blue-700">View announcement →</span>
+        </Link>
+      )}
+
+      {myOpenTasks.length > 0 && (
+        <div className="mb-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-bold text-[var(--sec-ink)]">My tasks</h2>
+            <Link href="/projects" className="text-xs font-medium text-[var(--sec-blue)] hover:underline">
+              View in Projects
+            </Link>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+              { label: "Overdue", count: myOverdueCount, icon: AlertCircle, className: "border-red-200 bg-red-50 text-red-700" },
+              { label: "Due Today", count: myDueTodayCount, icon: Clock, className: "border-amber-200 bg-amber-50 text-amber-700" },
+              { label: "In Progress", count: myInProgressCount, icon: Loader2, className: "border-blue-200 bg-blue-50 text-blue-700" },
+              {
+                label: "Completed This Week",
+                count: myCompletedThisWeekCount,
+                icon: CheckCircle2,
+                className: "border-emerald-200 bg-emerald-50 text-emerald-700",
+              },
+            ].map((chip) => {
+              const Icon = chip.icon;
+              return (
+                <div key={chip.label} className={`flex items-center gap-3 rounded-lg border px-4 py-3 ${chip.className}`}>
+                  <Icon size={18} />
+                  <div>
+                    <p className="text-lg font-bold">{chip.count}</p>
+                    <p className="text-xs">{chip.label}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {expiryAlerts.length > 0 && (
         <Link
@@ -242,37 +401,30 @@ export default async function DashboardHome() {
             <h2 className="text-base font-bold text-[var(--sec-ink)]">Needs attention</h2>
           </div>
 
-          {stuckItems.length === 0 && staleProjects.length === 0 ? (
+          {attentionRows.length === 0 ? (
             <p className="mt-4 text-sm text-[var(--sec-muted)]">Nothing needs attention right now.</p>
           ) : (
             <div className="mt-3 space-y-1">
-              {stuckItems.map((item, i) => (
+              {attentionRows.map((row) => (
                 <Link
-                  key={`stuck-${i}`}
-                  href={`/projects/${item.project!.id}`}
+                  key={row.key}
+                  href={row.href}
                   className="flex items-center justify-between gap-3 rounded-md px-1 py-1.5 hover:bg-slate-50"
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-sm text-[var(--sec-ink)]">{item.customName ?? item.templateName ?? "Untitled item"}</p>
-                    <p className="truncate text-xs text-[var(--sec-muted)]">{item.project!.name}</p>
+                    <p className="truncate text-sm text-[var(--sec-ink)]">{row.primary}</p>
+                    <p className="truncate text-xs text-[var(--sec-muted)]">{row.secondary}</p>
                   </div>
-                  <span
-                    className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium ${ITEM_STATUS_STYLES[item.status]}`}
-                  >
-                    {ITEM_STATUS_LABELS[item.status]}
-                  </span>
-                </Link>
-              ))}
-              {staleProjects.map((p) => (
-                <Link
-                  key={`stale-${p.id}`}
-                  href={`/projects/${p.id}`}
-                  className="flex items-center justify-between gap-3 rounded-md px-1 py-1.5 hover:bg-slate-50"
-                >
-                  <p className="truncate text-sm text-[var(--sec-ink)]">{p.name}</p>
-                  <span className="shrink-0 text-xs text-[var(--sec-muted)]">
-                    No update since {p.updatedAt.toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}
-                  </span>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                        row.days >= ATTENTION_OVERDUE_DAYS ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"
+                      }`}
+                    >
+                      {row.days}d
+                    </span>
+                    <span className="rounded-full border px-2 py-0.5 text-xs font-medium text-[var(--sec-muted)]">{row.badge}</span>
+                  </div>
                 </Link>
               ))}
             </div>
@@ -280,7 +432,14 @@ export default async function DashboardHome() {
         </div>
 
         <div className="rounded-lg border border-[var(--sec-line)] bg-white p-5">
-          <h2 className="text-base font-bold text-[var(--sec-ink)]">Team workload</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-bold text-[var(--sec-ink)]">Team workload</h2>
+            {can(user.role, "users.manage") && (
+              <Link href="/users" className="text-xs font-medium text-[var(--sec-blue)] hover:underline">
+                View all
+              </Link>
+            )}
+          </div>
 
           {workload.length === 0 && unassignedCount === 0 ? (
             <p className="mt-4 text-sm text-[var(--sec-muted)]">No projects yet.</p>
@@ -303,9 +462,44 @@ export default async function DashboardHome() {
                   {unassignedCount} project{unassignedCount === 1 ? "" : "s"} unassigned
                 </p>
               )}
+              {workloadImbalanced && (
+                <p className="flex items-center gap-1.5 border-t border-[var(--sec-line)] pt-3 text-xs text-amber-700">
+                  <AlertTriangle size={12} className="shrink-0" />
+                  {workload[0][0]} is carrying noticeably more than the rest of the team.
+                </p>
+              )}
             </div>
           )}
         </div>
+      </div>
+
+      <div className="mt-6 rounded-lg border border-[var(--sec-line)] bg-white p-5">
+        <h2 className="text-base font-bold text-[var(--sec-ink)]">Recent activity</h2>
+        {recentActivity.length === 0 ? (
+          <p className="mt-4 text-sm text-[var(--sec-muted)]">Nothing yet.</p>
+        ) : (
+          <div className="mt-3 divide-y divide-[var(--sec-line)]">
+            {recentActivity.map((e) => {
+              const row = (
+                <div className="flex items-center gap-3 py-2.5">
+                  <p className="min-w-0 flex-1 truncate text-sm text-[var(--sec-ink)]">
+                    <span className="font-medium">{e.actorName ?? "Someone"}</span>{" "}
+                    {ACTIVITY_LABELS[e.action as ActivityAction] ?? e.action}{" "}
+                    <span className="font-medium">{e.targetName}</span>
+                  </p>
+                  <span className="shrink-0 text-xs text-[var(--sec-muted)]">{relativeTime(e.createdAt)}</span>
+                </div>
+              );
+              return e.projectId ? (
+                <Link key={e.id} href={`/projects/${e.projectId}`} className="block hover:bg-slate-50">
+                  {row}
+                </Link>
+              ) : (
+                <div key={e.id}>{row}</div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

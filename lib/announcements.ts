@@ -71,6 +71,44 @@ export async function getLatestUnreadAnnouncement(
   };
 }
 
+// The single newest announcement this user hasn't explicitly confirmed yet
+// — independent of isUnread/announcementReads above (dismissing the
+// passive banner doesn't count as confirming). Drives the Dashboard's
+// "Confirm you've read this" prompt. null once everything is confirmed.
+export async function getLatestUnconfirmedAnnouncement(
+  userId: number
+): Promise<{ id: string; title: string; body: string; createdAt: Date; postedByLabel: string } | null> {
+  const confirmedIds = await db
+    .select({ id: announcementConfirmations.announcementId })
+    .from(announcementConfirmations)
+    .where(eq(announcementConfirmations.userId, userId));
+  const confirmedIdList = confirmedIds.map((r) => r.id);
+
+  const [row] = await db
+    .select({
+      id: announcements.id,
+      title: announcements.title,
+      body: announcements.body,
+      createdAt: announcements.createdAt,
+      posterName: users.name,
+      posterRole: users.role,
+    })
+    .from(announcements)
+    .leftJoin(users, eq(announcements.createdBy, users.id))
+    .where(confirmedIdList.length ? notInArray(announcements.id, confirmedIdList) : undefined)
+    .orderBy(desc(announcements.createdAt))
+    .limit(1);
+
+  if (!row) return null;
+  return {
+    id: row.id,
+    title: row.title,
+    body: row.body,
+    createdAt: row.createdAt,
+    postedByLabel: formatPostedBy(row.posterName ?? "Someone", row.posterRole ?? "admin"),
+  };
+}
+
 export async function getUnreadAnnouncementCount(userId: number): Promise<number> {
   const readIds = await db
     .select({ id: announcementReads.announcementId })
