@@ -2,7 +2,7 @@
 import { Megaphone } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { can } from "@/lib/permissions";
-import { getAllAnnouncementsForUser } from "@/lib/announcements";
+import { getAllAnnouncementsForUser, getAnnouncementConfirmationRosters } from "@/lib/announcements";
 import AnnouncementComposer from "@/components/AnnouncementComposer";
 import AnnouncementRow from "@/components/AnnouncementRow";
 import MarkAnnouncementsRead from "@/components/MarkAnnouncementsRead";
@@ -23,6 +23,10 @@ export default async function AnnouncementsPage() {
   // that nobody has seen yet. A real visit only happens once this component
   // mounts in the browser.
   const rows = await getAllAnnouncementsForUser(user.id);
+  // Only computed for Admin/Master Admin — the per-name confirmation
+  // breakdown behind each announcement's "X / Y confirmed" line never
+  // reaches a regular staff member's page payload.
+  const rosters = canManage ? await getAnnouncementConfirmationRosters(rows.map((r) => r.id)) : {};
 
   return (
     <div>
@@ -55,7 +59,11 @@ export default async function AnnouncementsPage() {
                 postedByLabel: a.postedByLabel,
                 createdAtLabel: formatDate(a.createdAt),
                 isUnread: a.isUnread,
+                isConfirmedByMe: a.isConfirmedByMe,
+                confirmedCount: a.confirmedCount,
+                totalStaff: a.totalStaff,
               }}
+              roster={canManage ? rosters[a.id] : undefined}
             />
           ))}
         </div>

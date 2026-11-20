@@ -779,6 +779,29 @@ export const announcementReads = pgTable(
   })
 );
 
+// Explicit "I've read this" acknowledgment — deliberately separate from
+// announcementReads above. announcementReads is fired automatically the
+// moment the page mounts (so the "New" badge/banner clears), which isn't
+// proof anyone actually read it. announcementConfirmations is only ever
+// written by a user clicking "Confirm" (see AnnouncementRow /
+// /api/announcements/[id]/confirm), so Admin/Master Admin can see exactly
+// who has and hasn't acknowledged a given announcement.
+export const announcementConfirmations = pgTable(
+  "announcement_confirmations",
+  {
+    announcementId: uuid("announcement_id")
+      .notNull()
+      .references(() => announcements.id, { onDelete: "cascade" }),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id),
+    confirmedAt: timestamp("confirmed_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.announcementId, table.userId] }),
+  })
+);
+
 // ---------------------------------------------------------------------------
 // Salary Slips — payroll documents, one per employee per month. Own SAL
 // numbering sequence (not shared with the client-document family above)

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Megaphone, Pencil, Trash2, Loader2, Check, X } from "lucide-react";
+import { Megaphone, Pencil, Trash2, Loader2, Check, X, CheckCircle2, ChevronDown, ChevronRight } from "lucide-react";
 
 export type AnnouncementRowData = {
   id: string;
@@ -11,9 +11,23 @@ export type AnnouncementRowData = {
   postedByLabel: string;
   createdAtLabel: string;
   isUnread: boolean;
+  isConfirmedByMe: boolean;
+  confirmedCount: number;
+  totalStaff: number;
 };
 
-export default function AnnouncementRow({ announcement, canManage }: { announcement: AnnouncementRowData; canManage: boolean }) {
+export default function AnnouncementRow({
+  announcement,
+  canManage,
+  roster,
+}: {
+  announcement: AnnouncementRowData;
+  canManage: boolean;
+  // Admin/Master Admin only — who exactly has and hasn't confirmed, by
+  // name. Undefined for a regular staff member (they only see their own
+  // confirm button, never anyone else's status).
+  roster?: { name: string; confirmed: boolean }[];
+}) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -21,6 +35,27 @@ export default function AnnouncementRow({ announcement, canManage }: { announcem
   const [body, setBody] = useState(announcement.body);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  const [confirmed, setConfirmed] = useState(announcement.isConfirmedByMe);
+  const [confirming, setConfirming] = useState(false);
+  const [rosterOpen, setRosterOpen] = useState(false);
+
+  const handleConfirm = async () => {
+    setConfirming(true);
+    setConfirmed(true); // optimistic — this is a one-way action, nothing to roll back to
+    try {
+      const res = await fetch(`/api/announcements/${announcement.id}/confirm`, { method: "POST" });
+      if (!res.ok) {
+        setConfirmed(false);
+      } else {
+        router.refresh();
+      }
+    } catch {
+      setConfirmed(false);
+    } finally {
+      setConfirming(false);
+    }
+  };
 
   const saveEdit = async () => {
     if (!title.trim() || !body.trim()) {
@@ -127,6 +162,51 @@ export default function AnnouncementRow({ announcement, canManage }: { announcem
           <p className="mt-2.5 text-xs text-[var(--sec-muted)]">
             Posted by {announcement.postedByLabel} · {announcement.createdAtLabel}
           </p>
+
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            {confirmed ? (
+              <span className="flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                <CheckCircle2 size={13} />
+                Confirmed
+              </span>
+            ) : (
+              <button
+                onClick={handleConfirm}
+                disabled={confirming}
+                className="flex items-center gap-1.5 rounded-full border border-[var(--sec-blue)] px-3 py-1 text-xs font-semibold text-[var(--sec-blue)] transition-colors hover:bg-blue-50 disabled:opacity-60"
+              >
+                {confirming ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle2 size={13} />}
+                Confirm you've read this
+              </button>
+            )}
+
+            {canManage && roster && (
+              <button
+                onClick={() => setRosterOpen((v) => !v)}
+                className="flex items-center gap-1 text-xs font-medium text-[var(--sec-muted)] hover:text-[var(--sec-blue)]"
+              >
+                {rosterOpen ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                {announcement.confirmedCount} / {announcement.totalStaff} confirmed
+              </button>
+            )}
+          </div>
+
+          {canManage && roster && rosterOpen && (
+            <div className="mt-2.5 flex flex-wrap gap-1.5 rounded-md border border-[var(--sec-line)] bg-slate-50 p-2.5">
+              {roster.map((person) => (
+                <span
+                  key={person.name}
+                  className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${
+                    person.confirmed ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                  }`}
+                >
+                  {person.confirmed ? <Check size={11} /> : <X size={11} />}
+                  {person.name}
+                </span>
+              ))}
+            </div>
+          )}
+
           {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
         </div>
 
