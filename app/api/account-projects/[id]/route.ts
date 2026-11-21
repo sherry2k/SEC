@@ -4,9 +4,17 @@ import { db } from "@/db";
 import { accountProjects } from "@/db/schema";
 import { authorizePermissionApi } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
+import { ACCOUNT_PROJECT_CATEGORIES } from "@/lib/checklist";
 
 function str(v: unknown): string {
   return typeof v === "string" ? v.trim() : "";
+}
+
+function parseCategory(v: unknown): { ok: true; value: string | null } | { ok: false } {
+  const value = str(v);
+  if (!value) return { ok: true, value: null };
+  if (!(ACCOUNT_PROJECT_CATEGORIES as readonly string[]).includes(value)) return { ok: false };
+  return { ok: true, value };
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -25,12 +33,18 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: "Client name is required." }, { status: 400 });
   }
 
+  const category = parseCategory(body?.category);
+  if (!category.ok) {
+    return NextResponse.json({ error: "That's not a valid category." }, { status: 400 });
+  }
+
   await db
     .update(accountProjects)
     .set({
       clientName,
       location: str(body?.location) || null,
       projectDetails: str(body?.projectDetails) || null,
+      category: category.value,
       updatedBy: auth.user.id,
       updatedAt: new Date(),
     })

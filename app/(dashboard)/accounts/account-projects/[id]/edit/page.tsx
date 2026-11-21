@@ -29,6 +29,7 @@ export default async function EditAccountProjectPage({ params }: { params: Promi
             clientName: accountProject.clientName,
             location: accountProject.location ?? "",
             projectDetails: accountProject.projectDetails ?? "",
+            category: accountProject.category ?? "",
           }}
         />
       </div>

@@ -66,6 +66,14 @@ export const CATEGORY_FULL_NAMES: Record<ProjectCategory, string> = {
   pending_projects: "Pending Projects",
 };
 
+// Same category vocabulary, used on Account Projects (Accounts module) —
+// minus "pending_projects", which is a Projects-module workflow status
+// (a project not yet started) that doesn't apply to an Account Project,
+// which already exists and is being invoiced.
+export const ACCOUNT_PROJECT_CATEGORIES = PROJECT_CATEGORIES.filter(
+  (category) => category !== "pending_projects",
+);
+
 export const ITEM_STATUSES = [
   "not_started",
   "in_preparation",

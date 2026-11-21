@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { ACCOUNT_PROJECT_CATEGORIES, CATEGORY_LABELS } from "@/lib/checklist";
 
 export type AccountProjectFormValues = {
   clientName: string;
   location: string;
   projectDetails: string;
+  category: string;
 };
 
 export default function AccountProjectForm({
@@ -92,6 +94,17 @@ export default function AccountProjectForm({
           placeholder="e.g. Obtaining Building Occupancy Certificate (BOC) for the existing nursery building."
           className={inputClass}
         />
+      </div>
+      <div>
+        <label className={labelClass}>Category</label>
+        <select value={values.category} onChange={(e) => set("category", e.target.value)} className={inputClass}>
+          <option value="">— No category —</option>
+          {ACCOUNT_PROJECT_CATEGORIES.map((category) => (
+            <option key={category} value={category}>
+              {CATEGORY_LABELS[category]}
+            </option>
+          ))}
+        </select>
       </div>
 
       <button

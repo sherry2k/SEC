@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { accountProjects } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
 import DeleteAccountProjectButton from "@/components/DeleteAccountProjectButton";
+import AccountProjectCategorySelect from "@/components/AccountProjectCategorySelect";
 
 // Same date+time format as app/(dashboard)/announcements/page.tsx's formatDate.
 function formatDateTime(d: Date): string {
@@ -92,6 +93,7 @@ export default async function AccountProjectsListPage({ searchParams }: { search
                 <th className="px-4 py-3 font-medium">Client name</th>
                 <th className="px-4 py-3 font-medium">Location</th>
                 <th className="px-4 py-3 font-medium">Project details</th>
+                <th className="px-4 py-3 font-medium">Category</th>
                 <th className="px-4 py-3 font-medium">Created</th>
                 <th className="px-4 py-3 font-medium">Actions</th>
               </tr>
@@ -107,6 +109,9 @@ export default async function AccountProjectsListPage({ searchParams }: { search
                   </td>
                   <td className="px-4 py-3 text-[var(--sec-muted)]">{p.location || "—"}</td>
                   <td className="px-4 py-3 text-[var(--sec-muted)]">{p.projectDetails || "—"}</td>
+                  <td className="px-4 py-3">
+                    <AccountProjectCategorySelect accountProjectId={p.id} initialCategory={p.category} />
+                  </td>
                   <td className="px-4 py-3 whitespace-nowrap text-[var(--sec-muted)]">{formatDateTime(p.createdAt)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">

@@ -236,6 +236,13 @@ export const accountProjects = pgTable("account_projects", {
   statementClientName: text("statement_client_name"),
   statementClientAddress: text("statement_client_address"),
   statementClientTrn: text("statement_client_trn"),
+  // Same category vocabulary as the main Projects module (lib/checklist.ts's
+  // PROJECT_CATEGORIES) minus "pending_projects" — that one is a Projects-
+  // module workflow status, not a category an Account Project (which
+  // already exists and is being invoiced) would ever need. No DB-level
+  // enum/FK: validated against ACCOUNT_PROJECT_CATEGORIES in the API routes,
+  // same approach as every other free-text-with-an-allowed-list column here.
+  category: text("category"),
 });
 
 
