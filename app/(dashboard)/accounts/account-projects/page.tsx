@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { asc, desc } from "drizzle-orm";
+import { asc, desc, arrayContains, type SQL } from "drizzle-orm";
 import { Plus, ArrowLeft, Pencil } from "lucide-react";
 import { db } from "@/db";
 import { accountProjects } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
+import { ACCOUNT_PROJECT_CATEGORIES, CATEGORY_LABELS, type ProjectCategory } from "@/lib/checklist";
 import DeleteAccountProjectButton from "@/components/DeleteAccountProjectButton";
-import AccountProjectCategorySelect from "@/components/AccountProjectCategorySelect";
+import AccountProjectCategoriesSelect from "@/components/AccountProjectCategoriesSelect";
 
 // Same date+time format as app/(dashboard)/announcements/page.tsx's formatDate.
 function formatDateTime(d: Date): string {
@@ -23,11 +24,16 @@ const SORT_OPTIONS = [
 ] as const;
 type SortKey = (typeof SORT_OPTIONS)[number]["key"];
 
-export default async function AccountProjectsListPage({ searchParams }: { searchParams: Promise<{ sort?: string }> }) {
+export default async function AccountProjectsListPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ sort?: string; category?: string }>;
+}) {
   await requirePermission("accounts.view");
 
-  const { sort } = await searchParams;
+  const { sort, category } = await searchParams;
   const sortKey: SortKey = SORT_OPTIONS.some((o) => o.key === sort) ? (sort as SortKey) : "newest";
+  const categoryFilter = (ACCOUNT_PROJECT_CATEGORIES as readonly string[]).includes(category ?? "") ? (category as ProjectCategory) : null;
 
   // "Newest" stays the default (the project someone just created is the
   // one they're most likely looking for next) — the client-name sorts are
@@ -35,7 +41,10 @@ export default async function AccountProjectsListPage({ searchParams }: { search
   // by Salary Slips' month filter.
   const orderBy =
     sortKey === "name_asc" ? asc(accountProjects.clientName) : sortKey === "name_desc" ? desc(accountProjects.clientName) : desc(accountProjects.createdAt);
-  const rows = await db.select().from(accountProjects).orderBy(orderBy);
+  // Filtering by category — categories is a Postgres text array, so
+  // "contains this category" uses arrayContains rather than equality.
+  const where: SQL | undefined = categoryFilter ? arrayContains(accountProjects.categories, [categoryFilter]) : undefined;
+  const rows = await db.select().from(accountProjects).where(where).orderBy(orderBy);
 
   return (
     <div>
@@ -65,7 +74,7 @@ export default async function AccountProjectsListPage({ searchParams }: { search
         {SORT_OPTIONS.map((o) => (
           <Link
             key={o.key}
-            href={o.key === "newest" ? "/accounts/account-projects" : `/accounts/account-projects?sort=${o.key}`}
+            href={{ pathname: "/accounts/account-projects", query: { ...(o.key !== "newest" && { sort: o.key }), ...(categoryFilter && { category: categoryFilter }) } }}
             className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
               sortKey === o.key
                 ? "border-[var(--sec-blue)] bg-blue-50 text-[var(--sec-blue)]"
@@ -77,9 +86,38 @@ export default async function AccountProjectsListPage({ searchParams }: { search
         ))}
       </div>
 
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <span className="text-xs font-medium uppercase tracking-wide text-[var(--sec-muted)]">Category</span>
+        <Link
+          href={{ pathname: "/accounts/account-projects", query: { ...(sortKey !== "newest" && { sort: sortKey }) } }}
+          className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+            !categoryFilter
+              ? "border-[var(--sec-blue)] bg-blue-50 text-[var(--sec-blue)]"
+              : "border-[var(--sec-line)] text-[var(--sec-muted)] hover:border-[var(--sec-blue)] hover:text-[var(--sec-blue)]"
+          }`}
+        >
+          All
+        </Link>
+        {ACCOUNT_PROJECT_CATEGORIES.map((c) => (
+          <Link
+            key={c}
+            href={{ pathname: "/accounts/account-projects", query: { category: c, ...(sortKey !== "newest" && { sort: sortKey }) } }}
+            className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+              categoryFilter === c
+                ? "border-[var(--sec-blue)] bg-blue-50 text-[var(--sec-blue)]"
+                : "border-[var(--sec-line)] text-[var(--sec-muted)] hover:border-[var(--sec-blue)] hover:text-[var(--sec-blue)]"
+            }`}
+          >
+            {CATEGORY_LABELS[c]}
+          </Link>
+        ))}
+      </div>
+
       {rows.length === 0 ? (
         <div className="mt-8 rounded-lg border border-dashed border-[var(--sec-line)] bg-white py-16 text-center">
-          <p className="text-sm text-[var(--sec-muted)]">No account projects yet.</p>
+          <p className="text-sm text-[var(--sec-muted)]">
+            {categoryFilter ? `No account projects in ${CATEGORY_LABELS[categoryFilter]}.` : "No account projects yet."}
+          </p>
           <Link href="/accounts/account-projects/new" className="mt-3 inline-block text-sm font-medium text-[var(--sec-blue)] hover:underline">
             Create the first one
           </Link>
@@ -110,7 +148,7 @@ export default async function AccountProjectsListPage({ searchParams }: { search
                   <td className="px-4 py-3 text-[var(--sec-muted)]">{p.location || "—"}</td>
                   <td className="px-4 py-3 text-[var(--sec-muted)]">{p.projectDetails || "—"}</td>
                   <td className="px-4 py-3">
-                    <AccountProjectCategorySelect accountProjectId={p.id} initialCategory={p.category} />
+                    <AccountProjectCategoriesSelect accountProjectId={p.id} initialCategories={p.categories} />
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-[var(--sec-muted)]">{formatDateTime(p.createdAt)}</td>
                   <td className="px-4 py-3">

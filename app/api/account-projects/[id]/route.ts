@@ -10,11 +10,13 @@ function str(v: unknown): string {
   return typeof v === "string" ? v.trim() : "";
 }
 
-function parseCategory(v: unknown): { ok: true; value: string | null } | { ok: false } {
-  const value = str(v);
-  if (!value) return { ok: true, value: null };
-  if (!(ACCOUNT_PROJECT_CATEGORIES as readonly string[]).includes(value)) return { ok: false };
-  return { ok: true, value };
+// A project can belong to more than one category (e.g. both BOC and CBC).
+function parseCategories(v: unknown): { ok: true; value: string[] } | { ok: false } {
+  if (v === undefined || v === null) return { ok: true, value: [] };
+  if (!Array.isArray(v)) return { ok: false };
+  const values = v.map((c) => str(c)).filter(Boolean);
+  if (!values.every((c) => (ACCOUNT_PROJECT_CATEGORIES as readonly string[]).includes(c))) return { ok: false };
+  return { ok: true, value: [...new Set(values)] };
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -33,8 +35,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: "Client name is required." }, { status: 400 });
   }
 
-  const category = parseCategory(body?.category);
-  if (!category.ok) {
+  const categories = parseCategories(body?.categories);
+  if (!categories.ok) {
     return NextResponse.json({ error: "That's not a valid category." }, { status: 400 });
   }
 
@@ -44,7 +46,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       clientName,
       location: str(body?.location) || null,
       projectDetails: str(body?.projectDetails) || null,
-      category: category.value,
+      categories: categories.value,
       updatedBy: auth.user.id,
       updatedAt: new Date(),
     })

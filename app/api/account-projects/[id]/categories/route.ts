@@ -7,18 +7,23 @@ import { logActivity } from "@/lib/activity";
 import { ACCOUNT_PROJECT_CATEGORIES, CATEGORY_LABELS, type ProjectCategory } from "@/lib/checklist";
 
 // Single-purpose route, same reasoning as /api/vendor-payments/[id]/status —
-// lets the inline dropdown on the Account Projects list change just the
-// category without going through the full edit form (and its required
-// client-name field).
+// lets the inline multi-select on the Account Projects list change just the
+// categories without going through the full edit form (and its required
+// client-name field). A project can hold more than one category (e.g.
+// both BOC and CBC), so the body carries the full replacement array.
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await authorizePermissionApi("accounts.edit");
   if (!auth.ok) return auth.response;
 
   const { id } = await params;
   const body = await request.json().catch(() => null);
-  const category = typeof body?.category === "string" ? body.category.trim() : "";
+  const raw = body?.categories;
 
-  if (category && !(ACCOUNT_PROJECT_CATEGORIES as readonly string[]).includes(category)) {
+  if (!Array.isArray(raw)) {
+    return NextResponse.json({ error: "Invalid categories." }, { status: 400 });
+  }
+  const categories = [...new Set(raw.map((c) => (typeof c === "string" ? c.trim() : "")).filter(Boolean))];
+  if (!categories.every((c) => (ACCOUNT_PROJECT_CATEGORIES as readonly string[]).includes(c))) {
     return NextResponse.json({ error: "That's not a valid category." }, { status: 400 });
   }
 
@@ -33,13 +38,15 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   await db
     .update(accountProjects)
-    .set({ category: category || null, updatedBy: auth.user.id, updatedAt: new Date() })
+    .set({ categories, updatedBy: auth.user.id, updatedAt: new Date() })
     .where(eq(accountProjects.id, id));
 
   await logActivity({
     userId: auth.user.id,
     action: "account_project_updated",
-    targetName: `${existing.clientName} (category → ${category ? CATEGORY_LABELS[category as ProjectCategory] : "none"})`,
+    targetName: `${existing.clientName} (categories → ${
+      categories.length ? categories.map((c) => CATEGORY_LABELS[c as ProjectCategory]).join(", ") : "none"
+    })`,
   });
 
   return NextResponse.json({ success: true });

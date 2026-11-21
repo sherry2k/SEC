@@ -3,13 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
-import { ACCOUNT_PROJECT_CATEGORIES, CATEGORY_LABELS } from "@/lib/checklist";
+import { ACCOUNT_PROJECT_CATEGORIES, CATEGORY_LABELS, CATEGORY_BADGE_STYLES, CATEGORY_SOLID_STYLES, type ProjectCategory } from "@/lib/checklist";
 
 export type AccountProjectFormValues = {
   clientName: string;
   location: string;
   projectDetails: string;
-  category: string;
+  // A project can belong to more than one category (e.g. both BOC and CBC).
+  categories: string[];
 };
 
 export default function AccountProjectForm({
@@ -28,6 +29,12 @@ export default function AccountProjectForm({
 
   const set = <K extends keyof AccountProjectFormValues>(key: K, value: AccountProjectFormValues[K]) =>
     setValues((prev) => ({ ...prev, [key]: value }));
+
+  const toggleCategory = (category: string) =>
+    setValues((prev) => ({
+      ...prev,
+      categories: prev.categories.includes(category) ? prev.categories.filter((c) => c !== category) : [...prev.categories, category],
+    }));
 
   const inputClass =
     "w-full rounded-md border border-[var(--sec-line)] bg-white px-3.5 py-2.5 text-sm text-[var(--sec-ink)] outline-none transition-colors focus:border-[var(--sec-blue)] focus:ring-2 focus:ring-[var(--sec-blue)]/20";
@@ -96,15 +103,25 @@ export default function AccountProjectForm({
         />
       </div>
       <div>
-        <label className={labelClass}>Category</label>
-        <select value={values.category} onChange={(e) => set("category", e.target.value)} className={inputClass}>
-          <option value="">— No category —</option>
-          {ACCOUNT_PROJECT_CATEGORIES.map((category) => (
-            <option key={category} value={category}>
-              {CATEGORY_LABELS[category]}
-            </option>
-          ))}
-        </select>
+        <label className={labelClass}>Categories</label>
+        <p className="mb-2 text-xs text-[var(--sec-muted)]">Select one or more — e.g. a project can be both BOC and CBC.</p>
+        <div className="flex flex-wrap gap-2">
+          {ACCOUNT_PROJECT_CATEGORIES.map((category) => {
+            const selected = values.categories.includes(category);
+            return (
+              <button
+                key={category}
+                type="button"
+                onClick={() => toggleCategory(category)}
+                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  selected ? CATEGORY_SOLID_STYLES[category as ProjectCategory] + " text-white" : CATEGORY_BADGE_STYLES[category as ProjectCategory]
+                }`}
+              >
+                {CATEGORY_LABELS[category]}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <button

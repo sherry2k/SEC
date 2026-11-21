@@ -15,7 +15,7 @@ export default async function NewAccountProjectPage() {
       <h1 className="text-2xl font-bold text-[var(--sec-ink)]">New account project</h1>
       <p className="mt-1 text-sm text-[var(--sec-muted)]">Once created, you can issue quotations, invoices and receipts under it.</p>
       <div className="mt-8 max-w-xl">
-        <AccountProjectForm mode="create" initial={{ clientName: "", location: "Abu Dhabi - UAE", projectDetails: "", category: "" }} />
+        <AccountProjectForm mode="create" initial={{ clientName: "", location: "Abu Dhabi - UAE", projectDetails: "", categories: [] }} />
       </div>
     </div>
   );
