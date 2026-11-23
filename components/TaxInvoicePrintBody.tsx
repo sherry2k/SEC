@@ -82,11 +82,11 @@ export default function TaxInvoicePrintBody({ invoice }: { invoice: PrintableTax
             <td className="border border-[var(--sec-line)] px-3 py-1 text-right">AED {money(totals.subtotal)}</td>
           </tr>
           <tr>
-            <td className="border border-[var(--sec-line)] px-3 py-1">VAT {invoice.vatRatePercent}%</td>
+            <td className="border border-[var(--sec-line)] px-3 py-1">Total VAT {invoice.vatRatePercent}%</td>
             <td className="border border-[var(--sec-line)] px-3 py-1 text-right">AED {money(totals.vatAmount)}</td>
           </tr>
           <tr className="font-bold">
-            <td className="border border-[var(--sec-line)] px-3 py-1">Invoice Amount</td>
+            <td className="border border-[var(--sec-line)] px-3 py-1">Total Amount incl. VAT</td>
             <td className="border border-[var(--sec-line)] px-3 py-1 text-right">AED {money(totals.total)}</td>
           </tr>
         </tbody>
