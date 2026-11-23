@@ -7,6 +7,7 @@
 import {
   DEFAULT_DOWN_PAYMENT_LABEL,
   QUOTATION_CATEGORY_BALANCE_LABELS,
+  QUOTATION_CATEGORY_LABELS,
   type QuotationCategory,
 } from "@/lib/quotation-category-constants";
 
@@ -181,6 +182,81 @@ export function categoryQuotationValues(template: {
     downPaymentLabel: DEFAULT_DOWN_PAYMENT_LABEL,
     balanceLabel:
       QUOTATION_CATEGORY_BALANCE_LABELS[template.category as QuotationCategory] ?? QUOTATION_CATEGORY_BALANCE_LABELS.permit,
+  };
+}
+
+// Builds the initial form values for a quotation started from TWO OR MORE
+// categories at once (e.g. a project that needs both BOC and CBC) — each
+// template's scope/exclusions get their own lettered sub-heading so the
+// client can tell which paragraph belongs to which category, each
+// template's fee rows get their name prefixed with that category's label
+// so the two categories' items don't blur together in one flat list, and
+// the scope fee is the sum of both. Everything stays freely editable from
+// there, same as the single-category path.
+//
+// `category` is stored as a combined human label ("BOC + CBC") rather than
+// a real QuotationCategory slug — every place that displays it already
+// falls back to showing the raw value when it's not a recognized key
+// (`QUOTATION_CATEGORY_LABELS[x] ?? x`), so this displays correctly
+// everywhere with no further code changes.
+export function mergeCategoryQuotationValues(
+  templates: {
+    category: string;
+    title: string;
+    subtitle: string;
+    intro: string;
+    scopeItemsText: string;
+    defaultScopeFeeExclVat: number;
+    mandatoryFeeItems: { name: string; defaultPrice: number; note: string }[];
+    exclusionsText: string;
+    optionalServiceItems: { name: string; defaultPrice: number; note: string }[];
+    commercialTermsText: string;
+    acceptanceNote: string;
+  }[]
+): QuotationFormValues {
+  const label = (category: string) => QUOTATION_CATEGORY_LABELS[category as QuotationCategory] ?? category;
+
+  const toFeeItems = (items: { name: string; defaultPrice: number; note: string }[], prefix: string): FeeItemDraft[] =>
+    items.map((i) => ({
+      key: `fee-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+      name: `${prefix} – ${i.name}`,
+      price: String(i.defaultPrice),
+      note: i.note,
+    }));
+
+  const letters = ["A", "B", "C", "D"];
+  const section = (text: string, i: number, heading: string) => `${letters[i] ?? i + 1}. ${label(templates[i].category)} – ${heading}\n${text}`;
+
+  return {
+    title: templates[0].title,
+    subtitle: templates[0].subtitle,
+    attention: "",
+    clientName: "",
+    projectDescription: "",
+    location: "Abu Dhabi - UAE",
+    buildingConfig: "",
+    accountProjectId: "",
+    vatRatePercent: 5,
+    intro: templates[0].intro,
+    paymentTerms: "",
+    commercialConditions: templates[0].commercialTermsText,
+    notes: "",
+    signatoryName: "Eng. Mohammad Abu Eisa",
+    showStamp: false,
+    signatoryTitle: "",
+    items: [],
+    category: templates.map((t) => label(t.category)).join(" + "),
+    scopeItemsText: templates.map((t, i) => section(t.scopeItemsText, i, "Scope of Services")).join("\n\n"),
+    scopeFeeExclVat: String(templates.reduce((sum, t) => sum + t.defaultScopeFeeExclVat, 0)),
+    exclusionsText: templates.map((t, i) => section(t.exclusionsText, i, "Exclusions")).join("\n\n"),
+    acceptanceNote: templates[0].acceptanceNote,
+    mandatoryFees: templates.flatMap((t) => toFeeItems(t.mandatoryFeeItems, label(t.category))),
+    optionalServices: templates.flatMap((t) => toFeeItems(t.optionalServiceItems, label(t.category))),
+    showCommercialSummary: true,
+    downPaymentLabel: DEFAULT_DOWN_PAYMENT_LABEL,
+    balanceLabel: templates
+      .map((t) => QUOTATION_CATEGORY_BALANCE_LABELS[t.category as QuotationCategory] ?? QUOTATION_CATEGORY_BALANCE_LABELS.permit)
+      .join(" / "),
   };
 }
 
