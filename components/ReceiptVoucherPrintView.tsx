@@ -74,9 +74,24 @@ export default function ReceiptVoucherPrintView({ voucher }: { voucher: Printabl
         </tbody>
       </table>
 
-      <p className="mt-3 text-right text-sm font-bold text-[var(--sec-ink)]">
-        Total Amount: AED {money(totals.total)} including {voucher.vatRatePercent}% VAT.
-      </p>
+      <div className="mt-3 flex justify-end">
+        <table className="text-sm">
+          <tbody>
+            <tr>
+              <td className="px-2 py-0.5 text-right text-[var(--sec-muted)]">Total Amount</td>
+              <td className="px-2 py-0.5 text-right">AED {money(totals.subtotal)}</td>
+            </tr>
+            <tr>
+              <td className="px-2 py-0.5 text-right text-[var(--sec-muted)]">Total VAT {voucher.vatRatePercent}%</td>
+              <td className="px-2 py-0.5 text-right">AED {money(totals.vatAmount)}</td>
+            </tr>
+            <tr className="border-t border-[var(--sec-line)]">
+              <td className="px-2 py-1 text-right font-bold text-[var(--sec-ink)]">Total Amount incl. VAT</td>
+              <td className="px-2 py-1 text-right font-bold text-[var(--sec-ink)]">AED {money(totals.total)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       {voucher.notes && (
         <div className="mt-5">
