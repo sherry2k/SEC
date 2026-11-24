@@ -157,6 +157,11 @@ export default async function AccountProjectDetailPage({ params }: { params: Pro
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[var(--sec-ink)]">{accountProject.clientName}</h1>
+          {accountProject.clientId && (
+            <Link href={`/accounts/clients/${accountProject.clientId}`} className="mt-0.5 inline-block text-xs font-medium text-[var(--sec-blue)] hover:underline">
+              View client — all their projects
+            </Link>
+          )}
           {accountProject.location && <p className="mt-1 text-sm text-[var(--sec-muted)]">{accountProject.location}</p>}
           {accountProject.projectDetails && <p className="mt-1 max-w-xl text-sm text-[var(--sec-ink)]">{accountProject.projectDetails}</p>}
         </div>

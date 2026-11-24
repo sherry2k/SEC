@@ -4,8 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { ACCOUNT_PROJECT_CATEGORIES, CATEGORY_LABELS, CATEGORY_BADGE_STYLES, CATEGORY_SOLID_STYLES, type ProjectCategory } from "@/lib/checklist";
+import ClientPicker from "@/components/ClientPicker";
 
 export type AccountProjectFormValues = {
+  // "" until a client is picked/created — the server derives clientName
+  // from this id at save time (frozen into the row, same as before).
+  clientId: string;
   clientName: string;
   location: string;
   projectDetails: string;
@@ -44,8 +48,8 @@ export default function AccountProjectForm({
     e.preventDefault();
     setError("");
 
-    if (!values.clientName.trim()) {
-      setError("Client name is required.");
+    if (!values.clientId) {
+      setError("Pick a client, or add a new one, first.");
       return;
     }
 
@@ -80,8 +84,12 @@ export default function AccountProjectForm({
       {error && <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 
       <div>
-        <label className={labelClass}>Client name *</label>
-        <input value={values.clientName} onChange={(e) => set("clientName", e.target.value)} required className={inputClass} />
+        <label className={labelClass}>Client *</label>
+        <ClientPicker
+          clientId={values.clientId}
+          clientName={values.clientName}
+          onSelect={(client) => setValues((prev) => ({ ...prev, clientId: client.id, clientName: client.name }))}
+        />
       </div>
       <div>
         <label className={labelClass}>Location</label>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { or, ilike, desc } from "drizzle-orm";
+import { or, ilike, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { accountProjects } from "@/db/schema";
+import { accountProjects, clients } from "@/db/schema";
 import { authorizePermissionApi } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
 import { ACCOUNT_PROJECT_CATEGORIES } from "@/lib/checklist";
@@ -59,9 +59,18 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json().catch(() => null);
-    const clientName = str(body?.clientName);
-    if (!clientName) {
-      return NextResponse.json({ error: "Client name is required." }, { status: 400 });
+    const clientId = str(body?.clientId);
+    if (!clientId) {
+      return NextResponse.json({ error: "Pick a client, or add a new one, first." }, { status: 400 });
+    }
+
+    // clientName is derived from the Client record here, never trusted from
+    // the request — this is the "freeze the name at save time" copy every
+    // document type already uses, kept in sync with whatever the client was
+    // actually named at the moment this project was created.
+    const [client] = await db.select({ name: clients.name }).from(clients).where(eq(clients.id, clientId)).limit(1);
+    if (!client) {
+      return NextResponse.json({ error: "That client no longer exists. Pick another." }, { status: 400 });
     }
 
     const categories = parseCategories(body?.categories);
@@ -72,7 +81,8 @@ export async function POST(request: NextRequest) {
     const [accountProject] = await db
       .insert(accountProjects)
       .values({
-        clientName,
+        clientId,
+        clientName: client.name,
         location: str(body?.location) || null,
         projectDetails: str(body?.projectDetails) || null,
         categories: categories.value,
@@ -84,7 +94,7 @@ export async function POST(request: NextRequest) {
     await logActivity({
       userId: auth.user.id,
       action: "account_project_created",
-      targetName: clientName,
+      targetName: client.name,
     });
 
     return NextResponse.json({ success: true, accountProject }, { status: 201 });

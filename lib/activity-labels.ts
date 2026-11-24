@@ -14,6 +14,9 @@ export type ActivityAction =
   | "account_project_created"
   | "account_project_updated"
   | "account_project_deleted"
+  | "client_created"
+  | "client_updated"
+  | "client_deleted"
   | "vendor_created"
   | "vendor_updated"
   | "vendor_deleted"
@@ -69,6 +72,9 @@ export const ACTIVITY_LABELS: Record<ActivityAction, string> = {
   account_project_created: "created account project",
   account_project_updated: "updated account project",
   account_project_deleted: "deleted account project",
+  client_created: "added client",
+  client_updated: "updated client",
+  client_deleted: "deleted client",
   vendor_created: "added vendor",
   vendor_updated: "updated vendor",
   vendor_deleted: "deleted vendor",

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FolderKanban, Wallet, ArrowRight, Receipt, Send, Coins, FileText, FileCheck2, FileSpreadsheet, ClipboardList, Building2 } from "lucide-react";
+import { FolderKanban, Wallet, ArrowRight, Receipt, Send, Coins, FileText, FileCheck2, FileSpreadsheet, ClipboardList, Building2, Users } from "lucide-react";
 import { db } from "@/db";
 import { quotations, quotationItems, taxInvoices, invoices, performaInvoices, receiptVouchers } from "@/db/schema";
 import { requirePermission } from "@/lib/auth";
@@ -155,6 +155,18 @@ export default async function AccountsIndexPage() {
 
       <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
                 <Link
+          href="/accounts/clients"
+          className="group rounded-lg border border-[var(--sec-line)] bg-white p-6 transition-colors hover:border-[var(--sec-blue)]"
+        >
+          <Users size={28} className="text-[var(--sec-blue)]" />
+          <p className="mt-3 text-lg font-bold text-[var(--sec-ink)]">Clients</p>
+          <p className="mt-1 text-sm text-[var(--sec-muted)]">Each client's details, entered once — with every Account Project they have, listed together.</p>
+          <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--sec-blue)] group-hover:underline">
+            Open <ArrowRight size={14} />
+          </span>
+        </Link>
+
+        <Link
           href="/accounts/account-projects"
           className="group rounded-lg border border-[var(--sec-line)] bg-white p-6 transition-colors hover:border-[var(--sec-blue)]"
         >

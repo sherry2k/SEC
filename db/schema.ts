@@ -216,8 +216,38 @@ export const checklistItemComments = pgTable("checklist_item_comments", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// A client can have more than one Account Project (e.g. one nursery with a
+// separate project for its commercial tower fit-out, another for an ADCD
+// approval, another for BOC + CBC) — this is the shared record for their
+// name/address/TRN/contact info so it's entered once instead of retyped
+// into every Account Project. Browsing "every project for this client"
+// reads from here (accountProjects.clientId); nothing financial lives on
+// this table — each Account Project keeps its own fully separate
+// quotations/invoices/receipt vouchers/statement of account, unchanged.
+export const clients = pgTable("clients", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  address: text("address"),
+  trn: text("trn"),
+  contactInfo: text("contact_info"),
+  notes: text("notes"),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedBy: integer("updated_by").references(() => users.id),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const accountProjects = pgTable("account_projects", {
   id: uuid("id").primaryKey().defaultRandom(),
+  // Nullable so this stays optional for any Account Project created before
+  // Clients existed (the migration backfills it for every one of those) —
+  // every new project sets it going forward. Kept alongside clientName
+  // below, never replacing it: clientName is frozen at the moment a
+  // project is created (or its client is changed), same as how a
+  // quotation/invoice freezes its own client name, so existing documents
+  // never silently change if someone later fixes a typo on the Client
+  // record.
+  clientId: uuid("client_id").references(() => clients.id),
   clientName: text("client_name").notNull(),
   location: text("location"),
   projectDetails: text("project_details"),

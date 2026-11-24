@@ -26,6 +26,7 @@ export default async function EditAccountProjectPage({ params }: { params: Promi
           mode="edit"
           accountProjectId={accountProject.id}
           initial={{
+            clientId: accountProject.clientId ?? "",
             clientName: accountProject.clientName,
             location: accountProject.location ?? "",
             projectDetails: accountProject.projectDetails ?? "",

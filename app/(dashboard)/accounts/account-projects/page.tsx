@@ -144,6 +144,11 @@ export default async function AccountProjectsListPage({
                     <Link href={`/accounts/account-projects/${p.id}`} className="font-semibold text-[var(--sec-ink)] hover:underline">
                       {p.clientName}
                     </Link>
+                    {p.clientId && (
+                      <Link href={`/accounts/clients/${p.clientId}`} className="mt-0.5 block text-xs font-medium text-[var(--sec-muted)] hover:text-[var(--sec-blue)] hover:underline">
+                        View client
+                      </Link>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-[var(--sec-muted)]">{p.location || "—"}</td>
                   <td className="px-4 py-3 text-[var(--sec-muted)]">{p.projectDetails || "—"}</td>
