@@ -1,7 +1,19 @@
 // The project categories and their checklist statuses.
 // This mirrors Section 3 of the framework document.
 
-export const PROJECT_CATEGORIES = ["boc", "cbc", "permit", "ad_ports", "work_permit", "contractor", "archives", "pending_projects"] as const;
+export const PROJECT_CATEGORIES = [
+  "boc",
+  "cbc",
+  "permit",
+  "ad_ports",
+  "work_permit",
+  "contractor",
+  "archives",
+  "pending_projects",
+  "new_project",
+  "enoc",
+  "itc",
+] as const;
 export type ProjectCategory = (typeof PROJECT_CATEGORIES)[number];
 
 export const CATEGORY_LABELS: Record<ProjectCategory, string> = {
@@ -13,6 +25,9 @@ export const CATEGORY_LABELS: Record<ProjectCategory, string> = {
   contractor: "Contractor",
   archives: "Archives",
   pending_projects: "Pending Projects",
+  new_project: "New Project",
+  enoc: "eNOC",
+  itc: "ITC",
 };
 
 // A distinct colour per category, applied everywhere a category shows up —
@@ -27,6 +42,9 @@ export const CATEGORY_BADGE_STYLES: Record<ProjectCategory, string> = {
   contractor: "border-rose-200 bg-rose-50 text-rose-700",
   archives: "border-slate-300 bg-slate-100 text-slate-600",
   pending_projects: "border-orange-200 bg-orange-50 text-orange-700",
+  new_project: "border-lime-200 bg-lime-50 text-lime-700",
+  enoc: "border-pink-200 bg-pink-50 text-pink-700",
+  itc: "border-indigo-200 bg-indigo-50 text-indigo-700",
 };
 
 // Solid version — background is the full category colour, text is white.
@@ -42,6 +60,9 @@ export const CATEGORY_SOLID_STYLES: Record<ProjectCategory, string> = {
   contractor: "bg-rose-600 border-rose-600",
   archives: "bg-slate-500 border-slate-500",
   pending_projects: "bg-orange-600 border-orange-600",
+  new_project: "bg-lime-600 border-lime-600",
+  enoc: "bg-pink-600 border-pink-600",
+  itc: "bg-indigo-600 border-indigo-600",
 };
 
 export const CATEGORY_ACCENT_BORDER: Record<ProjectCategory, string> = {
@@ -53,6 +74,9 @@ export const CATEGORY_ACCENT_BORDER: Record<ProjectCategory, string> = {
   contractor: "border-l-rose-400",
   archives: "border-l-slate-400",
   pending_projects: "border-l-orange-400",
+  new_project: "border-l-lime-400",
+  enoc: "border-l-pink-400",
+  itc: "border-l-indigo-400",
 };
 
 export const CATEGORY_FULL_NAMES: Record<ProjectCategory, string> = {
@@ -64,14 +88,21 @@ export const CATEGORY_FULL_NAMES: Record<ProjectCategory, string> = {
   contractor: "Contractor",
   archives: "Archives",
   pending_projects: "Pending Projects",
+  new_project: "New Project",
+  enoc: "eNOC",
+  itc: "ITC",
 };
 
 // Same category vocabulary, used on Account Projects (Accounts module) —
-// minus "pending_projects", which is a Projects-module workflow status
+// minus "pending_projects", "new_project", "enoc" and "itc", which (for
+// now) stay Projects-module-only categories, not offered when linking a
+// category to an Account Project. "pending_projects" is a workflow status
 // (a project not yet started) that doesn't apply to an Account Project,
-// which already exists and is being invoiced.
+// which already exists and is being invoiced; the other three are new and
+// simply haven't been brought over to Account Projects yet.
+const PROJECTS_MODULE_ONLY_CATEGORIES: ProjectCategory[] = ["pending_projects", "new_project", "enoc", "itc"];
 export const ACCOUNT_PROJECT_CATEGORIES = PROJECT_CATEGORIES.filter(
-  (category) => category !== "pending_projects",
+  (category) => !PROJECTS_MODULE_ONLY_CATEGORIES.includes(category),
 );
 
 export const ITEM_STATUSES = [
