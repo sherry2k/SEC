@@ -67,10 +67,13 @@ export default async function ProjectsPage() {
     .from(projectChecklistItems)
     .leftJoin(checklistTemplates, eq(projectChecklistItems.templateId, checklistTemplates.id));
 
+  // De-duplicated — a project can now link the same category more than
+  // once (e.g. a 2nd BOC submission), but its badges here should still
+  // only show each category once, not "BOC, BOC".
   const categoriesByProject = new Map<string, ProjectCategory[]>();
   for (const link of categoryLinks) {
     const list = categoriesByProject.get(link.projectId) ?? [];
-    list.push(link.category);
+    if (!list.includes(link.category)) list.push(link.category);
     categoriesByProject.set(link.projectId, list);
   }
 

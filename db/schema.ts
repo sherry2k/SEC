@@ -149,23 +149,27 @@ export const checklistTemplates = pgTable("checklist_templates", {
   sortOrder: integer("sort_order").notNull().default(0),
 });
 
-// A project can be linked to more than one category (framework doc 3.3).
-export const projectCategories = pgTable(
-  "project_categories",
-  {
-    projectId: uuid("project_id")
-      .notNull()
-      .references(() => projects.id, { onDelete: "cascade" }),
-    category: projectCategoryEnum("category").notNull(),
-    // Free-text note tied to this specific category link — e.g. the
-    // assigned contractor's name under Contractor, or the archive
-    // submission's own project number under Archives. Generic column;
-    // which categories show a field for it is a UI-level decision.
-    note: text("note"),
-    addedAt: timestamp("added_at", { withTimezone: true }).notNull().defaultNow(),
-  },
-  (t) => [primaryKey({ columns: [t.projectId, t.category] })]
-);
+// A project can be linked to more than one category (framework doc 3.3) —
+// and, as of its own "id" primary key below, more than once to the SAME
+// category: a project occasionally needs two independent BOC submissions
+// (or two of any other category), each with its own fresh checklist, its
+// own note, its own status. (projectId, category) used to be the primary
+// key, which capped a project at one link per category; "id" replaces
+// that so duplicates are just another row, ordered by addedAt so repeated
+// links display in the order they were added ("BOC", "BOC (2)", ...).
+export const projectCategories = pgTable("project_categories", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  projectId: uuid("project_id")
+    .notNull()
+    .references(() => projects.id, { onDelete: "cascade" }),
+  category: projectCategoryEnum("category").notNull(),
+  // Free-text note tied to this specific category link — e.g. the
+  // assigned contractor's name under Contractor, or the archive
+  // submission's own project number under Archives. Generic column;
+  // which categories show a field for it is a UI-level decision.
+  note: text("note"),
+  addedAt: timestamp("added_at", { withTimezone: true }).notNull().defaultNow(),
+});
 
 // The working copy: one row per template item, copied onto the project when
 // its category is added. This is what staff actually update day to day.
@@ -182,6 +186,14 @@ export const projectChecklistItems = pgTable("project_checklist_items", {
   templateId: integer("template_id").references(() => checklistTemplates.id),
   customName: text("custom_name"),
   category: projectCategoryEnum("category").notNull(),
+  // Which specific link this item belongs to — needed now that a project
+  // can have more than one link for the same category: "category" alone
+  // can no longer tell two BOC instances' items apart. Nullable only so
+  // the column can be added before the one-time migration backfills it
+  // from the (then still unique) projectId+category pairing; every item
+  // from here on sets it. onDelete cascade: removing a category link
+  // removes its own checklist items with it, same as before.
+  categoryLinkId: uuid("category_link_id").references(() => projectCategories.id, { onDelete: "cascade" }),
   sortOrder: integer("sort_order").notNull().default(0),
   parentItemId: uuid("parent_item_id").references((): AnyPgColumn => projectChecklistItems.id),
   status: itemStatusEnum("status").notNull().default("not_started"),

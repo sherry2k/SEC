@@ -1,5 +1,4 @@
 import {
-  CATEGORY_LABELS,
   CATEGORY_ACCENT_BORDER,
   ITEM_STATUS_LABELS,
   ITEM_STATUS_STYLES,
@@ -21,7 +20,13 @@ export type PrintableChecklistItem = {
   comments: { id: string; comment: string; authorName: string | null; createdAt: string }[];
 };
 
-export type PrintableSection = { category: ProjectCategory; note: string | null; items: PrintableChecklistItem[] };
+export type PrintableSection = {
+  categoryLinkId: string;
+  category: ProjectCategory;
+  displayLabel: string;
+  note: string | null;
+  items: PrintableChecklistItem[];
+};
 
 export type PrintableProject = {
   projectCode: string;
@@ -129,12 +134,12 @@ export default function ProjectPrintBody({ project }: { project: PrintableProjec
           const noteLabel = CATEGORY_NOTE_LABELS[section.category];
           return (
             <div
-              key={section.category}
+              key={section.categoryLinkId}
               className={`rounded-lg border border-l-4 border-[var(--sec-line)] ${CATEGORY_ACCENT_BORDER[section.category]}`}
               style={{ breakInside: "avoid" }}
             >
               <div className="border-b border-[var(--sec-line)] px-3 py-2">
-                <p className="text-sm font-bold">{CATEGORY_LABELS[section.category]}</p>
+                <p className="text-sm font-bold">{section.displayLabel}</p>
                 {section.note && noteLabel && (
                   <p className="mt-0.5 text-xs text-[var(--sec-muted)]">
                     {noteLabel}: <span className="text-[var(--sec-ink)]">{section.note}</span>

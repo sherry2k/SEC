@@ -3,9 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, Loader2, Check } from "lucide-react";
-import type { ProjectCategory } from "@/lib/checklist";
 
-export default function DeleteCategoryButton({ projectId, category }: { projectId: string; category: ProjectCategory }) {
+export default function DeleteCategoryButton({ projectId, categoryLinkId }: { projectId: string; categoryLinkId: string }) {
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -18,7 +17,7 @@ export default function DeleteCategoryButton({ projectId, category }: { projectI
       const res = await fetch(`/api/projects/${projectId}/categories`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ category }),
+        body: JSON.stringify({ categoryLinkId }),
       });
       if (!res.ok) {
         const data: { error?: string } = await res.json().catch(() => ({}));

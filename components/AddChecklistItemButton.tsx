@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Loader2 } from "lucide-react";
-import type { ProjectCategory } from "@/lib/checklist";
 
-// Adds a one-off item to this project's checklist for a category — for a
-// requirement specific to this project, not the standard template every
-// project in that category gets automatically.
-export default function AddChecklistItemButton({ projectId, category }: { projectId: string; category: ProjectCategory }) {
+// Adds a one-off item to this project's checklist under one specific
+// category link — for a requirement specific to this project (and, if
+// that category is linked more than once, to this particular instance of
+// it), not the standard template every project in that category gets
+// automatically.
+export default function AddChecklistItemButton({ projectId, categoryLinkId }: { projectId: string; categoryLinkId: string }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -26,7 +27,7 @@ export default function AddChecklistItemButton({ projectId, category }: { projec
       const res = await fetch(`/api/projects/${projectId}/checklist`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ category, name: name.trim() }),
+        body: JSON.stringify({ categoryLinkId, name: name.trim() }),
       });
       if (!res.ok) {
         const data: { error?: string } = await res.json().catch(() => ({}));

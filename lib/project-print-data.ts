@@ -3,6 +3,7 @@ import { eq, asc } from "drizzle-orm";
 import { db } from "@/db";
 import { projects, projectCategories, projectChecklistItems, checklistTemplates, checklistItemComments, users } from "@/db/schema";
 import { visibleActorName } from "@/lib/visibility";
+import { categoryLinkDisplayLabels } from "@/lib/checklist";
 import type { Role } from "@/lib/roles";
 
 // Fetches exactly what ProjectPrintView consumes — the same query shape
@@ -28,9 +29,8 @@ export async function getProjectForPrint(id: string, viewerRole: Role) {
     ? await db.select({ name: users.name }).from(users).where(eq(users.id, project.responsibleId)).limit(1)
     : [null];
 
-  const links = await db.select().from(projectCategories).where(eq(projectCategories.projectId, id));
-  const linkedCategories = links.map((l) => l.category);
-  const noteByCategory = new Map(links.map((l) => [l.category, l.note]));
+  const links = await db.select().from(projectCategories).where(eq(projectCategories.projectId, id)).orderBy(asc(projectCategories.addedAt));
+  const displayLabelByLinkId = categoryLinkDisplayLabels(links);
 
   const items = await db
     .select({
@@ -42,7 +42,7 @@ export async function getProjectForPrint(id: string, viewerRole: Role) {
       submittedByName: users.name,
       submittedByRole: users.role,
       approvedAt: projectChecklistItems.approvedAt,
-      category: projectChecklistItems.category,
+      categoryLinkId: projectChecklistItems.categoryLinkId,
       templateId: projectChecklistItems.templateId,
       customName: projectChecklistItems.customName,
       templateName: checklistTemplates.name,
@@ -74,11 +74,13 @@ export async function getProjectForPrint(id: string, viewerRole: Role) {
     commentsByItem.set(c.itemId, list);
   }
 
-  const sections = linkedCategories.map((category) => ({
-    category,
-    note: noteByCategory.get(category) ?? null,
+  const sections = links.map((link) => ({
+    categoryLinkId: link.id,
+    category: link.category,
+    displayLabel: displayLabelByLinkId.get(link.id) ?? "",
+    note: link.note,
     items: items
-      .filter((i) => i.category === category)
+      .filter((i) => i.categoryLinkId === link.id)
       .sort((a, b) => a.sortOrder - b.sortOrder)
       .map((i) => ({
         id: i.id,

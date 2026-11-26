@@ -8,7 +8,7 @@ import { requirePermission } from "@/lib/auth";
 import { financeCanEditProjects } from "@/lib/settings";
 import { can } from "@/lib/permissions";
 import { visibleActorName } from "@/lib/visibility";
-import { PROJECT_CATEGORIES, CATEGORY_LABELS, type ProjectCategory } from "@/lib/checklist";
+import { PROJECT_CATEGORIES, categoryLinkDisplayLabels, type ProjectCategory } from "@/lib/checklist";
 import ProjectChecklist from "@/components/ProjectChecklist";
 import AddCategoryButton from "@/components/AddCategoryButton";
 import DeleteProjectButton from "@/components/DeleteProjectButton";
@@ -82,9 +82,11 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     ? visibleActorName(completedByUser.role, completedByUser.name, user.role)
     : null;
 
-  const links = await db.select().from(projectCategories).where(eq(projectCategories.projectId, id));
-  const linkedCategories = links.map((l) => l.category);
-  const noteByCategory = new Map(links.map((l) => [l.category, l.note]));
+  // Ordered by addedAt so repeated links (a 2nd BOC, say) number in the
+  // order they were added, and categoryLinkDisplayLabels relies on that
+  // order to hand out "BOC"/"BOC (2)"/... consistently.
+  const links = await db.select().from(projectCategories).where(eq(projectCategories.projectId, id)).orderBy(asc(projectCategories.addedAt));
+  const displayLabelByLinkId = categoryLinkDisplayLabels(links);
 
   const items = await db
     .select({
@@ -96,7 +98,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       submittedByName: users.name,
       submittedByRole: users.role,
       approvedAt: projectChecklistItems.approvedAt,
-      category: projectChecklistItems.category,
+      categoryLinkId: projectChecklistItems.categoryLinkId,
       templateId: projectChecklistItems.templateId,
       customName: projectChecklistItems.customName,
       templateName: checklistTemplates.name,
@@ -128,11 +130,13 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     commentsByItem.set(c.itemId, list);
   }
 
-  const sections = linkedCategories.map((category) => ({
-    category,
-    note: noteByCategory.get(category) ?? null,
+  const sections = links.map((link) => ({
+    categoryLinkId: link.id,
+    category: link.category,
+    displayLabel: displayLabelByLinkId.get(link.id) ?? "",
+    note: link.note,
     items: items
-      .filter((i) => i.category === category)
+      .filter((i) => i.categoryLinkId === link.id)
       .sort((a, b) => a.sortOrder - b.sortOrder)
       .map((i) => ({
         id: i.id,
@@ -155,7 +159,10 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   const completedItems = items.filter((i) => i.status === "approved" || i.status === "not_applicable").length;
   const progressPct = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
 
-  const availableCategories: ProjectCategory[] = PROJECT_CATEGORIES.filter((c) => !linkedCategories.includes(c));
+  // Every category is always offered here, including ones already linked —
+  // a project can link the same category more than once (e.g. a second,
+  // independent BOC submission), each as its own fresh checklist.
+  const availableCategories: ProjectCategory[] = [...PROJECT_CATEGORIES];
 
     const details = [
     ["Project No.", project.municipalityNo],

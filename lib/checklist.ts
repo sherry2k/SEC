@@ -114,3 +114,20 @@ export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   completed: "Completed",
   cancelled: "Cancelled",
 };
+
+// A project can link the same category more than once (e.g. a second,
+// independent BOC submission later on). The first link of a category still
+// just reads "BOC"; a repeat reads "BOC (2)", "BOC (3)", etc., numbered by
+// the order the links were added in (pass them already sorted by addedAt).
+// Returns a Map keyed by the link's id so a caller can look up any given
+// link's display label without re-deriving the count itself.
+export function categoryLinkDisplayLabels(links: { id: string; category: ProjectCategory }[]): Map<string, string> {
+  const seenCount = new Map<ProjectCategory, number>();
+  const labels = new Map<string, string>();
+  for (const link of links) {
+    const n = (seenCount.get(link.category) ?? 0) + 1;
+    seenCount.set(link.category, n);
+    labels.set(link.id, n === 1 ? CATEGORY_LABELS[link.category] : `${CATEGORY_LABELS[link.category]} (${n})`);
+  }
+  return labels;
+}

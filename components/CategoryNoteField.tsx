@@ -17,11 +17,13 @@ const FIELD_CONFIG: Partial<Record<ProjectCategory, { label: string; placeholder
 export default function CategoryNoteField({
   projectId,
   category,
+  categoryLinkId,
   initialNote,
   canEdit,
 }: {
   projectId: string;
   category: ProjectCategory;
+  categoryLinkId: string;
   initialNote: string | null;
   canEdit: boolean;
 }) {
@@ -39,7 +41,7 @@ export default function CategoryNoteField({
       await fetch(`/api/projects/${projectId}/categories`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ category, note: value }),
+        body: JSON.stringify({ categoryLinkId, note: value }),
       });
       router.refresh();
     } finally {

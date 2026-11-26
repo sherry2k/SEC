@@ -1,12 +1,15 @@
 "use client";
 
-import { CATEGORY_LABELS, CATEGORY_ACCENT_BORDER, type ProjectCategory } from "@/lib/checklist";
+import { CATEGORY_ACCENT_BORDER, type ProjectCategory } from "@/lib/checklist";
 import ChecklistItemRow, { type ChecklistItem } from "@/components/ChecklistItemRow";
 import AddChecklistItemButton from "@/components/AddChecklistItemButton";
 import DeleteCategoryButton from "@/components/DeleteCategoryButton";
 import CategoryNoteField from "@/components/CategoryNoteField";
 
-type CategorySection = { category: ProjectCategory; note: string | null; items: ChecklistItem[] };
+// categoryLinkId identifies this specific link — needed since a project can
+// have the same category linked more than once; displayLabel is what's
+// shown ("BOC", or "BOC (2)" for a repeat), already resolved by the caller.
+type CategorySection = { categoryLinkId: string; category: ProjectCategory; displayLabel: string; note: string | null; items: ChecklistItem[] };
 
 // Renders each linked category as its own card, with items indented one
 // level under their parent (only Contractor → Inspection currently nests).
@@ -48,17 +51,17 @@ export default function ProjectChecklist({
 
   return (
     <div className="space-y-6">
-      {sections.map(({ category, note, items }) => (
-        <div key={category} className={`rounded-lg border border-l-4 border-[var(--sec-line)] bg-white ${CATEGORY_ACCENT_BORDER[category]}`}>
+      {sections.map(({ categoryLinkId, category, displayLabel, note, items }) => (
+        <div key={categoryLinkId} className={`rounded-lg border border-l-4 border-[var(--sec-line)] bg-white ${CATEGORY_ACCENT_BORDER[category]}`}>
           <div className="flex items-center justify-between border-b border-[var(--sec-line)] px-4 py-3">
-            <h3 className="font-bold text-base text-[var(--sec-ink)]">{CATEGORY_LABELS[category]}</h3>
-            {canEdit && <DeleteCategoryButton projectId={projectId} category={category} />}
+            <h3 className="font-bold text-base text-[var(--sec-ink)]">{displayLabel}</h3>
+            {canEdit && <DeleteCategoryButton projectId={projectId} categoryLinkId={categoryLinkId} />}
           </div>
-          <CategoryNoteField projectId={projectId} category={category} initialNote={note} canEdit={canEdit} />
+          <CategoryNoteField projectId={projectId} category={category} categoryLinkId={categoryLinkId} initialNote={note} canEdit={canEdit} />
           <div className="px-4 py-1">{renderTree(items, projectId, canEdit, currentUserName)}</div>
           {canEdit && (
             <div className="no-print border-t border-[var(--sec-line)]">
-              <AddChecklistItemButton projectId={projectId} category={category} />
+              <AddChecklistItemButton projectId={projectId} categoryLinkId={categoryLinkId} />
             </div>
           )}
         </div>

@@ -36,9 +36,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const validCategories = categories.filter((c): c is ProjectCategory =>
-      PROJECT_CATEGORIES.includes(c as ProjectCategory)
-    );
+    // Deduped — a category can be linked twice deliberately later on (via
+    // "Link another category" on the project page), but the checkbox list
+    // here shouldn't ever submit the same one twice at creation time.
+    const validCategories = [
+      ...new Set(categories.filter((c): c is ProjectCategory => PROJECT_CATEGORIES.includes(c as ProjectCategory))),
+    ];
     if (validCategories.length === 0) {
       return NextResponse.json({ error: "Select at least one category." }, { status: 400 });
     }
