@@ -46,7 +46,6 @@ export async function getDashboardForPrint(viewerRole: Role) {
     work_permit: 0,
     contractor: 0,
     archives: 0,
-    pending_projects: 0,
     new_project: 0,
     enoc: 0,
     itc: 0,
