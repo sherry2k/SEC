@@ -13,10 +13,11 @@ import {
   formatUaeTime,
   formatDuration,
 } from "@/lib/attendance";
-import { getAttendanceSummary, weekRangeFor, monthRangeFor } from "@/lib/attendance-report";
+import { getAttendanceSummary, getDailyAttendanceDetail, weekRangeFor, monthRangeFor } from "@/lib/attendance-report";
 import AttendanceDatePicker from "@/components/AttendanceDatePicker";
 import AttendanceEditForm from "@/components/AttendanceEditForm";
 import DownloadPdfButton from "@/components/DownloadPdfButton";
+import AttendanceSummaryTable from "@/components/AttendanceSummaryTable";
 
 const RANGE_OPTIONS = [
   { value: "day", label: "Day" },
@@ -196,6 +197,9 @@ async function SummaryView({
 }) {
   const { start, end, label } = range === "week" ? weekRangeFor(dateKey) : monthRangeFor(dateKey);
   const summary = await getAttendanceSummary(staff, start, end);
+  const dailyDetail = await getDailyAttendanceDetail(staff, start, end);
+  const daysByUser = new Map(dailyDetail.map((d) => [d.userId, d.days]));
+  const summaryWithDays = summary.map((row) => ({ ...row, days: daysByUser.get(row.userId) ?? [] }));
 
   // Prev/next shifts the reference date by a week or a full month, landing
   // on the equivalent day in the adjacent period — the exact day doesn't
@@ -233,32 +237,7 @@ async function SummaryView({
         <DownloadPdfButton href={`/api/attendance/pdf?date=${dateKey}&range=${range}`} />
       </div>
 
-      <div className="mt-4 overflow-x-auto rounded-lg border border-[var(--sec-line)] bg-white">
-        <table className="w-full min-w-[520px] text-left text-sm">
-          <thead>
-            <tr className="border-b border-[var(--sec-line)] text-xs uppercase tracking-wide text-[var(--sec-muted)]">
-              <th className="px-4 py-3 font-medium">Name</th>
-              <th className="px-4 py-3 font-medium">Days Present</th>
-              <th className="px-4 py-3 font-medium">Days Absent</th>
-              <th className="px-4 py-3 font-medium">Expected Hrs</th>
-              <th className="px-4 py-3 font-medium">Actual Hrs</th>
-            </tr>
-          </thead>
-          <tbody>
-            {summary.map((row) => (
-              <tr key={row.userId} className="border-b border-[var(--sec-line)] last:border-0">
-                <td className="px-4 py-3 font-medium text-[var(--sec-ink)]">{row.name}</td>
-                <td className="px-4 py-3 text-emerald-700">{row.daysPresent}</td>
-                <td className={`px-4 py-3 ${row.daysAbsent > 0 ? "text-red-600" : "text-[var(--sec-muted)]"}`}>{row.daysAbsent}</td>
-                <td className="px-4 py-3 text-[var(--sec-muted)]">{row.expectedHoursLabel}</td>
-                <td className="px-4 py-3 text-[var(--sec-ink)]">{row.totalHoursLabel}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {summary.length === 0 && <p className="mt-4 text-sm text-[var(--sec-muted)]">No staff accounts to show yet.</p>}
+      <AttendanceSummaryTable rows={summaryWithDays} />
     </>
   );
 }

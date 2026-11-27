@@ -28,9 +28,9 @@ export default async function AttendancePrintSourcePage({
 
   const { start, end, label } = range === "week" ? weekRangeFor(dateKey) : monthRangeFor(dateKey);
   const rows = await getAttendanceSummary(staff, start, end);
-  // Day-by-day check-in/check-out breakdown — monthly report only, per the
-  // user's request; the weekly PDF stays as the summary table alone.
-  const dailyDetail = range === "month" ? await getDailyAttendanceDetail(staff, start, end) : undefined;
+  // Day-by-day check-in/check-out breakdown — both weekly and monthly PDFs,
+  // same as the on-screen view.
+  const dailyDetail = await getDailyAttendanceDetail(staff, start, end);
 
   return (
     <div
