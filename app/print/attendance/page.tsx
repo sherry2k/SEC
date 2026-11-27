@@ -10,21 +10,27 @@ import { arabicFont } from "@/lib/fonts";
 export default async function AttendancePrintSourcePage({
   searchParams,
 }: {
-  searchParams: Promise<{ date?: string; range?: string }>;
+  searchParams: Promise<{ date?: string; range?: string; userId?: string }>;
 }) {
   await requirePermission("attendance.view");
 
-  const { date: dateParam, range: rangeParam } = await searchParams;
+  const { date: dateParam, range: rangeParam, userId: userIdParam } = await searchParams;
   const dateKey = dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : uaeDateKey(new Date());
   const range = rangeParam === "month" ? "month" : "week";
+  const singleUserId = userIdParam && /^\d+$/.test(userIdParam) ? Number(userIdParam) : null;
 
   // Same roles as the on-screen Attendance page — Staff, Finance and Admin
   // all self check-in, so the PDF should list the same people the screen
   // does, not just Staff.
-  const staff = await db
+  const allStaff = await db
     .select({ id: users.id, name: users.name })
     .from(users)
     .where(and(inArray(users.role, ["staff", "finance", "admin"]), eq(users.status, "approved")));
+
+  // A per-employee PDF (the Download PDF button next to one selected
+  // employee's card) scopes the whole report down to just that person,
+  // instead of the full staff list.
+  const staff = singleUserId ? allStaff.filter((s) => s.id === singleUserId) : allStaff;
 
   const { start, end, label } = range === "week" ? weekRangeFor(dateKey) : monthRangeFor(dateKey);
   const rows = await getAttendanceSummary(staff, start, end);

@@ -17,7 +17,7 @@ import { getAttendanceSummary, getDailyAttendanceDetail, weekRangeFor, monthRang
 import AttendanceDatePicker from "@/components/AttendanceDatePicker";
 import AttendanceEditForm from "@/components/AttendanceEditForm";
 import DownloadPdfButton from "@/components/DownloadPdfButton";
-import AttendanceSummaryTable from "@/components/AttendanceSummaryTable";
+import AttendanceEmployeeCards from "@/components/AttendanceEmployeeCards";
 
 const RANGE_OPTIONS = [
   { value: "day", label: "Day" },
@@ -39,7 +39,7 @@ export default async function AttendancePage({
   // Staff and Finance both self check-in — Finance (Yousef) now shows up
   // in the day/week/month attendance views alongside Staff.
   const staff = await db
-    .select({ id: users.id, name: users.name })
+    .select({ id: users.id, name: users.name, role: users.role })
     .from(users)
     .where(and(inArray(users.role, ["staff", "finance", "admin"]), eq(users.status, "approved")));
 
@@ -193,13 +193,18 @@ async function SummaryView({
 }: {
   dateKey: string;
   range: "week" | "month";
-  staff: { id: number; name: string }[];
+  staff: { id: number; name: string; role: string }[];
 }) {
   const { start, end, label } = range === "week" ? weekRangeFor(dateKey) : monthRangeFor(dateKey);
   const summary = await getAttendanceSummary(staff, start, end);
   const dailyDetail = await getDailyAttendanceDetail(staff, start, end);
   const daysByUser = new Map(dailyDetail.map((d) => [d.userId, d.days]));
-  const summaryWithDays = summary.map((row) => ({ ...row, days: daysByUser.get(row.userId) ?? [] }));
+  const roleByUser = new Map(staff.map((s) => [s.id, s.role]));
+  const summaryWithDays = summary.map((row) => ({
+    ...row,
+    days: daysByUser.get(row.userId) ?? [],
+    role: roleByUser.get(row.userId) ?? "staff",
+  }));
 
   // Prev/next shifts the reference date by a week or a full month, landing
   // on the equivalent day in the adjacent period — the exact day doesn't
@@ -234,10 +239,10 @@ async function SummaryView({
             Next →
           </Link>
         </div>
-        <DownloadPdfButton href={`/api/attendance/pdf?date=${dateKey}&range=${range}`} />
+        <DownloadPdfButton href={`/api/attendance/pdf?date=${dateKey}&range=${range}`} label="Download PDF (all)" />
       </div>
 
-      <AttendanceSummaryTable rows={summaryWithDays} />
+      <AttendanceEmployeeCards rows={summaryWithDays} dateKey={dateKey} range={range} />
     </>
   );
 }
