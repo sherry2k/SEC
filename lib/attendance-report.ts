@@ -2,7 +2,7 @@ import "server-only";
 import { and, gte, lte, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { attendanceRecords } from "@/db/schema";
-import { WORKING_WEEKDAYS, STANDARD_HOURS_PER_WORKING_DAY, isWorkingDay, formatDuration, netWorkedMs } from "@/lib/attendance";
+import { WORKING_WEEKDAYS, STANDARD_HOURS_PER_WORKING_DAY, isWorkingDay, formatDuration, formatUaeTime, netWorkedMs } from "@/lib/attendance";
 
 export type StaffSummaryRow = {
   userId: number;
@@ -97,6 +97,84 @@ export async function getAttendanceSummary(
       const totalHoursLabel = totalMs > 0 ? formatDuration(0, totalMs) : "0h 0m";
 
       return { userId: person.id, name: person.name, daysPresent, daysAbsent, expectedHoursLabel, totalHoursLabel };
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export type DailyDetailRow = {
+  dateKey: string;
+  dateLabel: string;
+  checkInLabel: string;
+  checkOutLabel: string;
+  hoursLabel: string;
+  present: boolean;
+};
+
+export type StaffDailyDetail = {
+  userId: number;
+  name: string;
+  days: DailyDetailRow[];
+};
+
+// Day-by-day check-in/check-out detail for a range, one row per working day
+// per person — used by the monthly PDF's per-employee breakdown, below the
+// summary table. Absent working days are included (marked present: false)
+// rather than skipped, same "Expected" framing as the summary report.
+export async function getDailyAttendanceDetail(
+  staff: { id: number; name: string }[],
+  start: Date,
+  end: Date
+): Promise<StaffDailyDetail[]> {
+  const userIds = staff.map((s) => s.id);
+  const records = userIds.length
+    ? await db
+        .select()
+        .from(attendanceRecords)
+        .where(and(inArray(attendanceRecords.userId, userIds), gte(attendanceRecords.date, start), lte(attendanceRecords.date, end)))
+    : [];
+
+  const recordByUserAndDay = new Map<string, (typeof records)[number]>();
+  for (const r of records) {
+    recordByUserAndDay.set(`${r.userId}:${r.date.getTime()}`, r);
+  }
+
+  // Same "don't count a future day" cap as the summary report.
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  const effectiveEnd = end > today ? today : end;
+
+  const workingDays: Date[] = [];
+  if (effectiveEnd >= start) {
+    const cursor = new Date(start);
+    while (cursor <= effectiveEnd) {
+      if (WORKING_WEEKDAYS.includes(cursor.getUTCDay())) workingDays.push(new Date(cursor));
+      cursor.setUTCDate(cursor.getUTCDate() + 1);
+    }
+  }
+
+  return staff
+    .map((person) => {
+      const days: DailyDetailRow[] = workingDays.map((day) => {
+        const dateLabel = day.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
+        const dateKey = day.toISOString().slice(0, 10);
+        const record = recordByUserAndDay.get(`${person.id}:${day.getTime()}`);
+
+        if (record?.checkInAt) {
+          const hoursLabel = record.checkOutAt
+            ? formatDuration(0, netWorkedMs(record.checkInAt, record.checkOutAt, record.lunchOutAt, record.lunchInAt))
+            : "—";
+          return {
+            dateKey,
+            dateLabel,
+            checkInLabel: formatUaeTime(record.checkInAt),
+            checkOutLabel: record.checkOutAt ? formatUaeTime(record.checkOutAt) : "—",
+            hoursLabel,
+            present: true,
+          };
+        }
+        return { dateKey, dateLabel, checkInLabel: "—", checkOutLabel: "—", hoursLabel: "—", present: false };
+      });
+      return { userId: person.id, name: person.name, days };
     })
     .sort((a, b) => a.name.localeCompare(b.name));
 }
