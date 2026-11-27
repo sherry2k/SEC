@@ -73,14 +73,20 @@ export default function QuotationCategoryPrintBody({ quotation }: { quotation: P
     QUOTATION_CATEGORY_BALANCE_LABELS[quotation.category as QuotationCategory] ||
     QUOTATION_CATEGORY_BALANCE_LABELS.permit;
 
-  type SummaryRow = { label: string; type: "Required" | "Optional"; feeExclVat: number };
-  const summaryRows: SummaryRow[] = [
-    { label: downPaymentLabel, type: "Required", feeExclVat: downPayment },
-    ...quotation.mandatoryFees.map((f) => ({ label: f.name, type: "Required" as const, feeExclVat: f.price })),
-    { label: balanceLabel, type: "Required" as const, feeExclVat: balance },
+  type SummaryRow = { label: string; feeExclVat: number };
+  // Split into two blocks instead of one interleaved table: 6.1 is what
+  // SEC itself earns (the down payment + balance on the consultancy fee),
+  // 6.2 is what passes straight through to government authorities. Same
+  // figures as before, just grouped so the two are easy to tell apart.
+  const consultantFeeRows: SummaryRow[] = [
+    { label: downPaymentLabel, feeExclVat: downPayment },
+    { label: balanceLabel, feeExclVat: balance },
   ];
-  const requiredTotal = summaryRows.reduce((sum, r) => sum + r.feeExclVat, 0);
-  const optionalRows: SummaryRow[] = quotation.optionalServices.map((f) => ({ label: f.name, type: "Optional" as const, feeExclVat: f.price }));
+  const consultantFeeTotal = consultantFeeRows.reduce((sum, r) => sum + r.feeExclVat, 0);
+  const governmentFeeRows: SummaryRow[] = quotation.mandatoryFees.map((f) => ({ label: f.name, feeExclVat: f.price }));
+  const governmentFeeTotal = governmentFeeRows.reduce((sum, r) => sum + r.feeExclVat, 0);
+  const requiredTotal = consultantFeeTotal + governmentFeeTotal;
+  const optionalRows: SummaryRow[] = quotation.optionalServices.map((f) => ({ label: f.name, feeExclVat: f.price }));
   const optionalTotal = optionalRows.reduce((sum, r) => sum + r.feeExclVat, 0);
 
   return (
@@ -177,62 +183,120 @@ export default function QuotationCategoryPrintBody({ quotation }: { quotation: P
       {quotation.showCommercialSummary && (
         <>
       <h2 className="mt-8 break-inside-avoid break-after-avoid text-base font-bold text-[var(--sec-blue)]">6 Commercial Summary and Payment Schedule</h2>
+
+      <h3 className="mt-4 break-inside-avoid break-after-avoid text-sm font-bold text-[var(--sec-ink)]">6.1 Consultant Fee Schedule</h3>
       <table className="mt-2 w-full border-collapse text-sm">
         <thead>
           <tr className="bg-[var(--sec-blue-deep)] text-white">
             <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-left">No.</th>
-            <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-left">Service and Payment Trigger</th>
-            <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-left">Type</th>
+            <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-left">Payment Trigger</th>
             <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-right">Fee Excl. VAT</th>
             <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-right">Total Incl. VAT</th>
           </tr>
         </thead>
         <tbody>
-          {summaryRows.map((row, i) => (
+          {consultantFeeRows.map((row, i) => (
             <tr key={i}>
               <td className="border border-[var(--sec-line)] px-2 py-1.5">{i + 1}</td>
               <td className="border border-[var(--sec-line)] px-2 py-1.5">{row.label}</td>
-              <td className="border border-[var(--sec-line)] px-2 py-1.5">{row.type}</td>
               <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(row.feeExclVat)}</td>
               <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(row.feeExclVat * (1 + vat))}</td>
             </tr>
           ))}
-          <tr className="font-bold">
-            <td className="border border-[var(--sec-line)] px-2 py-1.5" colSpan={3}>
-              Total Required Payments
+          <tr className="bg-[var(--sec-bg)] font-bold">
+            <td className="border border-[var(--sec-line)] px-2 py-1.5" colSpan={2}>
+              Total Consultant Fee
             </td>
-            <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(requiredTotal)}</td>
-            <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(requiredTotal * (1 + vat))}</td>
+            <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(consultantFeeTotal)}</td>
+            <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(consultantFeeTotal * (1 + vat))}</td>
           </tr>
-          {optionalRows.map((row, i) => (
-            <tr key={i}>
-              <td className="border border-[var(--sec-line)] px-2 py-1.5">{summaryRows.length + i + 1}</td>
-              <td className="border border-[var(--sec-line)] px-2 py-1.5">{row.label}</td>
-              <td className="border border-[var(--sec-line)] px-2 py-1.5">{row.type}</td>
-              <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(row.feeExclVat)}</td>
-              <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(row.feeExclVat * (1 + vat))}</td>
-            </tr>
-          ))}
-          {optionalRows.length > 0 && (
-            <>
-              <tr className="font-bold">
-                <td className="border border-[var(--sec-line)] px-2 py-1.5" colSpan={3}>
+        </tbody>
+      </table>
+
+      {governmentFeeRows.length > 0 && (
+        <>
+          <h3 className="mt-6 break-inside-avoid break-after-avoid text-sm font-bold text-[var(--sec-ink)]">6.2 Government / Authority Fee Schedule</h3>
+          <table className="mt-2 w-full border-collapse text-sm">
+            <thead>
+              <tr className="bg-[var(--sec-blue-deep)] text-white">
+                <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-left">No.</th>
+                <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-left">Authority Fee</th>
+                <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-right">Fee Excl. VAT</th>
+                <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-right">Total Incl. VAT</th>
+              </tr>
+            </thead>
+            <tbody>
+              {governmentFeeRows.map((row, i) => (
+                <tr key={i}>
+                  <td className="border border-[var(--sec-line)] px-2 py-1.5">{i + 1}</td>
+                  <td className="border border-[var(--sec-line)] px-2 py-1.5">{row.label}</td>
+                  <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(row.feeExclVat)}</td>
+                  <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(row.feeExclVat * (1 + vat))}</td>
+                </tr>
+              ))}
+              <tr className="bg-[var(--sec-bg)] font-bold">
+                <td className="border border-[var(--sec-line)] px-2 py-1.5" colSpan={2}>
+                  Total Government Fees
+                </td>
+                <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(governmentFeeTotal)}</td>
+                <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(governmentFeeTotal * (1 + vat))}</td>
+              </tr>
+            </tbody>
+          </table>
+        </>
+      )}
+
+      <table className="mt-3 w-full border-collapse text-sm">
+        <tbody>
+          <tr className="bg-[#DCE6F0] font-bold">
+            <td className="border border-[var(--sec-blue-deep)] px-2 py-2" colSpan={2}>
+              Grand Total Required Payments
+            </td>
+            <td className="border border-[var(--sec-blue-deep)] px-2 py-2 text-right">AED {money(requiredTotal)}</td>
+            <td className="border border-[var(--sec-blue-deep)] px-2 py-2 text-right">AED {money(requiredTotal * (1 + vat))}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      {optionalRows.length > 0 && (
+        <>
+          <h3 className="mt-6 break-inside-avoid break-after-avoid text-sm font-bold text-[var(--sec-ink)]">6.3 Optional Additional Services</h3>
+          <table className="mt-2 w-full border-collapse text-sm">
+            <thead>
+              <tr className="bg-[var(--sec-blue-deep)] text-white">
+                <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-left">No.</th>
+                <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-left">Service</th>
+                <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-right">Fee Excl. VAT</th>
+                <th className="border border-[var(--sec-blue-deep)] px-2 py-2 text-right">Total Incl. VAT</th>
+              </tr>
+            </thead>
+            <tbody>
+              {optionalRows.map((row, i) => (
+                <tr key={i}>
+                  <td className="border border-[var(--sec-line)] px-2 py-1.5">{i + 1}</td>
+                  <td className="border border-[var(--sec-line)] px-2 py-1.5">{row.label}</td>
+                  <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(row.feeExclVat)}</td>
+                  <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(row.feeExclVat * (1 + vat))}</td>
+                </tr>
+              ))}
+              <tr className="bg-[var(--sec-bg)] font-bold">
+                <td className="border border-[var(--sec-line)] px-2 py-1.5" colSpan={2}>
                   Total Optional Services
                 </td>
                 <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(optionalTotal)}</td>
                 <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(optionalTotal * (1 + vat))}</td>
               </tr>
               <tr className="font-bold">
-                <td className="border border-[var(--sec-line)] px-2 py-1.5" colSpan={3}>
+                <td className="border border-[var(--sec-line)] px-2 py-1.5" colSpan={2}>
                   Potential Total Including All Optional Services
                 </td>
                 <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money(requiredTotal + optionalTotal)}</td>
                 <td className="border border-[var(--sec-line)] px-2 py-1.5 text-right">AED {money((requiredTotal + optionalTotal) * (1 + vat))}</td>
               </tr>
-            </>
-          )}
-        </tbody>
-      </table>
+            </tbody>
+          </table>
+        </>
+      )}
       <p className="mt-2 text-xs italic text-[var(--sec-muted)]">
         Optional services apply only upon the Client&apos;s written instruction. No site supervision or site visit is included in this quotation.
       </p>
